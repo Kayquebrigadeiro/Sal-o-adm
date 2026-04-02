@@ -1,0 +1,80 @@
+﻿Lendo arquivo: c:\Ptojeto-jaco\NOVA PLANILHA DE SALAO 20233 - Copia.xlsm
+Abas encontradas: [
+  'AGENDA DISPONIVEL',
+  'CONTROLE',
+  'VALORES',
+  'HOME CAR',
+  'PROCED PARALELO',
+  'CALENDARIO',
+  'GRAFICOS-FECHAMENTO',
+  'DESPESAS - RECEITA',
+  'DADOS'
+]
+
+============================
+=== Aba: AGENDA DISPONIVEL
+============================
+Total de linhas com dados: 28
+Linha 0: [null,null,null,null,null,null,null,null,null,null,null,null,null,1996,null,null,1996,1996]
+Linha 1: ["ANO",2024]
+Linha 2: ["M├èS","OUTUBRO",null,null,null,null,null,null,null,null,null,null,null,"HOJE","AMANHA"]
+
+============================
+=== Aba: CONTROLE
+============================
+Total de linhas com dados: 10005
+Linha 0: [null,null,null,null,null,null,null,null,null,null,null,null,null,1,1,1]
+Linha 1: [null,null,null,null,null,null,"OP├çOES CLASSIFICA├ç├âO"]
+
+============================
+=== Aba: VALORES
+============================
+Total de linhas com dados: 59
+Linha 0: ["PROCEDIMENTO","VALOR","COMPRIMENTO",null,"VALOR LIQUIDO GANHO",null,null,"TAMANHO ","PORCENTUAL",null,null,null,null,"COLORA├ç├âO",null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,"FUNCIONARIO","CARGO",null,null,null,null,null,null,null,null,null,"CUSTOS PROCEDIMENTOS GERAL","CUSTO POR CABELO",null,null,5]
+Linha 1: [null,null,null,null,null,null,null,"M",20,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,"TETA","PROPRIETARIO",null,null,null,null,null,null,"PORCENTUAL?",null,null,"COLORA├ç├âO",34.9]
+Linha 2: ["BOTOX",145.24210526315792,"M",null,78.88888888888889,null,null,"G",30,null,null,null,null,"PRODUTO","VLR","QTD DE APLICA├ç├âO","VLR POR APLICA├ç├âO","PRODUTO SEU?",null,"VALOR LIQUIDO",65,null,null,"M",153.66000000000003,null,null,"SIM",null,"YARA","FUNCIONARIO",null,null,"P",null,"COLORA├ç├âO","CABELO",50,null,null,"LUZES",101.50000000000001]
+
+============================
+=== Aba: HOME CAR
+============================
+Total de linhas com dados: 9996
+Linha 0: ["DATA","CLIENTE","PRODUTO","CUSTO PRODUTO","VALOR KIT","PAGO","VALOR PENDENTE","OBS"]
+Linha 1: [44839,"dinha","mini fusion",45,80,80,0]
+Linha 2: [44842,"edna","shanpoo e condicionador",77,120,120,0]
+
+============================
+=== Aba: PROCED PARALELO
+============================
+Total de linhas com dados: 14999
+Linha 0: [null,"DATA","FUNCIONARIO","NOME DE PROCEDIMENTOS","VALOR","PAGO","PENDENCIA","CLIENTE"]
+Linha 1: [null,44855,"-","busso",25,25,0,"adailma"]
+Linha 2: [null,44863,"-","busso ",15,15,0,"damiana"]
+
+============================
+=== Aba: CALENDARIO
+============================
+Total de linhas com dados: 4076
+Linha 0: [null,null,null,null,null,2030]
+Linha 1: [null,null,null,null,null,"4562"]
+Linha 2: [null,"CONC","VALOR","conc","M├èS",2022,2023,2024,2025,2026,2027,2028,2029,2030,2031,2032]
+
+============================
+=== Aba: GRAFICOS-FECHAMENTO
+============================
+Total de linhas com dados: 887
+Linha 1: [null,null,"TOTAL",null,12253]
+Linha 2: [null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,"R├│tulos de Linha","DATA","CONSIDERADO","Contagem de ATENDENTE"]
+
+============================
+=== Aba: DESPESAS - RECEITA
+============================
+Total de linhas com dados: 21
+Linha 0: ["1 ┬║ PASSO",null,null,"2 ┬║ PASSO",null,null,"3 ┬║ PASSO"]
+Linha 2: ["DEFINIR PROLABORE TEORIA",null,null,"DEFINIR PROLABORE REALIDADE","JUNHO ",null,"SAUDE DA EMPRESA",null,null,null,null,null,"GEOVANA",560]
+
+============================
+=== Aba: DADOS
+============================
+Total de linhas com dados: 10003
+Linha 0: [null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,36526]
+Linha 1: [null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,"HOME CAR"]

@@ -1,12 +1,14 @@
 -- ============================================================
 --  LIMPEZA INICIAL - PREPARAÇÃO PARA O SAAS
 -- ============================================================
+drop view if exists gastos_pessoais_resumo cascade;
 drop view if exists ranking_procedimentos cascade;
 drop view if exists rendimento_por_profissional cascade;
 drop view if exists saude_financeira_atual cascade;
 drop view if exists fechamento_mensal cascade;
 drop view if exists agenda_do_dia cascade;
 
+drop table if exists gastos_pessoais cascade;
 drop table if exists despesas cascade;
 drop table if exists procedimentos_paralelos cascade;
 drop table if exists homecare cascade;
@@ -62,7 +64,7 @@ create table configuracoes (
   custo_fixo_por_atendimento numeric(10,2) not null default 29.00,
   taxa_maquininha_pct        numeric(5,2)  not null default 5.00,
   prolabore_mensal           numeric(10,2) default 0,
-  gastos_pessoais            jsonb not null default '[]'   -- ← ADICIONADO
+  gastos_pessoais            jsonb not null default '[]'
 );
 
 -- =======================
@@ -168,6 +170,22 @@ create table despesas (
 
 create index idx_despesas_data on despesas(data);
 
+-- ════════════════════════════════════════════════════════════════════════════
+-- NOVA TABELA: Gastos Pessoais (para Calculadora de Pró-labore)
+-- ════════════════════════════════════════════════════════════════════════════
+
+create table gastos_pessoais (
+  id uuid primary key default uuid_generate_v4(),
+  salao_id uuid not null references saloes(id) on delete cascade,
+  descricao text not null,
+  valor numeric(10, 2) not null check (valor >= 0),
+  criado_em timestamptz default now(),
+  atualizado_em timestamptz default now()
+);
+
+create index idx_gastos_pessoais_salao_id on gastos_pessoais(salao_id);
+create index idx_gastos_pessoais_criado_em on gastos_pessoais(criado_em desc);
+
 -- =======================
 --  3. FUNÇÕES MATEMÁTICAS E TRIGGERS
 -- =======================
@@ -268,6 +286,21 @@ create trigger on_auth_user_created
   after insert on auth.users
   for each row execute procedure public.handle_new_user_salao();
 
+-- Função: Atualizar timestamp automático para gastos_pessoais
+create or replace function public.atualizar_timestamp_gastos()
+returns trigger as $$
+begin
+  new.atualizado_em = now();
+  return new;
+end;
+$$ language plpgsql;
+
+-- Trigger: Atualizar timestamp ao modificar gastos_pessoais
+create trigger trigger_atualizar_timestamp_gastos_pessoais
+  before update on gastos_pessoais
+  for each row
+  execute function public.atualizar_timestamp_gastos();
+
 -- =======================
 --  4. VIEWS DE RESULTADO (SEGURAS COM SECURITY_INVOKER)
 -- =======================
@@ -357,7 +390,6 @@ left join desp  d on d.salao_id = b.salao_id and d.mes = b.mes
 left join sal   s on s.salao_id = b.salao_id
 order by b.mes desc;
 
--- ← ADICIONADO: view ranking_procedimentos
 create or replace view ranking_procedimentos with (security_invoker = true) as
 select
   a.salao_id,
@@ -374,7 +406,6 @@ from atendimentos a
 join procedimentos pr on pr.id = a.procedimento_id
 group by a.salao_id, date_trunc('month', a.data)::date, pr.nome;
 
--- ← ADICIONADO: view rendimento_por_profissional
 create or replace view rendimento_por_profissional with (security_invoker = true) as
 select
   a.salao_id,
@@ -389,6 +420,18 @@ from atendimentos a
 join profissionais p on p.id = a.profissional_id
 group by a.salao_id, date_trunc('month', a.data)::date, p.nome, p.salario_fixo;
 
+-- VIEW: Resumo de gastos pessoais por mês (para analytics futura)
+create or replace view gastos_pessoais_resumo with (security_invoker = true) as
+select
+  g.salao_id,
+  date_trunc('month', g.criado_em)::date as mes,
+  count(*) as quantidade_gastos,
+  sum(g.valor) as total_gastos,
+  round(avg(g.valor), 2) as gasto_medio
+from gastos_pessoais g
+group by g.salao_id, date_trunc('month', g.criado_em)::date
+order by g.salao_id, mes desc;
+
 -- =======================
 --  5. SEGURANÇA MÁXIMA (RLS)
 -- =======================
@@ -401,6 +444,7 @@ alter table atendimentos            enable row level security;
 alter table homecare                enable row level security;
 alter table procedimentos_paralelos enable row level security;
 alter table despesas                enable row level security;
+alter table gastos_pessoais         enable row level security;
 
 create policy "Saloes isolation"    on saloes for all to authenticated using (id in (select salao_id from perfis_acesso where auth_user_id = auth.uid()));
 create policy "Read own profile"    on perfis_acesso for select to authenticated using (auth_user_id = auth.uid());
@@ -411,3 +455,24 @@ create policy "Isolar atendim"      on atendimentos for all to authenticated usi
 create policy "Isolar homecare"     on homecare for all to authenticated using (salao_id in (select salao_id from perfis_acesso where auth_user_id = auth.uid()));
 create policy "Isolar parale"       on procedimentos_paralelos for all to authenticated using (salao_id in (select salao_id from perfis_acesso where auth_user_id = auth.uid()));
 create policy "Isolar despes"       on despesas for all to authenticated using (salao_id in (select salao_id from perfis_acesso where auth_user_id = auth.uid()));
+create policy "Isolar gastos pessoais" on gastos_pessoais for all to authenticated using (salao_id in (select salao_id from perfis_acesso where auth_user_id = auth.uid()));
+
+-- ════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+-- ✅ SCHEMA ATUALIZADO E PRONTO PARA PRODUÇÃO
+-- ════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+-- 
+-- PRINCIPAIS MUDANÇAS:
+-- ✓ Tabela gastos_pessoais adicionada (para Calculadora de Pró-labore)
+-- ✓ Índices criados para performance (salao_id, criado_em)
+-- ✓ Função atualizar_timestamp_gastos() implementada
+-- ✓ Trigger automático para atualizar 'atualizado_em'
+-- ✓ View gastos_pessoais_resumo para analytics
+-- ✓ RLS policy: Cada proprietário vê apenas seus gastos (by salao_id)
+-- ✓ Compatível com multi-tenancy existente
+--
+-- PRÓXIMOS PASSOS:
+-- 1. Copie este arquivo inteiro
+-- 2. Cole no Editor SQL do Supabase (https://app.supabase.com/project/seu-projeto/sql/editor)
+-- 3. Execute como um único script
+-- 4. Atualize seu React para usar a nova tabela gastos_pessoais
+-- ════════════════════════════════════════════════════════════════════════════════════════════════════════════════════

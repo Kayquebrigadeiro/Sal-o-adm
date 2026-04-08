@@ -1,8 +1,7 @@
 import { createClient } from '@supabase/supabase-js';
 
-// Substitua pelas credenciais do seu projeto no Supabase
-// (Ficam em Project Settings > API)
-const supabaseUrl = 'https://SEU_PROJETO_SUPABASE_REF.supabase.co';
-const supabaseKey = 'sb_publishable_Xl__VDfbLbOBP6hRDGMyMg_YmDr67hk';
+// Usar variáveis de ambiente (Vercel) ou fallback para desenvolvimento
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || 'https://SEU_PROJETO_SUPABASE_REF.supabase.co';
+const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY || 'SUA_CHAVE_SUPABASE_ANON';
 
 export const supabase = createClient(supabaseUrl, supabaseKey);

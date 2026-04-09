@@ -34,13 +34,14 @@ export default function App() {
 
         setSessao(session);
 
-        // 2. Pegar perfil
+        // 2. Pegar perfil (usar limit(1) ao invés de single() para evitar erro PGRST116)
         console.log('[App] Buscando perfil para:', session.user.id);
         const { data: perfData, error: perfError } = await supabase
           .from('perfis_acesso')
           .select('cargo, salao_id')
           .eq('auth_user_id', session.user.id)
-          .single();
+          .order('criado_em', { ascending: false })
+          .limit(1);
 
         console.log('[App] Resultado:', { perfData, perfError });
 
@@ -51,15 +52,15 @@ export default function App() {
           return;
         }
 
-        if (!perfData) {
+        if (!perfData || perfData.length === 0) {
           console.error('[App] ❌ Perfil não encontrado');
           setErro('Perfil não encontrado no banco de dados');
           setCarregando(false);
           return;
         }
 
-        console.log('[App] ✅ Perfil carregado:', perfData);
-        setPerfil(perfData);
+        console.log('[App] ✅ Perfil carregado:', perfData[0]);
+        setPerfil(perfData[0]);
         setCarregando(false);
 
       } catch (err) {

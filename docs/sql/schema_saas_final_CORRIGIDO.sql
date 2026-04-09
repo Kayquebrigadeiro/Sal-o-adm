@@ -305,21 +305,26 @@ returns text as $$
 declare
   v_username text;
 begin
-  v_username := lower(p_nome)
-    -- Remove acentos
-    COLLATE "C"
-    |> replace(' ', '_')
-    |> replace('ã', 'a')
-    |> replace('õ', 'o')
-    |> replace('é', 'e')
-    |> replace('á', 'a')
-    |> replace('í', 'i')
-    |> replace('ó', 'o')
-    |> replace('ç', 'c')
-    |> regexp_replace('[^a-z0-9_]', '', 'g')
-    |> substring(1, 20);
+  -- Remove acentos e caracteres especiais
+  v_username := lower(p_nome);
+  v_username := replace(v_username, ' ', '_');
+  v_username := replace(v_username, 'ã', 'a');
+  v_username := replace(v_username, 'á', 'a');
+  v_username := replace(v_username, 'â', 'a');
+  v_username := replace(v_username, 'à', 'a');
+  v_username := replace(v_username, 'é', 'e');
+  v_username := replace(v_username, 'ê', 'e');
+  v_username := replace(v_username, 'í', 'i');
+  v_username := replace(v_username, 'ó', 'o');
+  v_username := replace(v_username, 'ô', 'o');
+  v_username := replace(v_username, 'õ', 'o');
+  v_username := replace(v_username, 'ú', 'u');
+  v_username := replace(v_username, 'ç', 'c');
+  v_username := regexp_replace(v_username, '[^a-z0-9_]', '', 'g');
+  v_username := regexp_replace(v_username, '_+', '_', 'g');
+  v_username := substring(v_username, 1, 20);
   
-  return coalesce(v_username, 'user_' || to_char(now(), 'DDMMYYHHmmss'));
+  return coalesce(nullif(v_username, ''), 'user_' || to_char(now(), 'DDMMYYHH24MISS'));
 end;
 $$ language plpgsql immutable;
 

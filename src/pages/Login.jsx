@@ -12,16 +12,50 @@ export default function Login() {
     setErro('');
     setLoading(true);
 
-    // Se não tiver @, é username - converte para email interno
-    const emailLogin = login.includes('@') ? login : `${login}@sistema.local`;
+    try {
+      let emailParaLogin = login;
 
-    const { error } = await supabase.auth.signInWithPassword({
-      email: emailLogin,
-      password: senha,
-    });
+      // Se não tem @, é username - buscar email em logins_gerados
+      if (!login.includes('@')) {
+        const { data: loginData, error: loginError } = await supabase
+          .from('logins_gerados')
+          .select('auth_user_id')
+          .eq('username', login.toLowerCase())
+          .eq('ativo', true)
+          .single();
 
-    if (error) {
-      setErro('Usuário ou senha incorretos.');
+        if (loginError || !loginData) {
+          setErro('Usuário não encontrado.');
+          setLoading(false);
+          return;
+        }
+
+        // Buscar email do usuário no auth.users via RPC
+        const { data: userData, error: userError } = await supabase.rpc('get_user_email_by_id', {
+          user_id: loginData.auth_user_id
+        });
+
+        if (userError || !userData) {
+          setErro('Erro ao buscar dados do usuário.');
+          setLoading(false);
+          return;
+        }
+
+        emailParaLogin = userData;
+      }
+
+      // Fazer login com email
+      const { error } = await supabase.auth.signInWithPassword({
+        email: emailParaLogin,
+        password: senha,
+      });
+
+      if (error) {
+        setErro('Usuário ou senha incorretos.');
+      }
+    } catch (err) {
+      console.error('Erro no login:', err);
+      setErro('Erro ao fazer login. Tente novamente.');
     }
 
     setLoading(false);

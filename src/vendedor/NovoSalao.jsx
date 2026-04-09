@@ -101,7 +101,7 @@ export default function NovoSalao({ userId }) {
   // Gerar credenciais automaticamente quando carrega ou quando o nome da proprietária muda
   useEffect(() => {
     const proprietaria = profissionais.find(p => p.cargo === 'PROPRIETARIO');
-    if (proprietaria?.nome && !loginProprietaria.username) {
+    if (etapa === 5 && proprietaria?.nome && !loginProprietaria.username) {
       const username = gerarUsernameDoNome(proprietaria.nome);
       const senha = gerarSenhaAleatoria();
       
@@ -111,7 +111,7 @@ export default function NovoSalao({ userId }) {
         nome: proprietaria.nome
       });
     }
-  }, [profissionais[profissionais.findIndex(p => p.cargo === 'PROPRIETARIO')]?.nome]);
+  }, [etapa, profissionais]);
 
   const salvarTudo = async () => {
     setSalvando(true);
@@ -211,18 +211,9 @@ export default function NovoSalao({ userId }) {
 
       if (authError) throw authError;
 
-      // 7. Criar perfil de acesso da proprietária (será criado pelo trigger automaticamente)
-      // Mas vamos confirmá-lo se necessário
-      if (authData?.user) {
-        const { error: perfilError } = await supabase
-          .from('perfis_acesso')
-          .insert([{
-            auth_user_id: authData.user.id,
-            salao_id: salao.id,
-            cargo: 'PROPRIETARIO'
-          }])
-          .then(res => res); // ignora erro se já foi criado pelo trigger
-      }
+      // 7. Perfil de acesso será criado automaticamente pelo trigger
+      // Aguardar 1 segundo para garantir que os triggers executaram
+      await new Promise(resolve => setTimeout(resolve, 1000));
 
       alert(`✅ Salão "${dadosSalao.nome}" criado com sucesso!\n\n📋 CREDENCIAIS DA PROPRIETÁRIA:\n\nUsuário: ${loginProprietaria.username}\nSenha: ${loginProprietaria.senha}\n\n⚠️ IMPORTANTE: Anote essas informações!`);
       navigate('/admin/saloes');

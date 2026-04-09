@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { supabase } from '../supabaseClient';
 import { useNavigate } from 'react-router-dom';
 
@@ -18,6 +18,27 @@ function parseMoeda(texto) {
   // Substitui vírgula por ponto
   const numero = limpo.replace(',', '.');
   return parseFloat(numero) || 0;
+}
+
+// Função para gerar username a partir de nome
+function gerarUsernameDoNome(nome) {
+  return nome
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '') // Remove acentos
+    .replace(/[^a-z0-9]/g, '_') // Substitui caracteres especiais por _
+    .replace(/_+/g, '_') // Remove underscores duplicados
+    .substring(0, 20); // Limita tamanho
+}
+
+// Função para gerar senha segura
+function gerarSenhaAleatoria() {
+  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%';
+  let result = '';
+  for (let i = 0; i < 12; i++) {
+    result += chars.charAt(Math.floor(Math.random() * chars.length));
+  }
+  return result;
 }
 
 // Lista de procedimentos padrão baseada na planilha
@@ -74,8 +95,23 @@ export default function NovoSalao({ userId }) {
   ]);
   
   const [loginProprietaria, setLoginProprietaria] = useState({
-    email: '', senha: '', nome: ''
+    username: '', senha: '', nome: ''
   });
+
+  // Gerar credenciais automaticamente quando carrega ou quando o nome da proprietária muda
+  useEffect(() => {
+    const proprietaria = profissionais.find(p => p.cargo === 'PROPRIETARIO');
+    if (proprietaria?.nome && !loginProprietaria.username) {
+      const username = gerarUsernameDoNome(proprietaria.nome);
+      const senha = gerarSenhaAleatoria();
+      
+      setLoginProprietaria({
+        username: username || 'proprietaria',
+        senha: senha,
+        nome: proprietaria.nome
+      });
+    }
+  }, [profissionais[profissionais.findIndex(p => p.cargo === 'PROPRIETARIO')]?.nome]);
 
   const salvarTudo = async () => {
     setSalvando(true);
@@ -150,16 +186,24 @@ export default function NovoSalao({ userId }) {
         await supabase.from('despesas').insert(despesasParaSalvar);
       }
 
-      // 6. Criar usuário da proprietária
+      // 6. Criar usuário da proprietária com username e senha gerados
       const proprietaria = profissionais.find(p => p.cargo === 'PROPRIETARIO');
+      
+      // Usar um email único baseado no username (será usado internamente)
+      const timestamp = Date.now();
+      const emailUnico = `salao_${timestamp}@proprietaria.local`;
+      
       const { data: authData, error: authError } = await supabase.auth.signUp({
-        email: loginProprietaria.email,
+        email: emailUnico,
         password: loginProprietaria.senha,
         options: {
           data: {
             nome: loginProprietaria.nome || proprietaria?.nome,
             salao_id: salao.id,
-            cargo: 'PROPRIETARIO'
+            cargo: 'PROPRIETARIO',
+            username: loginProprietaria.username,
+            senha: loginProprietaria.senha,
+            vendedor_id: userId
           },
           emailRedirectTo: window.location.origin
         }
@@ -167,18 +211,20 @@ export default function NovoSalao({ userId }) {
 
       if (authError) throw authError;
 
-      // 7. Criar perfil de acesso da proprietária
+      // 7. Criar perfil de acesso da proprietária (será criado pelo trigger automaticamente)
+      // Mas vamos confirmá-lo se necessário
       if (authData?.user) {
-        await supabase.from('perfis_acesso').insert([{
-          user_id: authData.user.id,
-          email: loginProprietaria.email,
-          tipo_acesso: 'proprietaria',
-          salao_id: salao.id,
-          nome: loginProprietaria.nome || proprietaria?.nome
-        }]);
+        const { error: perfilError } = await supabase
+          .from('perfis_acesso')
+          .insert([{
+            auth_user_id: authData.user.id,
+            salao_id: salao.id,
+            cargo: 'PROPRIETARIO'
+          }])
+          .then(res => res); // ignora erro se já foi criado pelo trigger
       }
 
-      alert(`✅ Salão "${dadosSalao.nome}" criado com sucesso!\n\nCredenciais da proprietária:\nEmail: ${loginProprietaria.email}\nSenha: ${loginProprietaria.senha}\n\nGuarde essas informações!`);
+      alert(`✅ Salão "${dadosSalao.nome}" criado com sucesso!\n\n📋 CREDENCIAIS DA PROPRIETÁRIA:\n\nUsuário: ${loginProprietaria.username}\nSenha: ${loginProprietaria.senha}\n\n⚠️ IMPORTANTE: Anote essas informações!`);
       navigate('/admin/saloes');
 
     } catch (err) {
@@ -528,18 +574,19 @@ function Etapa4Despesas({ lista, onChange, onNext, onBack }) {
 
 function Etapa5Acesso({ dados, onChange, profissionais, onBack, onSalvar, salvando }) {
   const proprietaria = profissionais.find(p => p.cargo === 'PROPRIETARIO');
-  const valido = dados.email && dados.senha && dados.senha.length >= 6;
+  
+  const valido = dados.username && dados.senha && dados.senha.length >= 6;
 
   return (
     <div className="bg-white rounded-xl border border-slate-200 p-6 space-y-4">
       <h2 className="font-medium text-slate-700">Criar acesso da proprietária</h2>
       <p className="text-xs text-slate-500">
-        Defina com a dona do salão o e-mail e senha que ela usará para entrar no sistema.
+        Credenciais geradas automaticamente. Você pode editar se preferir.
       </p>
 
-      <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 text-xs text-amber-700">
-        ⚠ O e-mail e senha são definidos <strong>agora</strong> pelo vendedor junto com a proprietária.
-        O acesso é imediato após a criação.
+      <div className="bg-green-50 border border-green-200 rounded-lg p-3 text-xs text-green-700">
+        ✅ <strong>Username e senha gerados automaticamente</strong> baseados no nome da proprietária.
+        Anote essas informações para entregar!
       </div>
 
       <div>
@@ -550,21 +597,35 @@ function Etapa5Acesso({ dados, onChange, profissionais, onBack, onSalvar, salvan
           placeholder="Nome completo" />
       </div>
       <div>
-        <label className="text-xs text-slate-600 block mb-1">E-mail de acesso *</label>
-        <input type="email" required value={dados.email}
-          onChange={e => onChange({...dados, email: e.target.value})}
-          className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm"
-          placeholder="email@exemplo.com" />
+        <label className="text-xs text-slate-600 block mb-1">Nome de usuário (login) *</label>
+        <input type="text" required value={dados.username}
+          onChange={e => onChange({...dados, username: e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, '_')})}
+          className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm font-mono"
+          placeholder="usuario_login" />
+        <p className="text-xs text-slate-400 mt-1">
+          Este será o usuário para login (sem espaços ou caracteres especiais)
+        </p>
       </div>
       <div>
         <label className="text-xs text-slate-600 block mb-1">Senha *</label>
         <input type="text" required value={dados.senha}
           onChange={e => onChange({...dados, senha: e.target.value})}
-          className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm"
+          className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm font-mono"
           placeholder="Mínimo 6 caracteres" />
         <p className="text-xs text-slate-400 mt-1">
-          Mostrado em texto puro para você anotar e entregar. A proprietária pode trocar depois.
+          Senha gerada automaticamente. Pode ser alterada pela proprietária depois.
         </p>
+      </div>
+
+      <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 mt-4">
+        <p className="text-xs text-blue-700">
+          <strong>📋 Credenciais geradas:</strong>
+        </p>
+        <div className="mt-2 space-y-1 text-xs font-mono text-blue-900">
+          <p>Usuário: <strong>{dados.username}</strong></p>
+          <p>Senha: <strong>{dados.senha}</strong></p>
+        </div>
+        <p className="text-xs text-blue-600 mt-2">⚠️ Anote essas informações antes de salvar!</p>
       </div>
 
       <div className="flex justify-between pt-4">
@@ -573,7 +634,7 @@ function Etapa5Acesso({ dados, onChange, profissionais, onBack, onSalvar, salvan
           ← Voltar
         </button>
         <button onClick={onSalvar} disabled={!valido || salvando}
-          className="bg-green-700 text-white text-sm px-6 py-2.5 rounded-lg disabled:opacity-40">
+          className="bg-green-700 text-white text-sm px-6 py-2.5 rounded-lg disabled:opacity-40 hover:bg-green-800">
           {salvando ? 'Criando salão...' : '✓ Criar salão e acesso'}
         </button>
       </div>

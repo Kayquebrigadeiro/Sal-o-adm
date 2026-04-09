@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { supabase } from '../supabaseClient';
 
 export default function Login() {
-  const [email, setEmail]       = useState('');
+  const [login, setLogin]       = useState(''); // Aceita username ou email
   const [senha, setSenha]       = useState('');
   const [erro, setErro]         = useState('');
   const [loading, setLoading]   = useState(false);
@@ -12,13 +12,16 @@ export default function Login() {
     setErro('');
     setLoading(true);
 
+    // Se não tiver @, é username - converte para email interno
+    const emailLogin = login.includes('@') ? login : `${login}@sistema.local`;
+
     const { error } = await supabase.auth.signInWithPassword({
-      email,
+      email: emailLogin,
       password: senha,
     });
 
     if (error) {
-      setErro('E-mail ou senha incorretos.');
+      setErro('Usuário ou senha incorretos.');
     }
 
     setLoading(false);
@@ -40,16 +43,16 @@ export default function Login() {
         <form onSubmit={handleLogin} className="space-y-4">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              E-mail
+              Usuário
             </label>
             <input
-              type="email"
+              type="text"
               required
               autoFocus
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              value={login}
+              onChange={(e) => setLogin(e.target.value)}
               className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-gray-800"
-              placeholder="seu@email.com"
+              placeholder="seu_usuario ou email@exemplo.com"
             />
           </div>
 

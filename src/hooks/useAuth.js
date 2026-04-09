@@ -28,23 +28,33 @@ export function useAuth() {
   }, []);
 
   async function carregarPerfil(userId) {
+    // Fazemos um "Join" para pegar o status configurado da tabela de salões
     const { data, error } = await supabase
       .from('perfis_acesso')
-      .select('salao_id, cargo')
+      .select(`
+        salao_id, 
+        cargo,
+        saloes ( configurado )
+      `)
       .eq('auth_user_id', userId)
       .single();
 
-    if (data) setPerfil(data);
-    else console.error('Erro ao buscar perfil:', error);
+    if (data) {
+      setPerfil({
+        salao_id: data.salao_id,
+        cargo: data.cargo,
+        configurado: data.saloes?.configurado // Extrai o booleano aqui
+      });
+    } else {
+      console.error('Erro ao buscar perfil:', error);
+    }
     
     setLoading(false);
   }
 
   return {
     sessao,
-    user: sessao?.user,
-    role: perfil?.cargo,
-    salaoId: perfil?.salao_id,
-    loading,
+    perfil,
+    loading
   };
 }

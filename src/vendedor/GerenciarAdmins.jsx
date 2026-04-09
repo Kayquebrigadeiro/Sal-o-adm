@@ -16,12 +16,17 @@ export default function GerenciarAdmins() {
 
   const carregar = async () => {
     setLoading(true);
-    const { data } = await supabase
-      .from('perfis_acesso')
-      .select('auth_user_id, criado_em')
-      .eq('cargo', 'VENDEDOR')
-      .order('criado_em');
-    setAdmins(data || []);
+    
+    // Usar função RPC que tem acesso ao auth.users
+    const { data, error } = await supabase.rpc('get_admin_emails');
+    
+    if (error) {
+      console.error('Erro ao carregar admins:', error);
+      setAdmins([]);
+    } else {
+      setAdmins(data || []);
+    }
+    
     setLoading(false);
   };
 

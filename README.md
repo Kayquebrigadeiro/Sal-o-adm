@@ -1,35 +1,28 @@
-# 💇‍♀️ SaaS Salão de Beleza
+# 💇♀️ SaaS Salão de Beleza
 
 Sistema completo de gerenciamento para salões de beleza com painel administrativo multi-tenant.
 
-## 🚀 Deploy Rápido
+## 📋 Índice
 
-### Vercel (Recomendado)
-
-[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/Kayquebrigadeiro/SASS-Sal-o)
-
-1. Clique no botão acima
-2. Faça login com GitHub
-3. O projeto já está configurado com `.env` incluído
-4. Clique em **Deploy**
-5. ✅ Pronto em 2 minutos!
-
-### Netlify (Alternativa)
-
-[![Deploy to Netlify](https://www.netlify.com/img/deploy/button.svg)](https://app.netlify.com/start/deploy?repository=https://github.com/Kayquebrigadeiro/SASS-Sal-o)
+- [Sobre o Projeto](#sobre-o-projeto)
+- [Tecnologias](#tecnologias)
+- [Instalação](#instalação)
+- [Estrutura do Projeto](#estrutura-do-projeto)
+- [Funcionalidades](#funcionalidades)
+- [Documentação](#documentação)
+- [Deploy](#deploy)
 
 ---
 
-## 📋 Sobre o Projeto
+## 🎯 Sobre o Projeto
 
-Sistema SaaS completo para gerenciamento de salões de beleza com:
+Sistema SaaS multi-tenant para gerenciamento completo de salões de beleza:
 
-- 📅 **Agenda inteligente** - Agendamento de clientes com horários de 30 em 30 minutos
-- 💰 **Dashboard financeiro** - Controle completo de receitas, despesas e lucro
-- 👥 **Gestão de profissionais** - Cadastro de funcionários e comissões
-- 💅 **Procedimentos** - Catálogo completo de serviços (cabelo, unhas, sobrancelhas, etc)
-- 🏢 **Multi-tenant** - Um vendedor pode gerenciar múltiplos salões
-- 🔐 **Autenticação segura** - Sistema de login com diferentes níveis de acesso
+- **Painel Administrativo** - Vendedores gerenciam múltiplos salões
+- **Painel Proprietária** - Gestão completa do salão
+- **Sistema de Login Dual** - Email para admins, username para proprietárias
+- **Dashboard Financeiro** - Controle de receitas, despesas e lucro
+- **Agenda Inteligente** - Agendamentos com horários de 30 em 30 minutos
 
 ---
 
@@ -38,72 +31,28 @@ Sistema SaaS completo para gerenciamento de salões de beleza com:
 - **Frontend:** React 18 + Vite
 - **Estilização:** Tailwind CSS
 - **Roteamento:** React Router v7
-- **Backend:** Supabase (PostgreSQL + Auth + APIs REST)
+- **Backend:** Supabase (PostgreSQL + Auth)
 - **Gráficos:** Recharts
 - **Ícones:** Lucide React
 
 ---
 
-## 🏗️ Arquitetura
-
-```
-┌─────────────────────────────────────────┐
-│  VENDEDOR (Admin)                       │
-│  - Cria e gerencia múltiplos salões     │
-│  - Define configurações iniciais        │
-│  - Cria login das proprietárias         │
-└─────────────────────────────────────────┘
-                    │
-                    ├─── Salão 1
-                    │    └─── PROPRIETÁRIA
-                    │         ├─── Agenda
-                    │         ├─── Dashboard
-                    │         ├─── Despesas
-                    │         └─── Configurações
-                    │
-                    ├─── Salão 2
-                    └─── Salão 3...
-```
-
----
-
-## 🔑 Níveis de Acesso
-
-### 1. VENDEDOR (Admin)
-- Acesso ao painel administrativo
-- Criar novos salões
-- Gerenciar múltiplos salões
-- Configurar profissionais e procedimentos
-
-### 2. PROPRIETÁRIA
-- Acesso completo ao seu salão
-- Agenda de atendimentos
-- Dashboard financeiro
-- Gestão de despesas
-- Configurações do salão
-
-### 3. FUNCIONÁRIA
-- Acesso apenas à agenda
-- Visualizar seus atendimentos
-- Registrar procedimentos realizados
-
----
-
-## 📦 Instalação Local
+## 📦 Instalação
 
 ```bash
 # Clone o repositório
-git clone https://github.com/Kayquebrigadeiro/SASS-Sal-o.git
+git clone https://github.com/Kayquebrigadeiro/Salao-secreto.git
 
 # Entre na pasta
-cd SASS-Sal-o
+cd Salao-secreto
 
 # Instale as dependências
 npm install
 
-# O arquivo .env já está incluído (repositório privado)
+# Configure o banco de dados
+# Execute o arquivo: docs/sql/schema_saas_final_CORRIGIDO.sql no Supabase
 
-# Inicie o servidor de desenvolvimento
+# Inicie o servidor
 npm run dev
 ```
 
@@ -111,102 +60,205 @@ Acesse: http://localhost:5173
 
 ---
 
-## 🗄️ Banco de Dados
-
-O projeto usa **Supabase** como backend. O banco já está configurado e rodando em:
+## 📁 Estrutura do Projeto
 
 ```
-URL: https://fnvhwfdrmozihekmhbke.supabase.co
-```
-
-### Estrutura de Tabelas:
-
-- `saloes` - Dados dos salões
-- `perfis_acesso` - Usuários e permissões
-- `profissionais` - Funcionários dos salões
-- `procedimentos` - Serviços oferecidos
-- `atendimentos` - Agendamentos e histórico
-- `despesas` - Controle financeiro
-- `configuracoes` - Configurações por salão
-
----
-
-## 🔐 Credenciais de Teste
-
-### Vendedor (Admin)
-```
-Email: vendedor@salao.com
-Senha: vendedor123
-```
-
-### Proprietária (Exemplo)
-```
-Email: proprietaria@salao.com
-Senha: (definida pelo vendedor ao criar o salão)
+Salao-secreto/
+├── src/
+│   ├── components/          # Componentes reutilizáveis
+│   ├── hooks/              # Custom hooks
+│   ├── pages/              # Páginas principais
+│   ├── vendedor/           # Painel administrativo
+│   ├── App.jsx             # Componente principal
+│   └── supabaseClient.js   # Configuração Supabase
+├── docs/
+│   ├── guias/              # Guias de uso e deploy
+│   ├── sql/                # Scripts SQL e migrations
+│   ├── prompts/            # Prompts de desenvolvimento
+│   └── resumos/            # Resumos de implementações
+├── supabase/
+│   └── functions/          # Edge Functions
+├── backup/                 # Arquivos de backup
+└── README.md
 ```
 
 ---
 
-## 📱 Funcionalidades Principais
+## ✨ Funcionalidades
 
-### Para o Vendedor:
-- ✅ Dashboard com lista de todos os salões
-- ✅ Criar novo salão (wizard de 5 etapas)
+### 🔐 Sistema de Login Dual
+
+**Admin/Vendedor:**
+- Login com **email + senha**
+- Acesso ao painel administrativo
+- Gerenciamento de múltiplos salões
+
+**Proprietária:**
+- Login com **username + senha**
+- Acesso ao dashboard do salão
+- Gestão completa de atendimentos
+
+### 👨‍💼 Painel do Vendedor (Admin)
+
+- ✅ Criar e gerenciar múltiplos salões
 - ✅ Configurar profissionais e procedimentos
 - ✅ Definir preços e comissões
-- ✅ Criar login da proprietária
+- ✅ Gerar credenciais de acesso (username/senha)
+- ✅ Gerenciar outros admins do sistema
 
-### Para a Proprietária:
-- ✅ Agenda visual com horários de 08:00 às 19:00
-- ✅ Dashboard com gráficos de receita e despesas
+### 👩‍💼 Painel da Proprietária
+
+- ✅ Agenda visual (08:00 às 19:00)
+- ✅ Dashboard com gráficos financeiros
 - ✅ Controle de despesas mensais
 - ✅ Gestão de profissionais
-- ✅ Configuração de procedimentos e preços
-- ✅ Relatórios financeiros
+- ✅ Configuração de procedimentos
+- ✅ Relatórios de receita e lucro
 
-### Para a Funcionária:
-- ✅ Visualizar agenda do dia
-- ✅ Registrar atendimentos realizados
-- ✅ Ver histórico de comissões
+### 📊 Dashboard Financeiro
+
+- Receita total e recebida
+- Pendências de pagamento
+- Lucro líquido vs possível
+- Ranking de procedimentos
+- Rendimento por profissional
+- Controle de despesas
+
+---
+
+## 📚 Documentação
+
+### Guias Principais
+
+- **[Guia de Deploy](docs/guias/GUIA_DEPLOY.md)** - Como fazer deploy do sistema
+- **[Guia de Criação de Vendedor](docs/guias/GUIA_CRIAR_VENDEDOR_ADMIN.md)** - Como criar o primeiro admin
+- **[Guia de Testes](docs/guias/GUIA_TESTES_PRATICO.md)** - Como testar o sistema
+
+### Arquitetura
+
+- **[Arquitetura do Sistema](docs/ARQUITETURA_VENDEDOR_ADMIN.md)** - Visão geral da arquitetura
+- **[Fluxo de Criação de Salão](docs/FLUXO_CRIACAO_SALAO_COMPLETO.md)** - Passo a passo detalhado
+
+### SQL
+
+- **[Schema Principal](docs/sql/schema_saas_final_CORRIGIDO.sql)** - Schema completo do banco
+- **[Migrations](docs/sql/)** - Histórico de alterações
+
+### Resumos de Implementação
+
+- **[Resumo de Alterações](docs/resumos/RESUMO_ALTERACOES.md)**
+- **[Implementação de Admins](docs/resumos/RESUMO_IMPLEMENTACAO_ADMINS.md)**
+- **[Sistema de Username](docs/resumos/RESUMO_USERNAME.md)**
 
 ---
 
 ## 🚀 Deploy
 
-### Variáveis de Ambiente (já configuradas no .env)
+### Supabase
+
+1. Crie um projeto no [Supabase](https://supabase.com)
+2. Execute o SQL: `docs/sql/schema_saas_final_CORRIGIDO.sql`
+3. Configure as variáveis de ambiente:
 
 ```env
-VITE_SUPABASE_URL=https://fnvhwfdrmozihekmhbke.supabase.co
-VITE_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+VITE_SUPABASE_URL=sua_url_aqui
+VITE_SUPABASE_ANON_KEY=sua_chave_aqui
 ```
 
-### Build de Produção
+### Vercel (Recomendado)
 
 ```bash
 npm run build
+vercel --prod
 ```
 
-Gera os arquivos otimizados na pasta `dist/`
+Ou use o botão:
+
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/Kayquebrigadeiro/Salao-secreto)
 
 ---
 
-## 📚 Documentação Adicional
+## 🔑 Credenciais de Teste
 
-- [GUIA_DEPLOY.md](./GUIA_DEPLOY.md) - Guia completo de deploy
-- [ARQUITETURA_VENDEDOR_ADMIN.md](./ARQUITETURA_VENDEDOR_ADMIN.md) - Arquitetura do sistema
-- [CHECKLIST_DEPLOY_FINAL.md](./CHECKLIST_DEPLOY_FINAL.md) - Checklist de deploy
-- [PROMPT_ADMIN_COMPLETO.md](./PROMPT_ADMIN_COMPLETO.md) - Documentação técnica
+Após configurar o banco, crie um vendedor manualmente:
+
+```sql
+-- 1. Crie um usuário no Supabase Authentication
+-- 2. Execute:
+INSERT INTO perfis_acesso (auth_user_id, salao_id, cargo)
+VALUES (
+  'UUID_DO_USUARIO',
+  '00000000-0000-0000-0000-000000000000',
+  'VENDEDOR'
+);
+```
+
+---
+
+## 🗄️ Banco de Dados
+
+### Tabelas Principais
+
+- `saloes` - Dados dos salões
+- `perfis_acesso` - Usuários e permissões
+- `logins_gerados` - Credenciais de proprietárias
+- `profissionais` - Funcionários
+- `procedimentos` - Serviços oferecidos
+- `atendimentos` - Agendamentos
+- `despesas` - Controle financeiro
+
+### Views
+
+- `fechamento_mensal` - Resumo financeiro mensal
+- `ranking_procedimentos` - Procedimentos mais rentáveis
+- `rendimento_por_profissional` - Performance da equipe
+
+---
+
+## 🔐 Segurança
+
+- ✅ Row Level Security (RLS) em todas as tabelas
+- ✅ Isolamento multi-tenant
+- ✅ Autenticação via Supabase Auth
+- ✅ Senhas geradas com 12 caracteres seguros
+- ✅ Triggers automáticos para integridade
 
 ---
 
 ## 🤝 Contribuindo
 
-Este é um repositório privado. Para contribuir:
-
 1. Crie uma branch: `git checkout -b feature/nova-funcionalidade`
-2. Commit suas mudanças: `git commit -m 'Adiciona nova funcionalidade'`
-3. Push para a branch: `git push origin feature/nova-funcionalidade`
+2. Commit: `git commit -m 'Adiciona nova funcionalidade'`
+3. Push: `git push origin feature/nova-funcionalidade`
 4. Abra um Pull Request
+
+---
+
+## 📝 Notas Importantes
+
+### Para Desenvolvedores
+
+- O sistema usa **2 tipos de login**: email (admin) e username (proprietária)
+- Triggers automáticos criam perfis e registram logins
+- Edge Functions precisam ser deployadas separadamente
+- RLS protege todos os dados por salão
+
+### Para Vendedores
+
+- Anote as credenciais ao criar um salão
+- Username e senha são gerados automaticamente
+- Entregue credenciais em papel (não por WhatsApp)
+- Cada salão é isolado dos demais
+
+---
+
+## 🆘 Suporte
+
+Para dúvidas:
+
+1. Consulte a [documentação](docs/)
+2. Verifique os [guias](docs/guias/)
+3. Entre em contato com o desenvolvedor
 
 ---
 
@@ -216,27 +268,17 @@ Projeto privado - Todos os direitos reservados
 
 ---
 
-## 🆘 Suporte
-
-Para dúvidas ou problemas:
-
-1. Verifique a documentação em `/docs`
-2. Consulte os arquivos `GUIA_*.md`
-3. Entre em contato com o desenvolvedor
-
----
-
 ## 🎯 Roadmap
 
 - [ ] App mobile (React Native)
 - [ ] Notificações por WhatsApp
 - [ ] Integração com pagamento online
-- [ ] Sistema de fidelidade para clientes
-- [ ] Relatórios avançados em PDF
+- [ ] Sistema de fidelidade
+- [ ] Relatórios em PDF
 
 ---
 
 **Desenvolvido com ❤️ para salões de beleza**
 
-**Versão:** 1.0.0  
+**Versão:** 2.0.0  
 **Última atualização:** Janeiro 2025

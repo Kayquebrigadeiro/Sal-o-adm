@@ -76,7 +76,8 @@ export default function NovoSalao({ userId }) {
 
       // 2. Criar a conta de Autenticação para a Proprietária
       // Usamos um e-mail fictício estruturado para o Supabase Auth funcionar
-      const emailFicticio = `${dados.username}@salaosecreto.com`; 
+      const nomeLimpo = dados.username.replace(/_/g, '');
+      const emailFicticio = `${nomeLimpo}${Date.now()}@example.com`; 
       
       const { error: erroAuth } = await supabase.auth.signUp({
         email: emailFicticio,

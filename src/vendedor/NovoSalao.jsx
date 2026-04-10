@@ -54,20 +54,26 @@ export default function NovoSalao({ userId }) {
     setEtapa(2);
   };
 
-  // --- Salvar no Banco de Dados ---
   const finalizarCadastro = async () => {
     setSalvando(true);
     setErro('');
     
     try {
-      // 1. Criar o Salão (o banco já vai definir configurado = false por padrão)
+      // NOVIDADE: Pegamos o ID do Admin logado diretamente na fonte!
+      // Isso impede qualquer erro de "RLS Policy" por falta de ID.
+      const { data: { user }, error: erroUser } = await supabase.auth.getUser();
+      if (erroUser || !user) throw new Error("Sessão expirada. Atualize a página e tente novamente.");
+
+      const adminId = user.id;
+
+      // 1. Criar o Salão
       const { data: salao, error: erroSalao } = await supabase
         .from('saloes')
         .insert([{
           nome: dados.nomeSalao,
           telefone: dados.telefone,
-          vendedor_id: userId,
-          configurado: false // Forçando o false para garantir o Wizard depois
+          vendedor_id: adminId,
+          configurado: false
         }])
         .select('id')
         .single();
@@ -75,7 +81,6 @@ export default function NovoSalao({ userId }) {
       if (erroSalao) throw erroSalao;
 
       // 2. Criar a conta de Autenticação para a Proprietária
-      // O nome dela limpo + número único + @gmail.com (O Supabase é OBRIGADO a aceitar)
       const nomeLimpo = dados.username.replace(/[^a-zA-Z0-9]/g, '');
       const emailFicticio = `${nomeLimpo}${Date.now()}@gmail.com`; 
       
@@ -85,10 +90,10 @@ export default function NovoSalao({ userId }) {
         options: {
           data: {
             salao_id: salao.id,
-            vendedor_id: userId,
+            vendedor_id: adminId,
             cargo: 'PROPRIETARIO',
             username: dados.username,
-            senha: dados.senha // Passado no metadata para o Trigger gravar na logins_gerados
+            senha: dados.senha
           }
         }
       });

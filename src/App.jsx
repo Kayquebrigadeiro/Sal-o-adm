@@ -16,6 +16,7 @@ export default function App() {
   const [sessao, setSessao] = useState(null);
   const [perfil, setPerfil] = useState(null);
   const [carregando, setCarregando] = useState(true);
+  const [erroCritico, setErroCritico] = useState(null);
 
   useEffect(() => {
     const init = async () => {
@@ -29,59 +30,60 @@ export default function App() {
 
         setSessao(session);
 
+        // Busca o perfil
         const { data, error } = await supabase
           .from('perfis_acesso')
           .select(`salao_id, cargo, saloes(configurado)`)
           .eq('auth_user_id', session.user.id)
-          .order('criado_em', { ascending: false })
-          .limit(1);
+          .single();
 
-        if (data && data.length > 0) {
+        if (error) {
+          console.error('Erro ao buscar perfil no Supabase:', error);
+          setErroCritico(`Erro de Base de Dados: ${error.message}`);
+          setCarregando(false);
+          return;
+        }
+
+        if (data) {
           setPerfil({
-            salao_id: data[0].salao_id,
-            cargo: data[0].cargo,
-            configurado: data[0].saloes?.configurado
+            salao_id: data.salao_id,
+            cargo: data.cargo,
+            configurado: data.saloes?.configurado
           });
-        } else if (error) {
-          console.error('Erro ao buscar perfil:', error);
+        } else {
+          setErroCritico('Perfil não encontrado na tabela perfis_acesso.');
         }
       } catch (err) {
         console.error('Erro geral no App:', err);
+        setErroCritico(err.message || 'Ocorreu um erro desconhecido.');
       } finally {
         setCarregando(false);
       }
     };
 
     init();
-
-    const { data: listener } = supabase.auth.onAuthStateChange(async (_event, session) => {
-      setSessao(session);
-      if (!session) {
-        setPerfil(null);
-      } else {
-        // Recarrega perfil no login
-        const { data } = await supabase
-          .from('perfis_acesso')
-          .select(`salao_id, cargo, saloes(configurado)`)
-          .eq('auth_user_id', session.user.id)
-          .order('criado_em', { ascending: false })
-          .limit(1);
-        
-        if (data && data.length > 0) {
-          setPerfil({ 
-            salao_id: data[0].salao_id, 
-            cargo: data[0].cargo, 
-            configurado: data[0].saloes?.configurado 
-          });
-        }
-      }
-    });
-
-    return () => listener.subscription.unsubscribe();
   }, []);
 
+  // Ecrã de Erro Crítico (Fim do ecrã branco!)
+  if (erroCritico) {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center bg-red-50 p-6">
+        <div className="bg-white p-8 rounded-xl shadow-lg max-w-lg w-full border border-red-200">
+          <h1 className="text-xl font-bold text-red-600 mb-2">Erro de Acesso Detetado</h1>
+          <p className="text-sm text-slate-700 mb-4">{erroCritico}</p>
+          <button 
+            onClick={async () => { await supabase.auth.signOut(); window.location.reload(); }}
+            className="bg-slate-800 text-white px-4 py-2 rounded text-sm hover:bg-slate-900"
+          >
+            Sair e Voltar ao Login
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   if (carregando) {
-    return <div className="min-h-screen flex items-center justify-center bg-gray-50 text-gray-500">Carregando sistema...</div>;
+    return <div className="min-h-screen flex items-center justify-center bg-gray-50 text-gray-500">A carregar o sistema...</div>;
   }
 
   if (!sessao || !perfil) {
@@ -94,7 +96,7 @@ export default function App() {
   const email = sessao.user.email;
   const ctx = { salaoId, role };
 
-  // 1. Rota Isolada do Vendedor
+  // 1. Rota do Administrador / Vendedor
   if (role === 'VENDEDOR') {
     return (
       <BrowserRouter>
@@ -103,7 +105,7 @@ export default function App() {
     );
   }
 
-  // 2. O BLOQUEIO: Se for proprietária e não configurou o salão, trava ela no Wizard!
+  // 2. Trava do Wizard para a Proprietária
   if (role === 'PROPRIETARIO' && configurado === false) {
     return (
       <BrowserRouter>
@@ -114,7 +116,7 @@ export default function App() {
     );
   }
 
-  // 3. Sistema Normal (Configurado)
+  // 3. Sistema Normal
   return (
     <BrowserRouter>
       <div className="flex min-h-screen bg-gray-50">

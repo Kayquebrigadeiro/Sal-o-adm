@@ -15,50 +15,41 @@ export default function Login() {
     try {
       let emailParaLogin = login;
 
-      // Se não tem @, é username - buscar email em logins_gerados
+      // Se não tem @, é a Proprietária tentando entrar com o Username
       if (!login.includes('@')) {
-        const { data: loginData, error: loginError } = await supabase
-          .from('logins_gerados')
-          .select('auth_user_id')
-          .eq('username', login.toLowerCase())
-          .eq('ativo', true)
-          .single();
-
-        if (loginError || !loginData) {
-          setErro('Usuário não encontrado.');
-          setLoading(false);
-          return;
-        }
-
-        // Buscar email do usuário no auth.users via RPC
-        const { data: userData, error: userError } = await supabase.rpc('get_user_email_by_id', {
-          user_id: loginData.auth_user_id
+        // Usamos a nossa nova função segura no banco que tem permissão para ler dados
+        const { data: emailDescoberto, error: rpcError } = await supabase.rpc('get_email_from_username', {
+          p_username: login
         });
 
-        if (userError || !userData) {
-          setErro('Erro ao buscar dados do usuário.');
+        if (rpcError || !emailDescoberto) {
+          setErro('Usuário não encontrado ou inativo.');
           setLoading(false);
           return;
         }
-
-        emailParaLogin = userData;
+        emailParaLogin = emailDescoberto;
       }
 
-      // Fazer login com email
-      const { error } = await supabase.auth.signInWithPassword({
+      // Agora fazemos o login real no Supabase com o E-mail
+      const { error: signInError } = await supabase.auth.signInWithPassword({
         email: emailParaLogin,
         password: senha,
       });
 
-      if (error) {
-        setErro('Usuário ou senha incorretos.');
+      if (signInError) {
+        setErro('Credenciais inválidas. Verifique o usuário e senha.');
+        setLoading(false);
+        return;
       }
+
+      // Sucesso! Recarrega a página para o App.jsx ler a sessão e redirecionar
+      window.location.reload();
+
     } catch (err) {
       console.error('Erro no login:', err);
-      setErro('Erro ao fazer login. Tente novamente.');
+      setErro('Ocorreu um erro inesperado ao tentar entrar.');
+      setLoading(false);
     }
-
-    setLoading(false);
   };
 
   return (

@@ -36,18 +36,18 @@ export default function Login() {
         password: senha,
       });
 
-      if (signInError) {
-        setErro('Credenciais inválidas. Verifique o usuário e senha.');
-        setLoading(false);
-        return;
-      }
+      if (signInError) throw signInError;
 
       // Sucesso! Recarrega a página para o App.jsx ler a sessão e redirecionar
       window.location.reload();
 
     } catch (err) {
+      // ESTA É A LINHA MÁGICA:
+      alert("ERRO SECRETO DO SUPABASE: " + err.message);
+      
       console.error('Erro no login:', err);
-      setErro('Ocorreu um erro inesperado ao tentar entrar.');
+      setErro('Credenciais inválidas. Verifique o usuário e senha.');
+    } finally {
       setLoading(false);
     }
   };

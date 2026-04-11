@@ -1,314 +1,193 @@
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { supabase } from '../supabaseClient';
-import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Legend } from 'recharts';
+import { 
+  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, Legend, ResponsiveContainer,
+  PieChart, Pie, Cell
+} from 'recharts';
 
-const MESES = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
-
-function fmt(val) {
-  return Number(val || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
-}
-
-function Card({ label, valor, cor, variacao }) {
-  return (
-    <div className="bg-white rounded-xl border border-gray-200 p-5">
-      <div className="flex items-start justify-between">
-        <div>
-          <p className="text-xs text-gray-500 mb-1">{label}</p>
-          <p className={`text-2xl font-semibold ${cor || 'text-gray-800'}`}>{fmt(valor)}</p>
-        </div>
-        {variacao !== undefined && (
-          <div className={`text-xs font-bold px-2 py-1 rounded-full ${variacao >= 0 ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'}`}>
-            {variacao >= 0 ? '▲' : '▼'} {Math.abs(variacao).toFixed(1)}%
-          </div>
-        )}
-      </div>
-    </div>
-  );
-}
-
-export default function Dashboard({ salaoId }) {
-  const hoje = new Date();
-  const [ano, setAno] = useState(hoje.getFullYear());
-  const [mes, setMes] = useState(hoje.getMonth() + 1);
-  const [dados, setDados] = useState(null);
-  const [historico, setHistorico] = useState([]);
-  const [ranking, setRanking] = useState([]);
-  const [rendimento, setRendimento] = useState([]);
-  const [pendentes, setPendentes] = useState([]);
+const Dashboard = () => {
   const [loading, setLoading] = useState(true);
+  const [fechamento, setFechamento] = useState({});
+  const [rankingProcedimentos, setRankingProcedimentos] = useState([]);
+  const [rendimentoEquipe, setRendimentoEquipe] = useState([]);
+  const [gastosPessoais, setGastosPessoais] = useState({});
+
+  // Cores para o gráfico de pizza
+  const CORES = ['#10b981', '#3b82f6', '#f59e0b', '#ef4444', '#8b5cf6', '#64748b'];
 
   useEffect(() => {
-    if (!salaoId) return;
-    carregar();
-  }, [salaoId, ano, mes]);
+    carregarDados();
+  }, []);
 
-  const mesISO = `${ano}-${String(mes).padStart(2,'0')}-01`;
-
-  const carregar = async () => {
+  const carregarDados = async () => {
     setLoading(true);
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      const { data: perfil } = await supabase.from('perfis_acesso').select('salao_id').eq('auth_user_id', user?.id).single();
+      const salaoId = perfil?.salao_id;
 
-    const [
-      { data: fechamento },
-      { data: hist },
-      { data: rank },
-      { data: rend },
-      { data: pend },
-    ] = await Promise.all([
-      supabase.from('fechamento_mensal').select('*').eq('salao_id', salaoId).eq('mes', mesISO).single(),
-      supabase.from('fechamento_mensal').select('mes,receita_bruta,lucro_liquido_atendimentos,lucro_possivel_atendimentos').eq('salao_id', salaoId).order('mes', { ascending: false }).limit(6),
-      supabase.from('ranking_procedimentos').select('*').eq('salao_id', salaoId).eq('mes', mesISO).order('receita_total', { ascending: false }),
-      supabase.from('rendimento_por_profissional').select('*').eq('salao_id', salaoId).eq('mes', mesISO).order('receita_gerada', { ascending: false }),
-      supabase.from('atendimentos').select('cliente, valor_cobrado, procedimentos(nome), horario').eq('salao_id', salaoId).gte('data', mesISO).lt('data', `${ano}-${String(mes+1).padStart(2,'0')}-01`).eq('executado', true).eq('pago', false).neq('status', 'CANCELADO'),
-    ]);
+      if (!salaoId) return;
 
-    setDados(fechamento || {});
-    setHistorico((hist || []).reverse());
-    setRanking(rank || []);
-    setRendimento(rend || []);
-    setPendentes(pend || []);
-    setLoading(false);
+      // 1. Busca o Fechamento do Mês Atual (Receita, Lucro, Despesas)
+      const { data: fechamentoData } = await supabase
+        .from('fechamento_mensal')
+        .select('*')
+        .eq('salao_id', salaoId)
+        .limit(1)
+        .single();
+      setFechamento(fechamentoData || {});
+
+      // 2. Busca o Ranking de Procedimentos (Gráfico de Pizza e Barras)
+      const { data: rankingData } = await supabase
+        .from('ranking_procedimentos')
+        .select('*')
+        .eq('salao_id', salaoId);
+      setRankingProcedimentos(rankingData || []);
+
+      // 3. Busca Rendimento por Profissional
+      const { data: rendimentoData } = await supabase
+        .from('rendimento_por_profissional')
+        .select('*')
+        .eq('salao_id', salaoId);
+      setRendimentoEquipe(rendimentoData || []);
+
+      // 4. Busca os Gastos Pessoais (Para o cálculo do Pró-labore)
+      const { data: gastosData } = await supabase
+        .from('gastos_pessoais_resumo')
+        .select('*')
+        .eq('salao_id', salaoId)
+        .limit(1)
+        .single();
+      
+      const { data: configData } = await supabase
+        .from('configuracoes')
+        .select('prolabore_mensal')
+        .eq('salao_id', salaoId)
+        .single();
+
+      setGastosPessoais({
+        real: gastosData?.total_gastos || 0,
+        estipulado: configData?.prolabore_mensal || 0
+      });
+
+    } catch (error) {
+      console.error("Erro ao carregar dashboard:", error);
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const maxReceita = Math.max(...historico.map(h => Number(h.receita_bruta || 0)), 1);
-  
-  // Calcular variação com mês anterior
-  const mesAnterior = historico.slice(1, 2)[0];
-  const variacaoReceita = mesAnterior && Number(dados?.receita_total || 0) > 0 
-    ? (((Number(dados?.receita_total) - Number(mesAnterior.receita_bruta)) / Number(mesAnterior.receita_bruta)) * 100)
-    : undefined;
+  if (loading) return <div className="p-10 text-center text-gray-500 font-medium">Carregando Inteligência Financeira...</div>;
 
-  const variacaoLucro = mesAnterior && Number(dados?.lucro_liquido_atendimentos || 0) > 0
-    ? (((Number(dados?.lucro_liquido_atendimentos) - Number(mesAnterior.lucro_liquido_atendimentos)) / Number(mesAnterior.lucro_liquido_atendimentos)) * 100)
-    : undefined;
+  const deficitProlabore = gastosPessoais.estipulado - gastosPessoais.real;
 
   return (
-    <div className="p-6 max-w-6xl">
-      {/* Header */}
-      <div className="flex items-center gap-4 mb-6">
-        <h1 className="text-xl font-semibold text-gray-800">Dashboard</h1>
-        <div className="flex items-center gap-2 ml-auto">
-          <select
-            value={mes}
-            onChange={e => setMes(Number(e.target.value))}
-            className="border border-gray-200 rounded-lg px-3 py-1.5 text-sm"
-          >
-            {MESES.map((m, i) => <option key={i} value={i+1}>{m}</option>)}
-          </select>
-          <select
-            value={ano}
-            onChange={e => setAno(Number(e.target.value))}
-            className="border border-gray-200 rounded-lg px-3 py-1.5 text-sm"
-          >
-            {[2023,2024,2025,2026].map(a => <option key={a}>{a}</option>)}
-          </select>
+    <div className="p-6 bg-gray-50 min-h-screen">
+      <div className="mb-8">
+        <h1 className="text-3xl font-bold text-slate-800">Painel Financeiro</h1>
+        <p className="text-gray-500">Acompanhe a saúde do seu salão em tempo real.</p>
+      </div>
+
+      {/* CARDS DE INDICADORES (KPIs) */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+        {/* Líquido do Mês */}
+        <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 border-l-4 border-l-emerald-500">
+          <h3 className="text-sm font-medium text-gray-500 mb-1">Líquido do Mês</h3>
+          <p className="text-3xl font-bold text-slate-800">R$ {fechamento.lucro_liquido_atendimentos || '0.00'}</p>
+        </div>
+
+        {/* Faturamento Bruto */}
+        <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 border-l-4 border-l-blue-500">
+          <h3 className="text-sm font-medium text-gray-500 mb-1">Faturamento Bruto</h3>
+          <p className="text-3xl font-bold text-slate-800">R$ {fechamento.receita_bruta || '0.00'}</p>
+        </div>
+
+        {/* Saúde da Empresa */}
+        <div className={`bg-white p-6 rounded-2xl shadow-sm border border-gray-100 border-l-4 ${fechamento.saude_financeira >= 0 ? 'border-l-emerald-500' : 'border-l-red-500'}`}>
+          <h3 className="text-sm font-medium text-gray-500 mb-1">Saúde da Empresa</h3>
+          <p className={`text-3xl font-bold ${fechamento.saude_financeira >= 0 ? 'text-emerald-600' : 'text-red-600'}`}>
+            R$ {fechamento.saude_financeira || '0.00'}
+          </p>
+        </div>
+
+        {/* Pró-labore Real vs Estipulado */}
+        <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 border-l-4 border-l-purple-500">
+          <h3 className="text-sm font-medium text-gray-500 mb-1">Pró-labore (Real vs Estipulado)</h3>
+          <div className="flex items-end gap-2">
+            <p className="text-3xl font-bold text-slate-800">R$ {gastosPessoais.real}</p>
+            <p className="text-sm text-gray-400 mb-1">/ {gastosPessoais.estipulado}</p>
+          </div>
+          <p className={`text-xs mt-2 font-medium ${deficitProlabore >= 0 ? 'text-emerald-600' : 'text-red-500'}`}>
+            {deficitProlabore >= 0 ? `Sobra: R$ ${deficitProlabore}` : `Déficit: R$ ${Math.abs(deficitProlabore)}`}
+          </p>
         </div>
       </div>
 
-      {loading ? (
-        <p className="text-gray-400 text-sm">Carregando...</p>
-      ) : (
-        <>
-          {/* Cards de métricas */}
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-            <Card label="Receita total" valor={dados?.receita_total} variacao={variacaoReceita} />
-            <Card label="Receita recebida" valor={dados?.receita_recebida} cor="text-green-700" />
-            <Card label="Pendências" valor={dados?.pendencias} cor="text-yellow-600" />
-            <Card
-              label="Saúde financeira"
-              valor={dados?.saude_financeira}
-              cor={Number(dados?.saude_financeira || 0) >= 0 ? 'text-green-700' : 'text-red-600'}
-              variacao={variacaoLucro}
-            />
-          </div>
-
-          {/* Histórico com Recharts */}
-          {historico.length > 0 && (
-            <div className="bg-white rounded-xl border border-gray-200 p-5 mb-6">
-              <p className="text-sm font-medium text-gray-700 mb-4">Receita vs Lucro — últimos meses</p>
-              <ResponsiveContainer width="100%" height={300}>
-                <BarChart data={historico.map(h => ({
-                  mes: MESES[new Date(h.mes).getMonth()],
-                  receita: Number(h.receita_bruta || 0),
-                  lucro: Number(h.lucro_liquido_atendimentos || 0),
-                }))}>
-                  <XAxis dataKey="mes" />
-                  <YAxis />
-                  <Tooltip 
-                    formatter={(value) => fmt(value)}
-                    contentStyle={{ backgroundColor: '#fff', border: '1px solid #ccc', borderRadius: '8px' }}
-                  />
-                  <Legend />
-                  <Bar dataKey="receita" fill="#808080" name="Receita Bruta" radius={[8, 8, 0, 0]} />
-                  <Bar dataKey="lucro" fill="#22c55e" name="Lucro Líquido" radius={[8, 8, 0, 0]} />
-                </BarChart>
-              </ResponsiveContainer>
-            </div>
-          )}
-
-          {/* Lucro real vs possível */}
-          <div className="grid grid-cols-2 gap-4 mb-6">
-            <div className="bg-white rounded-xl border border-gray-200 p-5">
-              <p className="text-xs text-gray-500 mb-1">Lucro líquido (real)</p>
-              <p className={`text-2xl font-semibold ${Number(dados?.lucro_liquido_atendimentos || 0) >= 0 ? 'text-green-700' : 'text-red-600'}`}>
-                {fmt(dados?.lucro_liquido_atendimentos)}
-              </p>
-              <p className="text-xs text-gray-400 mt-1">Após maquininha, comissões e custos</p>
-            </div>
-            <div className="bg-white rounded-xl border border-gray-200 p-5">
-              <p className="text-xs text-gray-500 mb-1">Lucro possível (sem maquininha)</p>
-              <p className="text-2xl font-semibold text-blue-700">{fmt(dados?.lucro_possivel_atendimentos)}</p>
-              <p className="text-xs text-gray-400 mt-1">Se todos pagassem em dinheiro/pix</p>
-            </div>
-          </div>
-
-          {/* Custos detalhados */}
-          <div className="bg-white rounded-xl border border-gray-200 p-5 mb-6">
-            <p className="text-sm font-medium text-gray-700 mb-4">Custos e deduções do mês</p>
-            <div className="space-y-2 text-sm">
-              {[
-                ['Maquininha (5%)', dados?.total_maquininha],
-                ['Comissões profissionais', dados?.total_profissionais],
-                ['Custo fixo por atendimento (R$29)', dados?.total_custo_fixo],
-                ['Custo variável (produtos)', dados?.total_custo_variavel],
-                ['Despesas lançadas', dados?.total_despesas],
-                ['Salários fixos', dados?.total_salarios_fixos],
-              ].map(([label, val]) => (
-                <div key={label} className="flex justify-between py-1 border-b border-gray-50 last:border-0">
-                  <span className="text-gray-600">{label}</span>
-                  <span className="font-medium text-red-600">{fmt(val)}</span>
-                </div>
-              ))}
-              <div className="flex justify-between pt-2 font-semibold">
-                <span>Total de custos</span>
-                <span className="text-red-700">
-                  {fmt(
-                    [dados?.total_maquininha, dados?.total_profissionais, dados?.total_custo_fixo,
-                     dados?.total_custo_variavel, dados?.total_despesas, dados?.total_salarios_fixos]
-                    .reduce((s, v) => s + Number(v || 0), 0)
-                  )}
-                </span>
-              </div>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-            {/* Ranking de procedimentos */}
-            <div className="bg-white rounded-xl border border-gray-200 p-5">
-              <p className="text-sm font-medium text-gray-700 mb-4">Procedimentos mais rentáveis</p>
-              {ranking.length === 0 ? (
-                <p className="text-sm text-gray-400">Sem dados neste mês.</p>
-              ) : (
-                <table className="w-full text-xs">
-                  <thead>
-                    <tr className="text-gray-400 border-b border-gray-100">
-                      <th className="text-left pb-2">Procedimento</th>
-                      <th className="text-right pb-2">Qtd</th>
-                      <th className="text-right pb-2">Receita</th>
-                      <th className="text-right pb-2">Lucro</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {ranking.map((r, i) => (
-                      <tr key={i} className="border-b border-gray-50 last:border-0">
-                        <td className="py-1.5 text-gray-700">{r.procedimento}</td>
-                        <td className="py-1.5 text-right text-gray-500">{r.quantidade}</td>
-                        <td className="py-1.5 text-right text-gray-700">{fmt(r.receita_total)}</td>
-                        <td className={`py-1.5 text-right font-medium ${Number(r.lucro_total) >= 0 ? 'text-green-700' : 'text-red-600'}`}>
-                          {fmt(r.lucro_total)}
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              )}
-            </div>
-
-            {/* Rendimento por profissional */}
-            <div className="bg-white rounded-xl border border-gray-200 p-5">
-              <p className="text-sm font-medium text-gray-700 mb-4">Rendimento por profissional</p>
-              {rendimento.length === 0 ? (
-                <p className="text-sm text-gray-400">Sem dados neste mês.</p>
-              ) : (
-                <table className="w-full text-xs">
-                  <thead>
-                    <tr className="text-gray-400 border-b border-gray-100">
-                      <th className="text-left pb-2">Nome</th>
-                      <th className="text-right pb-2">Atend.</th>
-                      <th className="text-right pb-2">Receita</th>
-                      <th className="text-right pb-2">Total</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {rendimento.map((r, i) => (
-                      <tr key={i} className="border-b border-gray-50 last:border-0">
-                        <td className="py-1.5 text-gray-700">{r.profissional}</td>
-                        <td className="py-1.5 text-right text-gray-500">{r.total_atendimentos}</td>
-                        <td className="py-1.5 text-right text-gray-700">{fmt(r.receita_gerada)}</td>
-                        <td className="py-1.5 text-right font-medium text-gray-800">{fmt(r.rendimento_total)}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              )}
-            </div>
-          </div>
-
-          {/* Home Car + Paralelos */}
-          <div className="grid grid-cols-2 gap-4 mb-6">
-            <div className="bg-white rounded-xl border border-gray-200 p-5">
-              <p className="text-xs text-gray-500 mb-1">Receita Home Car</p>
-              <p className="text-xl font-semibold text-gray-800">{fmt(dados?.receita_homecare)}</p>
-              <p className="text-xs text-yellow-600 mt-1">Pendente: {fmt(dados?.pendente_homecare)}</p>
-            </div>
-            <div className="bg-white rounded-xl border border-gray-200 p-5">
-              <p className="text-xs text-gray-500 mb-1">Receita Paralelos</p>
-              <p className="text-xl font-semibold text-gray-800">{fmt(dados?.receita_paralelos)}</p>
-              <p className="text-xs text-yellow-600 mt-1">Pendente: {fmt(dados?.pendente_paralelos)}</p>
-            </div>
-          </div>
-
-          {/* Pendentes */}
-          {pendentes.length > 0 && (
-            <div className="bg-white rounded-xl border border-gray-200 p-5">
-              <p className="text-sm font-medium text-gray-700 mb-4">
-                Clientes pendentes — executado mas não pago ({pendentes.length})
-              </p>
-              <table className="w-full text-xs">
-                <thead>
-                  <tr className="text-gray-400 border-b border-gray-100">
-                    <th className="text-left pb-2">Cliente</th>
-                    <th className="text-left pb-2">Procedimento</th>
-                    <th className="text-left pb-2">Horário</th>
-                    <th className="text-right pb-2">Valor</th>
-                    <th className="text-right pb-2">Ação</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {pendentes.map((p, i) => (
-                    <tr key={i} className="border-b border-gray-50 last:border-0">
-                      <td className="py-1.5 text-gray-700 font-medium">{p.cliente}</td>
-                      <td className="py-1.5 text-gray-500">{p.procedimentos?.nome}</td>
-                      <td className="py-1.5 text-gray-400">{p.horario?.slice(0,5)}</td>
-                      <td className="py-1.5 text-right font-medium text-yellow-700">{fmt(p.valor_cobrado)}</td>
-                      <td className="py-1.5 text-right">
-                        <button
-                          onClick={async () => {
-                            await supabase.from('atendimentos').update({ pago: true }).eq('id', p.id);
-                            carregar();
-                          }}
-                          className="text-xs bg-green-100 text-green-700 px-2 py-1 rounded hover:bg-green-200 font-bold"
-                        >
-                          Marcar pago
-                        </button>
-                      </td>
-                    </tr>
+      {/* ÁREA DE GRÁFICOS */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+        
+        {/* GRÁFICO 1: Quantitativo de Procedimentos (Pizza) */}
+        <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
+          <h3 className="text-lg font-bold text-slate-800 mb-4">Serviços Mais Feitos</h3>
+          <div className="h-64">
+            <ResponsiveContainer width="100%" height="100%">
+              <PieChart>
+                <Pie 
+                  data={rankingProcedimentos} 
+                  dataKey="quantidade" 
+                  nameKey="procedimento" 
+                  cx="50%" cy="50%" 
+                  outerRadius={80} 
+                  label
+                >
+                  {rankingProcedimentos.map((entry, index) => (
+                    <Cell key={`cell-${index}`} fill={CORES[index % CORES.length]} />
                   ))}
-                </tbody>
-              </table>
-            </div>
-          )}
-        </>
-      )}
+                </Pie>
+                <RechartsTooltip formatter={(value) => [`${value} feitos`, 'Quantidade']} />
+                <Legend />
+              </PieChart>
+            </ResponsiveContainer>
+          </div>
+        </div>
+
+        {/* GRÁFICO 2: Rendimento por Profissional (Barras) */}
+        <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
+          <h3 className="text-lg font-bold text-slate-800 mb-4">Rendimento por Profissional</h3>
+          <div className="h-64">
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart data={rendimentoEquipe}>
+                <CartesianGrid strokeDasharray="3 3" vertical={false} />
+                <XAxis dataKey="profissional" />
+                <YAxis />
+                <RechartsTooltip formatter={(value) => [`R$ ${value}`, 'Valor Gerado']} />
+                <Bar dataKey="rendimento_variavel" name="Comissão/Rendimento" fill="#3b82f6" radius={[4, 4, 0, 0]} />
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+        </div>
+
+        {/* GRÁFICO 3: Lucro do Procedimento (Real vs Possível) */}
+        <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 lg:col-span-2">
+          <h3 className="text-lg font-bold text-slate-800 mb-4">Lucro por Procedimento (Possível vs Real)</h3>
+          <div className="h-72">
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart data={rankingProcedimentos}>
+                <CartesianGrid strokeDasharray="3 3" vertical={false} />
+                <XAxis dataKey="procedimento" />
+                <YAxis />
+                <RechartsTooltip />
+                <Legend />
+                <Bar dataKey="receita_total" name="Receita Bruta" fill="#94a3b8" radius={[4, 4, 0, 0]} />
+                <Bar dataKey="lucro_total" name="Lucro Real" fill="#10b981" radius={[4, 4, 0, 0]} />
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+        </div>
+
+      </div>
     </div>
   );
-}
+};
+
+export default Dashboard;

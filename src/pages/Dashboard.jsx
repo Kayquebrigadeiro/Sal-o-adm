@@ -16,6 +16,7 @@ const Dashboard = () => {
     kpis: { bruto: 0, possivel: 0, real: 0 }
   });
   const [custoFixoPorAtendimento, setCustoFixoPorAtendimento] = useState(29);
+  const [alertasPrejuizo, setAlertasPrejuizo] = useState([]);
 
   // Cores da sua Planilha
   const COLORS = {
@@ -104,10 +105,21 @@ const Dashboard = () => {
       const mesesMap = {};
       const procedimentosMap = {};
       const profissionaisMap = {};
+      const servicosComPrejuizo = [];
 
       atendimentos?.forEach(atend => {
         const calc = calcularLucroReal(atend.valor_cobrado);
         
+        // 🚨 Detecta serviços com prejuízo
+        if (calc.lucro < 0) {
+          const proc = procedimentos?.find(p => p.id === atend.procedimento_id);
+          servicosComPrejuizo.push({
+            procedimento_nome: proc?.nome || 'Desconhecido',
+            valor_cobrado: atend.valor_cobrado,
+            lucro: calc.lucro
+          });
+        }
+
         // KPIs
         faturamentoTotal += calc.bruto;
         lucroTotalPossivel += (calc.bruto - calc.taxaSaida - calc.custoFixo); // Sem comissão
@@ -171,6 +183,9 @@ const Dashboard = () => {
         ]
       });
 
+      // 🔴 Atualiza alertas de prejuízo
+      setAlertasPrejuizo(servicosComPrejuizo);
+
     } catch (e) { 
       console.error('Erro ao carregar Dashboard:', e); 
     } finally { 
@@ -182,6 +197,35 @@ const Dashboard = () => {
 
   return (
     <div className="bg-white min-h-screen p-4 md:p-8 font-sans">
+      
+      {/* 🚨 BANNER DE ALERTA CRÍTICO — SANGRAMENTO DE CAIXA */}
+      {alertasPrejuizo.length > 0 && (
+        <div className="mb-8 bg-red-600 text-white p-5 rounded-2xl shadow-lg border-4 border-red-800 animate-bounce">
+          <div className="flex items-center justify-between gap-4">
+            <div className="flex items-center gap-4">
+              <span className="text-5xl flex-shrink-0">🚨</span>
+              <div>
+                <h3 className="text-xl font-bold uppercase tracking-tighter">
+                  Alerta de Sangramento de Caixa!
+                </h3>
+                <p className="text-red-100 text-sm mt-1">
+                  Os procedimentos abaixo estão custando mais caro do que o valor cobrado:
+                </p>
+                <div className="flex flex-wrap gap-2 mt-3">
+                  {[...new Set(alertasPrejuizo.map(p => p.procedimento_nome))].map(nome => (
+                    <span key={nome} className="bg-white text-red-700 px-3 py-1 rounded-full text-xs font-bold shadow-sm flex-shrink-0">
+                      {nome}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            </div>
+            <div className="text-right hidden md:block text-xs opacity-90 flex-shrink-0">
+              <p className="font-semibold">Ajuste os preços ou reduza o custo de material imediatamente!</p>
+            </div>
+          </div>
+        </div>
+      )}
       
       {/* KPIs DO TOPO (Estilo Field da Planilha) */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-10">

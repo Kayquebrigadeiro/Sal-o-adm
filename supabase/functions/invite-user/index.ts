@@ -68,7 +68,7 @@ serve(async (req) => {
       const { error: profileError } = await supabaseAdmin
         .from("perfis_acesso")
         .insert({
-          id: inviteData.user.id,
+          auth_user_id: inviteData.user.id,
           salao_id,
           cargo: role,
         })

@@ -2,55 +2,30 @@ import { useState } from 'react';
 import { supabase } from '../supabaseClient';
 import { useNavigate } from 'react-router-dom';
 
-// --- Funções Auxiliares ---
 function gerarUsernameDoNome(nome) {
-  return nome
-    .toLowerCase()
-    .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '') // Remove acentos
-    .replace(/[^a-z0-9]/g, '_') // Substitui caracteres especiais por _
-    .replace(/_+/g, '_') // Remove underscores duplicados
-    .substring(0, 20); // Limita tamanho
+  return nome.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9]/g, '_').replace(/_+/g, '_').substring(0, 20);
 }
 
 function gerarSenhaAleatoria() {
   const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$';
-  let senha = '';
-  for (let i = 0; i < 8; i++) {
-    senha += chars.charAt(Math.floor(Math.random() * chars.length));
-  }
-  return senha;
+  return Array.from({length: 8}).map(() => chars.charAt(Math.floor(Math.random() * chars.length))).join('');
 }
 
-export default function NovoSalao({ userId }) {
+export default function NovoSalao() {
   const navigate = useNavigate();
   const [etapa, setEtapa] = useState(1);
   const [salvando, setSalvando] = useState(false);
   const [erro, setErro] = useState('');
   
-  // Estado simplificado (apenas o essencial)
   const [dados, setDados] = useState({
-    nomeSalao: '',
-    telefone: '',
-    nomeProprietaria: '',
-    username: '',
-    senha: ''
+    nomeSalao: '', telefone: '', nomeProprietaria: '', username: '', senha: ''
   });
 
-  // --- Navegação entre etapas ---
   const irParaEtapa2 = (e) => {
     e.preventDefault();
-    if (!dados.nomeSalao || !dados.nomeProprietaria) {
-      setErro('O nome do salão e da proprietária são obrigatórios.');
-      return;
-    }
+    if (!dados.nomeSalao || !dados.nomeProprietaria) return setErro('Nome do salão e da proprietária são obrigatórios.');
     setErro('');
-    
-    // Gera automaticamente as credenciais com base no nome
-    const novoUsername = gerarUsernameDoNome(dados.nomeProprietaria);
-    const novaSenha = gerarSenhaAleatoria();
-    
-    setDados({ ...dados, username: novoUsername, senha: novaSenha });
+    setDados({ ...dados, username: gerarUsernameDoNome(dados.nomeProprietaria), senha: gerarSenhaAleatoria() });
     setEtapa(2);
   };
 
@@ -59,52 +34,39 @@ export default function NovoSalao({ userId }) {
     setErro('');
     
     try {
-      // NOVIDADE: Pegamos o ID do Admin logado diretamente na fonte!
-      // Isso impede qualquer erro de "RLS Policy" por falta de ID.
+      // 1. Pegamos o ID do Vendedor
       const { data: { user }, error: erroUser } = await supabase.auth.getUser();
-      if (erroUser || !user) throw new Error("Sessão expirada. Atualize a página e tente novamente.");
+      if (erroUser || !user) throw new Error("Sessão expirada.");
 
-      const adminId = user.id;
-
-      // 1. Criar o Salão
+      // 2. Criamos o Salão no banco normalmente
       const { data: salao, error: erroSalao } = await supabase
         .from('saloes')
-        .insert([{
-          nome: dados.nomeSalao,
-          telefone: dados.telefone,
-          vendedor_id: adminId,
-          configurado: false
-        }])
-        .select('id')
-        .single();
+        .insert([{ nome: dados.nomeSalao, telefone: dados.telefone, vendedor_id: user.id }])
+        .select('id').single();
 
       if (erroSalao) throw erroSalao;
 
-      // 2. Criar a conta de Autenticação para a Proprietária
-      const nomeLimpo = dados.username.replace(/[^a-zA-Z0-9]/g, '');
-      const emailFicticio = `${nomeLimpo}${Date.now()}@gmail.com`; 
+      // 3. A MÁGICA: Chamamos a Edge Function para criar a Proprietária sem nos deslogar!
+      const emailFicticio = `${dados.username.replace(/[^a-zA-Z0-9]/g, '')}${Date.now()}@gmail.com`;
       
-      const { error: erroAuth } = await supabase.auth.signUp({
-        email: emailFicticio,
-        password: dados.senha,
-        options: {
-          data: {
-            salao_id: salao.id,
-            vendedor_id: adminId,
-            cargo: 'PROPRIETARIO',
-            username: dados.username,
-            senha: dados.senha
-          }
+      const { data: funcData, error: funcError } = await supabase.functions.invoke('criar-proprietaria', {
+        body: { 
+          email: emailFicticio, 
+          senha: dados.senha, 
+          username: dados.username, 
+          salao_id: salao.id, 
+          vendedor_id: user.id 
         }
       });
 
-      if (erroAuth) throw erroAuth;
+      if (funcError) throw new Error("Erro ao gerar usuário: " + funcError.message);
+      if (funcData?.error) throw new Error(funcData.error);
 
-      alert('Salão criado com sucesso! Entregue as credenciais abaixo à proprietária.');
+      alert('Salão e acessos criados com sucesso!');
       navigate('/admin/saloes');
 
     } catch (err) {
-      console.error('[NovoSalao] Erro:', err);
+      console.error(err);
       setErro(err.message || 'Ocorreu um erro ao criar o salão.');
     } finally {
       setSalvando(false);
@@ -115,101 +77,37 @@ export default function NovoSalao({ userId }) {
     <div className="p-6 max-w-2xl mx-auto">
       <div className="mb-6">
         <h1 className="text-2xl font-bold text-slate-800">Novo Salão</h1>
-        <p className="text-sm text-slate-500 mt-1">
-          Etapa {etapa} de 2: {etapa === 1 ? 'Dados Básicos' : 'Credenciais de Acesso'}
-        </p>
+        <p className="text-sm text-slate-500 mt-1">Etapa {etapa} de 2: {etapa === 1 ? 'Dados Básicos' : 'Credenciais de Acesso'}</p>
       </div>
 
-      {erro && (
-        <div className="mb-4 p-3 bg-red-50 border border-red-200 text-red-700 rounded-lg text-sm">
-          {erro}
-        </div>
-      )}
+      {erro && <div className="mb-4 p-3 bg-red-50 text-red-700 rounded-lg text-sm">{erro}</div>}
 
       <div className="bg-white border border-slate-200 rounded-xl p-6 shadow-sm">
-        
-        {/* ETAPA 1: DADOS BÁSICOS */}
         {etapa === 1 && (
           <form onSubmit={irParaEtapa2} className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1">Nome do Salão *</label>
-              <input
-                type="text" required autoFocus
-                value={dados.nomeSalao}
-                onChange={e => setDados({...dados, nomeSalao: e.target.value})}
-                className="w-full border border-slate-300 rounded-lg px-3 py-2.5 text-sm focus:ring-2 focus:ring-slate-800 focus:outline-none"
-                placeholder="Ex: Studio Beauty"
-              />
-            </div>
-            
-            <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1">Telefone (WhatsApp)</label>
-              <input
-                type="text"
-                value={dados.telefone}
-                onChange={e => setDados({...dados, telefone: e.target.value})}
-                className="w-full border border-slate-300 rounded-lg px-3 py-2.5 text-sm focus:ring-2 focus:ring-slate-800 focus:outline-none"
-                placeholder="(00) 00000-0000"
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1">Nome da Proprietária *</label>
-              <input
-                type="text" required
-                value={dados.nomeProprietaria}
-                onChange={e => setDados({...dados, nomeProprietaria: e.target.value})}
-                className="w-full border border-slate-300 rounded-lg px-3 py-2.5 text-sm focus:ring-2 focus:ring-slate-800 focus:outline-none"
-                placeholder="Ex: Maria Silva"
-              />
-            </div>
-
-            <div className="pt-4 flex justify-end">
-              <button type="submit" className="bg-slate-800 text-white px-6 py-2.5 rounded-lg text-sm font-medium hover:bg-slate-900 transition-colors">
-                Próximo →
-              </button>
-            </div>
+            <div><label className="block text-sm font-medium mb-1">Nome do Salão *</label><input type="text" required autoFocus value={dados.nomeSalao} onChange={e => setDados({...dados, nomeSalao: e.target.value})} className="w-full border rounded-lg px-3 py-2 text-sm" /></div>
+            <div><label className="block text-sm font-medium mb-1">Telefone (WhatsApp)</label><input type="text" value={dados.telefone} onChange={e => setDados({...dados, telefone: e.target.value})} className="w-full border rounded-lg px-3 py-2 text-sm" /></div>
+            <div><label className="block text-sm font-medium mb-1">Nome da Proprietária *</label><input type="text" required value={dados.nomeProprietaria} onChange={e => setDados({...dados, nomeProprietaria: e.target.value})} className="w-full border rounded-lg px-3 py-2 text-sm" /></div>
+            <div className="pt-4 flex justify-end"><button type="submit" className="bg-slate-800 text-white px-6 py-2.5 rounded-lg text-sm hover:bg-slate-900">Próximo →</button></div>
           </form>
         )}
 
-        {/* ETAPA 2: CREDENCIAIS */}
         {etapa === 2 && (
           <div className="space-y-5">
             <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
-              <h3 className="text-amber-800 font-bold mb-2 flex items-center gap-2">
-                ⚠️ Anote estas credenciais
-              </h3>
-              <p className="text-sm text-amber-700 mb-4">
-                A proprietária precisará destes dados para o <b>primeiro acesso</b>. Ao entrar, ela mesma irá configurar os profissionais e serviços.
-              </p>
-              
+              <h3 className="text-amber-800 font-bold mb-2">⚠️ Anote estas credenciais</h3>
+              <p className="text-sm text-amber-700 mb-4">A proprietária precisará destes dados para o primeiro acesso.</p>
               <div className="bg-white border border-amber-100 rounded p-4 font-mono text-sm space-y-2">
-                <p><span className="text-slate-500 select-none">Usuário: </span> <strong className="text-slate-900 text-base">{dados.username}</strong></p>
-                <p><span className="text-slate-500 select-none">Senha: </span> <strong className="text-slate-900 text-base">{dados.senha}</strong></p>
+                <p><span className="text-slate-500">Usuário: </span> <strong>{dados.username}</strong></p>
+                <p><span className="text-slate-500">Senha: </span> <strong>{dados.senha}</strong></p>
               </div>
             </div>
-
             <div className="pt-4 flex justify-between">
-              <button 
-                type="button" 
-                onClick={() => setEtapa(1)} 
-                disabled={salvando}
-                className="text-slate-600 px-4 py-2.5 rounded-lg text-sm hover:bg-slate-100 transition-colors"
-              >
-                ← Voltar
-              </button>
-              
-              <button 
-                onClick={finalizarCadastro} 
-                disabled={salvando}
-                className="bg-green-600 text-white px-6 py-2.5 rounded-lg text-sm font-medium hover:bg-green-700 transition-colors disabled:opacity-50 flex items-center gap-2"
-              >
-                {salvando ? 'A Criar...' : 'Finalizar Cadastro ✔'}
-              </button>
+              <button onClick={() => setEtapa(1)} disabled={salvando} className="text-slate-600 px-4 py-2.5 rounded-lg text-sm hover:bg-slate-100">← Voltar</button>
+              <button onClick={finalizarCadastro} disabled={salvando} className="bg-green-600 text-white px-6 py-2.5 rounded-lg text-sm font-medium hover:bg-green-700 disabled:opacity-50">{salvando ? 'A Criar...' : 'Finalizar Cadastro ✔'}</button>
             </div>
           </div>
         )}
-
       </div>
     </div>
   );

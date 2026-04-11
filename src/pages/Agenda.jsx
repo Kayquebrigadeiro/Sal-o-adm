@@ -49,7 +49,7 @@ const Agenda = () => {
       const dataFormatada = dataAtual.toISOString().split('T')[0];
       const { data: agends } = await supabase
         .from('atendimentos')
-        .select(\*, profissionais(nome), procedimentos(nome, requer_comprimento)\)
+        .select('*, profissionais(nome), procedimentos(nome, requer_comprimento)')
         .eq('salao_id', salaoId)
         .eq('data', dataFormatada)
         .neq('status', 'CANCELADO');

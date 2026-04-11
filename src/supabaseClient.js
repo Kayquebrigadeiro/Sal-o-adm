@@ -1,7 +1,13 @@
 import { createClient } from '@supabase/supabase-js';
 
-// Usar variáveis de ambiente (Vercel) ou fallback para desenvolvimento
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || 'https://SEU_PROJETO_SUPABASE_REF.supabase.co';
-const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY || 'SUA_CHAVE_SUPABASE_ANON';
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
-export const supabase = createClient(supabaseUrl, supabaseKey);
+if (!supabaseUrl || !supabaseAnonKey) {
+  throw new Error(
+    'Variáveis VITE_SUPABASE_URL e VITE_SUPABASE_ANON_KEY não encontradas. ' +
+    'Configure-as no painel da Vercel em Settings → Environment Variables.'
+  );
+}
+
+export const supabase = createClient(supabaseUrl, supabaseAnonKey);

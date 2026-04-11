@@ -20,8 +20,8 @@ const Agenda = () => {
   const gerarHorarios = () => {
     const horarios = [];
     for (let h = 8; h <= 18; h++) {
-      horarios.push(\:00);
-      if (h !== 18) horarios.push(\:30);
+      horarios.push(`${h}:00`);
+      if (h !== 18) horarios.push(`${h}:30`);
     }
     return horarios;
   };

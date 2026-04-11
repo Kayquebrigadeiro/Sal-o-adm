@@ -31,24 +31,36 @@ export default function NovoSalao() {
   const finalizarCadastro = async () => {
     setCarregando(true);
     try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error('Sessão expirada');
 
+      // 1. Garante sessão ativa
+      const { data: sessionData } = await supabase.auth.getSession();
+      if (!sessionData?.session) {
+        alert('Sua sessão expirou. Faça login novamente.');
+        window.location.href = '/login';
+        return;
+      }
+
+      const session = sessionData.session;
+
+      // 2. Invoca a Edge Function com o header que elimina o 401
       const { data, error } = await supabase.functions.invoke('criar-proprietaria', {
+        headers: {
+          Authorization: `Bearer ${session.access_token}`,
+        },
         body: {
-          email: form.email_proprietaria,   // e-mail real
-          senha: senhaGerada,               // senha gerada no frontend
-          nome: form.nome_proprietaria,
-          nome_salao: form.nome_salao,
-          telefone: form.telefone,
-          vendedor_id: user.id,
-          // Link do e-mail de confirmação vai levar para o domínio correto
-          redirectTo: window.location.origin + '/agenda',
+          email:        form.email_proprietaria,
+          senha:        senhaGerada,
+          nome:         form.nome_proprietaria,
+          nome_salao:   form.nome_salao,
+          telefone:     form.telefone,
+          vendedor_id:  session.user.id,
+          redirectTo:   window.location.origin + '/agenda',
         },
       });
 
       if (error) throw new Error(error.message);
-      setEtapa(4); // etapa de sucesso
+      setEtapa(4);
+
     } catch (err) {
       alert('Erro ao criar salão: ' + err.message);
     } finally {

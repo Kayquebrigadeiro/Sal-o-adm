@@ -42,6 +42,8 @@ export default function NovoSalao() {
           nome_salao: form.nome_salao,
           telefone: form.telefone,
           vendedor_id: user.id,
+          // Link do e-mail de confirmação vai levar para o domínio correto
+          redirectTo: window.location.origin + '/agenda',
         },
       });
 

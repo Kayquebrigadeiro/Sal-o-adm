@@ -180,20 +180,20 @@ const Agenda = () => {
                   {profissionais.map(prof => {
                     const agendamento = getAgendamento(horario, prof.id);
                     return (
-                      <td key={\-\} className="p-2 border-b border-r border-gray-200">
+                      <td key={`${horario}-${prof.id}`} className="p-2 border-b border-r border-gray-200">
                         {agendamento ? (
                           // Card de Horário Ocupado (Agora é clicável para Checkout)
                           <div 
                             onClick={() => abrirModalCheckout(agendamento)}
-                            className={\p-2 border rounded-lg shadow-sm cursor-pointer transition-colors \\}
+                            className="p-2 border rounded-lg shadow-sm cursor-pointer transition-colors"
                           >
                             <div className="flex justify-between items-start">
-                              <p className={\ont-bold \\}>
+                              <p className="font-bold">
                                 {agendamento.cliente}
                               </p>
                               {agendamento.pago && <span className="text-xs bg-slate-200 text-slate-600 px-1 rounded">Pago</span>}
                             </div>
-                            <p className={\	ext-xs truncate \\}>
+                            <p className="text-xs truncate">
                               {agendamento.procedimentos?.nome}
                             </p>
                           </div>

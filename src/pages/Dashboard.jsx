@@ -15,6 +15,7 @@ const Dashboard = () => {
     comparativoGeral: [],
     kpis: { bruto: 0, possivel: 0, real: 0 }
   });
+  const [custoFixoPorAtendimento, setCustoFixoPorAtendimento] = useState(29);
 
   // Cores da sua Planilha
   const COLORS = {
@@ -24,6 +25,33 @@ const Dashboard = () => {
     light: '#E6F1FB'
   };
 
+  // 🎯 Formatação BRL
+  const formatarBRL = (valor) => {
+    return new Intl.NumberFormat('pt-BR', {
+      style: 'currency',
+      currency: 'BRL',
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2
+    }).format(valor);
+  };
+
+  // 🧮 Cálculo do Lucro Real com Fórmula Corrigida
+  const calcularLucroReal = (valorBruto, comissaoProfissional = 0.60, taxaMaquininha = 0.05) => {
+    const taxaSaida = valorBruto * taxaMaquininha;          // Taxa (5%) sai primeiro
+    const valorBaseComissao = valorBruto - taxaSaida;       // Base para comissão
+    const comissao = valorBaseComissao * comissaoProfissional; // Comissão da funcionária
+    const lucro = valorBruto - taxaSaida - custoFixoPorAtendimento - comissao; // Lucro final
+    
+    return {
+      bruto: valorBruto,
+      taxaSaida,
+      valorBase: valorBaseComissao,
+      comissao,
+      custoFixo: custoFixoPorAtendimento,
+      lucro
+    };
+  };
+
   useEffect(() => {
     fetchDadosSaaS();
   }, []);
@@ -31,38 +59,123 @@ const Dashboard = () => {
   const fetchDadosSaaS = async () => {
     setLoading(true);
     try {
-      // 1. Busca os dados reais das Views do Supabase
-      // Exemplo: const { data: faturamento } = await supabase.from('v_faturamento_mensal').select('*');
+      const { data: { user } } = await supabase.auth.getUser();
+      const { data: perfil } = await supabase
+        .from('perfis_acesso')
+        .select('salao_id')
+        .eq('auth_user_id', user?.id)
+        .single();
       
-      // Para visualização do layout com os seus dados da planilha:
+      const salaoId = perfil?.salao_id;
+      if (!salaoId) return;
+
+      // 📋 Busca configurações do salão (custo_fixo_por_atendimento)
+      const { data: configData } = await supabase
+        .from('configuracoes')
+        .select('custo_fixo_por_atendimento')
+        .eq('salao_id', salaoId)
+        .single();
+      
+      const custoFixo = configData?.custo_fixo_por_atendimento || 29;
+      setCustoFixoPorAtendimento(custoFixo);
+
+      // 🔄 Busca dados reais dos atendimentos para cálculos precisos
+      const { data: atendimentos } = await supabase
+        .from('atendimentos')
+        .select('valor_cobrado, procedimento_id, profissional_id, data')
+        .eq('salao_id', salaoId)
+        .eq('status', 'EXECUTADO')
+        .eq('pago', true);
+
+      const { data: procedimentos } = await supabase
+        .from('procedimentos')
+        .select('id, nome')
+        .eq('salao_id', salaoId);
+
+      const { data: profissionais } = await supabase
+        .from('profissionais')
+        .select('id, nome')
+        .eq('salao_id', salaoId);
+
+      // 🧮 Processa dados com fórmula corrigida
+      let faturamentoTotal = 0;
+      let lucroTotalPossivel = 0;
+      let lucroTotalReal = 0;
+      const mesesMap = {};
+      const procedimentosMap = {};
+      const profissionaisMap = {};
+
+      atendimentos?.forEach(atend => {
+        const calc = calcularLucroReal(atend.valor_cobrado);
+        
+        // KPIs
+        faturamentoTotal += calc.bruto;
+        lucroTotalPossivel += (calc.bruto - calc.taxaSaida - calc.custoFixo); // Sem comissão
+        lucroTotalReal += calc.lucro;
+
+        // Faturamento por mês
+        const mesAtend = new Date(atend.data).toLocaleString('pt-BR', { month: 'short', year: '2-digit' });
+        if (!mesesMap[mesAtend]) mesesMap[mesAtend] = { mes: mesAtend, valor: 0, qtd: 0 };
+        mesesMap[mesAtend].valor += calc.bruto;
+        mesesMap[mesAtend].qtd += 1;
+
+        // Lucro real por procedimento
+        const proc = procedimentos?.find(p => p.id === atend.procedimento_id);
+        if (proc) {
+          if (!procedimentosMap[proc.nome]) procedimentosMap[proc.nome] = 0;
+          procedimentosMap[proc.nome] += calc.lucro;
+        }
+
+        // Rendimento por profissional
+        const prof = profissionais?.find(p => p.id === atend.profissional_id);
+        if (prof) {
+          if (!profissionaisMap[prof.nome]) profissionaisMap[prof.nome] = 0;
+          profissionaisMap[prof.nome] += calc.comissao;
+        }
+      });
+
+      // Converte maps em arrays
+      const faturamentoMensal = Object.values(mesesMap).sort((a, b) => 
+        new Date(a.mes) - new Date(b.mes)
+      );
+
+      const lucroReal = Object.entries(procedimentosMap)
+        .map(([nome, valor]) => ({ nome, valor }))
+        .sort((a, b) => b.valor - a.valor);
+
+      const rendimentoEquipe = Object.entries(profissionaisMap)
+        .map(([nome, valor]) => ({ nome, valor }))
+        .sort((a, b) => b.valor - a.valor);
+
+      const rankingPossivel = procedimentos
+        ?.map(p => ({
+          nome: p.nome,
+          valor: (atendimentos?.filter(a => a.procedimento_id === p.id).length || 0) * 
+                 (atendimentos?.filter(a => a.procedimento_id === p.id).reduce((acc, a) => acc + a.valor_cobrado, 0) || 0) / 
+                 (atendimentos?.filter(a => a.procedimento_id === p.id).length || 1)
+        }))
+        .filter(p => p.valor > 0)
+        .sort((a, b) => b.valor - a.valor)
+        .slice(0, 4) || [];
+
+      // ✅ Atualiza estado com dados reais
       setDados({
-        kpis: { bruto: 125098, possivel: 20830, real: 19384 },
-        faturamentoMensal: [
-            { mes: 'jan', valor: 7106, qtd: 65 }, { mes: 'fev', valor: 12483, qtd: 98 },
-            { mes: 'mar', valor: 15417, qtd: 120 }, { mes: 'abr', valor: 12176, qtd: 110 },
-            { mes: 'mai', valor: 14819, qtd: 135 }, { mes: 'jun', valor: 14003, qtd: 128 },
-            { mes: 'jul', valor: 15885, qtd: 140 }, { mes: 'ago', valor: 13764, qtd: 125 },
-            { mes: 'set', valor: 16066, qtd: 142 }
-        ],
-        rankingPossivel: [
-            { nome: 'Progressiva', valor: 23570 }, { nome: 'Unhas Gel', valor: 18235 },
-            { nome: 'Botox', valor: 14260 }, { nome: 'Ext. cílios', valor: 10040 }
-        ].sort((a,b) => b.valor - a.valor),
-        lucroReal: [
-            { nome: 'Progressiva', valor: 9225.82 }, { nome: 'Botox', valor: 5181.80 },
-            { nome: 'Unhas Gel', valor: -250.35 }, { nome: 'Luzes', valor: -33.49 },
-            { nome: 'Kit Lavatorio', valor: -751.57 }
-        ].sort((a,b) => b.valor - a.valor),
-        rendimentoEquipe: [
-            { nome: 'Teta', valor: 26968 }, { nome: 'Mirelly', valor: 10557 },
-            { nome: 'Geovana', valor: 4494 }, { nome: 'Yara', valor: 1181 }
-        ],
+        kpis: { bruto: faturamentoTotal, possivel: lucroTotalPossivel, real: lucroTotalReal },
+        faturamentoMensal,
+        rankingPossivel,
+        lucroReal,
+        rendimentoEquipe,
         comparativoGeral: [
-            { label: 'Lucro possível', valor: 26127 },
-            { label: 'Lucro real', valor: 24307 }
+          { label: 'Lucro possível', valor: lucroTotalPossivel },
+          { label: 'Lucro real', valor: lucroTotalReal }
         ]
       });
-    } catch (e) { console.error(e); } finally { setLoading(false); }
+
+    } catch (e) { 
+      console.error('Erro ao carregar Dashboard:', e); 
+    } finally { 
+      setLoading(false); 
+    }
   };
 
   if (loading) return <div className="p-10 text-center text-gray-400">Processando fechamento...</div>;
@@ -74,15 +187,17 @@ const Dashboard = () => {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-10">
         <div className="bg-gray-50 p-4 rounded-xl border border-gray-100">
           <p className="text-[11px] uppercase tracking-wider text-gray-500 font-bold">Total faturado bruto</p>
-          <p className="text-2xl font-semibold text-gray-900 mt-1">R$ {dados.kpis.bruto.toLocaleString()}</p>
+          <p className="text-2xl font-semibold text-gray-900 mt-1">{formatarBRL(dados.kpis.bruto)}</p>
         </div>
         <div className="bg-gray-50 p-4 rounded-xl border border-gray-100">
           <p className="text-[11px] uppercase tracking-wider text-gray-500 font-bold">Lucro possível</p>
-          <p className="text-2xl font-semibold text-gray-900 mt-1 text-gray-400">R$ {dados.kpis.possivel.toLocaleString()}</p>
+          <p className="text-2xl font-semibold text-gray-900 mt-1 text-gray-400">{formatarBRL(dados.kpis.possivel)}</p>
         </div>
         <div className="bg-gray-50 p-4 rounded-xl border border-gray-100 ring-2 ring-emerald-500/20">
           <p className="text-[11px] uppercase tracking-wider text-emerald-600 font-bold">Lucro real</p>
-          <p className="text-2xl font-semibold text-emerald-700 mt-1">R$ {dados.kpis.real.toLocaleString()}</p>
+          <p className={`text-2xl font-semibold mt-1 ${dados.kpis.real >= 0 ? 'text-emerald-700' : 'text-red-700'}`}>
+            {formatarBRL(dados.kpis.real)}
+          </p>
         </div>
       </div>
 
@@ -98,8 +213,8 @@ const Dashboard = () => {
                 <BarChart data={dados.faturamentoMensal}>
                   <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f0f0f0" />
                   <XAxis dataKey="mes" axisLine={false} tickLine={false} tick={{fontSize: 12, fill: '#999'}} />
-                  <YAxis axisLine={false} tickLine={false} tick={{fontSize: 12, fill: '#999'}} tickFormatter={v => `R$${v/1000}k`} />
-                  <Tooltip cursor={{fill: '#f8f8f8'}} formatter={(v) => [`R$ ${v.toLocaleString()}`, 'Faturamento']} />
+                  <YAxis axisLine={false} tickLine={false} tick={{fontSize: 12, fill: '#999'}} tickFormatter={v => `R$${(v/1000).toFixed(1)}k`} />
+                  <Tooltip cursor={{fill: '#f8f8f8'}} formatter={(v) => [formatarBRL(v), 'Faturamento']} />
                   <Bar dataKey="valor" fill={COLORS.primary} radius={[4, 4, 0, 0]} label={{ position: 'top', fill: '#E85D24', fontSize: 10, formatter: (v, i) => `${dados.faturamentoMensal[i.index].qtd} at.` }} />
                 </BarChart>
               </ResponsiveContainer>
@@ -112,13 +227,14 @@ const Dashboard = () => {
           <h2 className="text-[13px] font-medium text-gray-400 uppercase tracking-widest border-b pb-2 mb-4">Gráfico 3 — Lucro real por procedimento</h2>
           <div className="bg-white border border-gray-100 rounded-xl p-5">
             <h3 className="text-base font-medium text-gray-800">O que cada serviço realmente deu de lucro</h3>
+            <p className="text-xs text-gray-500 mt-1">Fórmula: Bruto - Taxa(5%) - Custo({formatarBRL(custoFixoPorAtendimento)}) - Comissão(60%)</p>
             <div className="h-64 mt-4">
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={dados.lucroReal} layout="vertical">
                   <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="#f0f0f0" />
                   <XAxis type="number" axisLine={false} tickLine={false} tick={{fontSize: 10}} />
                   <YAxis dataKey="nome" type="category" width={90} axisLine={false} tickLine={false} tick={{fontSize: 11}} />
-                  <Tooltip />
+                  <Tooltip formatter={(v) => [formatarBRL(v), 'Lucro']} />
                   <ReferenceLine x={0} stroke="#000" strokeWidth={1} />
                   <Bar dataKey="valor" radius={[0, 4, 4, 0]}>
                     {dados.lucroReal.map((entry, index) => (
@@ -130,7 +246,7 @@ const Dashboard = () => {
             </div>
             {dados.lucroReal.some(v => v.valor < 0) && (
               <div className="mt-4 p-3 bg-red-50 text-red-700 text-xs rounded-lg border border-red-100">
-                ⚠️ <strong>Atenção:</strong> Serviços em vermelho estão com custos superiores à receita.
+                ⚠️ <strong>Atenção:</strong> Serviços em vermelho estão gerando prejuízo. Revise preço ou custos.
               </div>
             )}
           </div>
@@ -145,8 +261,8 @@ const Dashboard = () => {
                 <BarChart data={dados.rendimentoEquipe}>
                   <XAxis dataKey="nome" axisLine={false} tickLine={false} />
                   <YAxis hide />
-                  <Tooltip />
-                  <Bar dataKey="valor" radius={[4, 4, 0, 0]} label={{ position: 'top', fontSize: 11 }}>
+                  <Tooltip formatter={(v) => [formatarBRL(v), 'Comissão']} />
+                  <Bar dataKey="valor" radius={[4, 4, 0, 0]} label={{ position: 'top', fontSize: 11, formatter: (v) => formatarBRL(v).replace('R$ ', '') }}>
                     {dados.rendimentoEquipe.map((entry, index) => (
                       <Cell key={index} fill={entry.nome === 'Teta' ? COLORS.teta : COLORS.primary} />
                     ))}
@@ -166,8 +282,8 @@ const Dashboard = () => {
                 <BarChart data={dados.comparativoGeral} barSize={60}>
                   <XAxis dataKey="label" axisLine={false} tickLine={false} />
                   <YAxis hide />
-                  <Tooltip />
-                  <Bar dataKey="valor" radius={[6, 6, 0, 0]}>
+                  <Tooltip formatter={(v) => [formatarBRL(v), 'Lucro']} />
+                  <Bar dataKey="valor" radius={[6, 6, 0, 0]} label={{ position: 'top', fontSize: 10, formatter: (v) => formatarBRL(v).replace('R$ ', '').split(',')[0] }}>
                     <Cell fill={COLORS.primary} />
                     <Cell fill={COLORS.teta} />
                   </Bar>

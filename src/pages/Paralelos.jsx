@@ -10,7 +10,7 @@ function toISO(date) {
 }
 
 const MESES = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
-const vazio = { data: toISO(new Date()), profissional_id: '', descricao: '', cliente: '', valor: '', valor_pago: '' };
+const vazio = { data: toISO(new Date()), profissional_id: '', descricao: '', cliente: '', valor: '', valor_pago: '', valor_profissional: '' };
 
 export default function Paralelos({ salaoId }) {
   const hoje = new Date();
@@ -48,6 +48,12 @@ export default function Paralelos({ salaoId }) {
 
   const salvar = async (e) => {
     e.preventDefault();
+    
+    // ✅ Trava de segurança financeira
+    if (Number(form.valor_profissional) > Number(form.valor)) {
+      return alert("Erro: A comissão do profissional não pode ser maior que o valor total cobrado da cliente.");
+    }
+    
     setSalvando(true);
     const payload = {
       ...form,
@@ -55,6 +61,7 @@ export default function Paralelos({ salaoId }) {
       profissional_id: form.profissional_id || null,
       valor: Number(form.valor) || 0,
       valor_pago: Number(form.valor_pago) || 0,
+      valor_profissional: Number(form.valor_profissional) || 0,
     };
     const { error } = await supabase.from('procedimentos_paralelos').insert([payload]);
     setSalvando(false);
@@ -143,6 +150,10 @@ export default function Paralelos({ salaoId }) {
               <div className="grid grid-cols-2 gap-3">
                 <div><label className="text-xs text-gray-600 block mb-1">Valor (R$)</label><input type="number" step="0.01" required value={form.valor} onChange={e => setForm({...form, valor: e.target.value})} className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm" /></div>
                 <div><label className="text-xs text-gray-600 block mb-1">Pago (R$)</label><input type="number" step="0.01" value={form.valor_pago} onChange={e => setForm({...form, valor_pago: e.target.value})} className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm" /></div>
+              </div>
+              <div>
+                <label className="text-xs text-gray-600 block mb-1">Comissão do Profissional (R$)</label>
+                <input type="number" step="0.01" value={form.valor_profissional} onChange={e => setForm({...form, valor_profissional: e.target.value})} className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm" placeholder="Quanto o profissional ganha" />
               </div>
               <div className="flex gap-3 pt-2">
                 <button type="button" onClick={() => setModal(false)} className="flex-1 py-2.5 text-sm border border-gray-300 rounded-lg hover:bg-gray-50">Cancelar</button>

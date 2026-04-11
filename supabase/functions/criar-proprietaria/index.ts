@@ -14,7 +14,7 @@ serve(async (req) => {
   }
 
   try {
-    const { email, senha, username, salao_id, vendedor_id } = await req.json()
+    const { email, senha, nome, nome_salao, telefone, vendedor_id } = await req.json()
 
     // Usando a chave de Serviço (Bypassa RLS e não afeta a sessão do navegador)
     const supabaseAdmin = createClient(
@@ -22,27 +22,44 @@ serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     )
 
-    // 1. Cria a proprietária já com e-mail confirmado
+    // 1. Cria o salão
+    const { data: salao, error: salaoError } = await supabaseAdmin
+      .from('saloes')
+      .insert([{ nome: nome_salao, telefone, vendedor_id }])
+      .select('id')
+      .single()
+
+    if (salaoError) throw salaoError
+
+    // 2. Cria a proprietária com e-mail real (email_confirm: false para enviar e-mail de ativação)
     const { data: authData, error: authError } = await supabaseAdmin.auth.admin.createUser({
       email,
       password: senha,
-      email_confirm: true,
+      email_confirm: false, // ← Envia e-mail de ativação
       user_metadata: {
         cargo: 'PROPRIETARIO',
-        salao_id,
-        vendedor_id,
-        username
+        nome,
+        salao_id: salao.id
       }
     })
 
     if (authError) throw authError
 
-    // 2. Salva a credencial na tabela para o Vendedor entregar depois
+    // 3. Cria o perfil de acesso
+    const { error: perfilError } = await supabaseAdmin.from('perfis_acesso').insert({
+      auth_user_id: authData.user.id,
+      salao_id: salao.id,
+      cargo: 'PROPRIETARIO'
+    })
+
+    if (perfilError) throw perfilError
+
+    // 4. Salva a credencial na tabela para o Vendedor consultar depois
     const { error: loginError } = await supabaseAdmin.from('logins_gerados').insert({
       vendedor_id,
-      salao_id,
-      username,
-      senha_hash: senha, 
+      salao_id: salao.id,
+      email,
+      senha_hash: senha,
       auth_user_id: authData.user.id
     })
 

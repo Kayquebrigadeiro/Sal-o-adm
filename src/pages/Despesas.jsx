@@ -8,9 +8,9 @@ const Despesas = () => {
   const [novaDespesa, setNovaDespesa] = useState({
     descricao: '',
     valor: '',
+    valor_pago: '',
     data_vencimento: new Date().toISOString().split('T')[0],
-    tipo: 'PROFISSIONAL',
-    paga: true
+    tipo: 'PROFISSIONAL'
   });
 
   useEffect(() => {
@@ -50,15 +50,15 @@ const Despesas = () => {
         salao_id: perfil.salao_id,
         descricao: novaDespesa.descricao,
         valor: Number(novaDespesa.valor),
+        valor_pago: Number(novaDespesa.valor_pago) || 0,
         data_vencimento: novaDespesa.data_vencimento,
-        tipo: novaDespesa.tipo,
-        paga: novaDespesa.paga
+        tipo: novaDespesa.tipo
       }]);
 
       if (error) throw error;
 
       alert("Despesa registrada com sucesso!");
-      setNovaDespesa({ ...novaDespesa, descricao: '', valor: '' });
+      setNovaDespesa({ descricao: '', valor: '', valor_pago: '', data_vencimento: new Date().toISOString().split('T')[0], tipo: 'PROFISSIONAL' });
       carregarDespesas(); 
     } catch (error) {
       alert("Erro ao salvar: " + error.message);
@@ -84,26 +84,27 @@ const Despesas = () => {
 
             <div className="flex gap-4">
               <div className="w-1/2">
-                <label className="block text-sm font-medium text-gray-700">Valor (R$)</label>
+                <label className="block text-sm font-medium text-gray-700">Valor Total (R$)</label>
                 <input required type="number" step="0.01" value={novaDespesa.valor} onChange={e => setNovaDespesa({...novaDespesa, valor: e.target.value})} className="mt-1 w-full p-2 border rounded-lg" placeholder="0.00" />
               </div>
+              <div className="w-1/2">
+                <label className="block text-sm font-medium text-gray-700">Quanto foi pago (R$)</label>
+                <input type="number" step="0.01" value={novaDespesa.valor_pago} onChange={e => setNovaDespesa({...novaDespesa, valor_pago: e.target.value})} className="mt-1 w-full p-2 border rounded-lg" placeholder="0.00" />
+              </div>
+            </div>
+
+            <div className="flex gap-4">
               <div className="w-1/2">
                 <label className="block text-sm font-medium text-gray-700">Data</label>
                 <input required type="date" value={novaDespesa.data_vencimento} onChange={e => setNovaDespesa({...novaDespesa, data_vencimento: e.target.value})} className="mt-1 w-full p-2 border rounded-lg" />
               </div>
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700">Tipo de Gasto</label>
-              <select value={novaDespesa.tipo} onChange={e => setNovaDespesa({...novaDespesa, tipo: e.target.value})} className="mt-1 w-full p-2 border rounded-lg">
-                <option value="PROFISSIONAL">🏢 Despesa do Salão</option>
-                <option value="PESSOAL">🏠 Gasto Pessoal (Pró-labore)</option>
-              </select>
-            </div>
-
-            <div className="flex items-center gap-2 mt-4">
-              <input type="checkbox" id="paga" checked={novaDespesa.paga} onChange={e => setNovaDespesa({...novaDespesa, paga: e.target.checked})} className="w-4 h-4 text-emerald-600 rounded" />
-              <label htmlFor="paga" className="text-sm font-medium text-gray-700">Já está pago</label>
+              <div className="w-1/2">
+                <label className="block text-sm font-medium text-gray-700">Tipo de Gasto</label>
+                <select value={novaDespesa.tipo} onChange={e => setNovaDespesa({...novaDespesa, tipo: e.target.value})} className="mt-1 w-full p-2 border rounded-lg">
+                  <option value="PROFISSIONAL">🏢 Despesa do Salão</option>
+                  <option value="PESSOAL">🏠 Gasto Pessoal (Pró-labore)</option>
+                </select>
+              </div>
             </div>
 
             <button type="submit" className="w-full py-3 mt-4 bg-red-500 text-white font-bold rounded-xl hover:bg-red-600 transition-colors">
@@ -122,7 +123,8 @@ const Despesas = () => {
                     <th className="p-3 rounded-tl-lg">Data</th>
                     <th className="p-3">Descrição</th>
                     <th className="p-3">Categoria</th>
-                    <th className="p-3 text-right">Valor</th>
+                    <th className="p-3 text-right">Valor Total</th>
+                    <th className="p-3 text-right">Pago</th>
                     <th className="p-3 text-center rounded-tr-lg">Status</th>
                   </tr>
                 </thead>
@@ -137,8 +139,13 @@ const Despesas = () => {
                         </span>
                       </td>
                       <td className="p-3 text-right text-red-600 font-bold">- R$ {d.valor.toFixed(2)}</td>
+                      <td className="p-3 text-right text-emerald-600">R$ {(d.valor_pago || 0).toFixed(2)}</td>
                       <td className="p-3 text-center">
-                        {d.paga ? <span className="text-emerald-500">✔️ Pago</span> : <span className="text-amber-500">⏳ Pendente</span>}
+                        {d.valor_pendente <= 0 ? (
+                          <span className="text-emerald-500 font-bold">✔️ Quitado</span>
+                        ) : (
+                          <span className="text-amber-500 font-bold">⏳ Pendente: R$ {d.valor_pendente.toFixed(2)}</span>
+                        )}
                       </td>
                     </tr>
                   ))}

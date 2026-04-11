@@ -16,6 +16,7 @@ const Agenda = () => {
   // NOVO: Modal de Checkout (Finalizar Atendimento)
   const [modalCheckoutAberto, setModalCheckoutAberto] = useState(false);
   const [atendimentoSelecionado, setAtendimentoSelecionado] = useState(null);
+  const [valorRecebido, setValorRecebido] = useState('');
 
   const gerarHorarios = () => {
     const horarios = [];
@@ -104,31 +105,44 @@ const Agenda = () => {
   // --- FUNÇÕES DE CHECKOUT / FINALIZAR ---
   const abrirModalCheckout = (agendamento) => {
     setAtendimentoSelecionado(agendamento);
+    setValorRecebido(agendamento.valor_pago || '');
     setModalCheckoutAberto(true);
   };
 
-  const atualizarStatusAtendimento = async (acao) => {
-    try {
-      let updates = {};
-      
-      if (acao === 'PAGAR_EXECUTAR') {
-        updates = { pago: true, executado: true, status: 'EXECUTADO' };
-      } else if (acao === 'CANCELAR') {
-        if(!window.confirm("Tem certeza que deseja cancelar este agendamento?")) return;
-        updates = { status: 'CANCELADO' };
-      }
+  const finalizarAtendimento = async () => {
+    // ✅ Validação robusta: não aceita vazio nem número negativo
+    if (valorRecebido === '' || Number(valorRecebido) < 0) {
+      return alert("Insira um valor pago válido.");
+    }
 
-      const { error } = await supabase
-        .from('atendimentos')
-        .update(updates)
-        .eq('id', atendimentoSelecionado.id);
+    const { error } = await supabase
+      .from('atendimentos')
+      .update({ 
+        status: 'EXECUTADO', 
+        valor_pago: Number(valorRecebido) 
+      })
+      .eq('id', atendimentoSelecionado.id);
 
-      if (error) throw error;
-      
+    if (error) alert("Erro ao finalizar: " + error.message);
+    else {
       setModalCheckoutAberto(false);
-      fetchDadosDoDia(); // Recarrega para atualizar a cor na tela
-    } catch (error) {
-      alert("Erro ao atualizar: " + error.message);
+      setValorRecebido('');
+      fetchDadosDoDia();
+    }
+  };
+
+  const cancelarAtendimento = async () => {
+    if(!window.confirm("Tem certeza que deseja cancelar este agendamento?")) return;
+    
+    const { error } = await supabase
+      .from('atendimentos')
+      .update({ status: 'CANCELADO' })
+      .eq('id', atendimentoSelecionado.id);
+
+    if (error) alert("Erro ao cancelar: " + error.message);
+    else {
+      setModalCheckoutAberto(false);
+      fetchDadosDoDia();
     }
   };
 
@@ -185,13 +199,15 @@ const Agenda = () => {
                           // Card de Horário Ocupado (Agora é clicável para Checkout)
                           <div 
                             onClick={() => abrirModalCheckout(agendamento)}
-                            className="p-2 border rounded-lg shadow-sm cursor-pointer transition-colors"
+                            className={`p-2 border rounded-lg shadow-sm cursor-pointer transition-colors ${
+                              agendamento.status === 'EXECUTADO' ? 'bg-emerald-50 border-emerald-200' : 'bg-white'
+                            }`}
                           >
                             <div className="flex justify-between items-start">
                               <p className="font-bold">
                                 {agendamento.cliente}
                               </p>
-                              {agendamento.pago && <span className="text-xs bg-slate-200 text-slate-600 px-1 rounded">Pago</span>}
+                              {agendamento.status === 'EXECUTADO' && <span className="text-xs bg-emerald-200 text-emerald-700 px-1 rounded">✓</span>}
                             </div>
                             <p className="text-xs truncate">
                               {agendamento.procedimentos?.nome}
@@ -275,28 +291,45 @@ const Agenda = () => {
               </div>
               <div className="flex justify-between text-sm font-bold text-emerald-600 border-t pt-2 mt-2">
                 <span>Valor Cobrado:</span>
-                <span>R\$ {atendimentoSelecionado.valor_cobrado}</span>
+                <span>R$ {atendimentoSelecionado.valor_cobrado}</span>
               </div>
             </div>
 
-            {atendimentoSelecionado.pago && atendimentoSelecionado.executado ? (
+            {atendimentoSelecionado.status === 'EXECUTADO' ? (
               <div className="text-center p-3 bg-emerald-50 text-emerald-700 rounded-lg mb-6 border border-emerald-200">
-                ✔️ Este atendimento já foi pago e finalizado.
+                ✔️ Este atendimento já foi finalizado.
               </div>
             ) : (
-              <button 
-                onClick={() => atualizarStatusAtendimento('PAGAR_EXECUTAR')}
-                className="w-full py-3 bg-emerald-500 text-white font-bold rounded-xl hover:bg-emerald-600 transition-colors shadow-md mb-3"
-              >
-                💰 Receber Pagamento e Finalizar
-              </button>
+              <>
+                <div className="mb-4">
+                  <label className="block text-sm font-medium text-slate-700 mb-1">Valor Pago Hoje (R$)</label>
+                  <input 
+                    type="number" 
+                    step="0.01"
+                    value={valorRecebido}
+                    onChange={e => setValorRecebido(e.target.value)}
+                    placeholder={atendimentoSelecionado.valor_cobrado}
+                    className="w-full p-3 border rounded-xl focus:ring-2 focus:ring-emerald-500"
+                  />
+                  {Number(valorRecebido) < atendimentoSelecionado.valor_cobrado && (
+                    <p className="text-xs text-amber-600 mt-1">⚠️ Restará um saldo pendente de R$ {(atendimentoSelecionado.valor_cobrado - Number(valorRecebido)).toFixed(2)}</p>
+                  )}
+                </div>
+
+                <button 
+                  onClick={finalizarAtendimento}
+                  className="w-full py-3 bg-emerald-500 text-white font-bold rounded-xl hover:bg-emerald-600 transition-colors shadow-md mb-3"
+                >
+                  Confirmar e Finalizar
+                </button>
+              </>
             )}
 
             <div className="flex justify-between mt-4 border-t pt-4">
               <button 
-                onClick={() => atualizarStatusAtendimento('CANCELAR')}
+                onClick={cancelarAtendimento}
                 className="text-red-500 hover:bg-red-50 px-3 py-2 rounded-lg text-sm transition-colors"
-                disabled={atendimentoSelecionado.pago}
+                disabled={atendimentoSelecionado.status === 'EXECUTADO'}
               >
                 Cancelar Agendamento
               </button>

@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { supabase } from '../supabaseClient';
 
 const WizardBemVinda = () => {
   const [step, setStep] = useState(1);
@@ -59,24 +60,88 @@ const WizardBemVinda = () => {
   const finalizarWizard = async () => {
     setLoading(true);
     
-    // A MATEMÁTICA DA PLANILHA ACONTECE AQUI:
-    const custoFixoTotal = calcularCustoFixoTotal();
-    const custoPorAtendimento = custoFixoTotal / (Number(dados.estimativaAtendimentosMes) || 1);
+    try {
+      // 1. Descobrir quem é a proprietária logada e qual o ID do salão dela
+      const { data: { user }, error: erroUser } = await supabase.auth.getUser();
+      if (erroUser || !user) throw new Error("Usuário não autenticado.");
 
-    const payloadFinal = {
-      ...dados,
-      custoFixoTotal,
-      custoFixoPorAtendimento: custoPorAtendimento.toFixed(2)
-    };
+      const { data: perfil, error: erroPerfil } = await supabase
+        .from('perfis_acesso')
+        .select('salao_id')
+        .eq('auth_user_id', user.id)
+        .single();
+        
+      if (erroPerfil || !perfil) throw new Error("Perfil não encontrado.");
+      const salaoId = perfil.salao_id;
 
-    console.log("Pronto para enviar ao Supabase:", payloadFinal);
-    
-    // Simula o tempo de salvamento
-    setTimeout(() => {
-      alert(`Mágica feita! Seu custo fixo por atendimento foi calculado em: R$ ${payloadFinal.custoFixoPorAtendimento}. \nAbra o console (F12) para ver os dados que vão para o banco.`);
+      // 2. A Matemática: Calcula o Custo Fixo por Atendimento
+      const custoFixoTotal = calcularCustoFixoTotal();
+      const custoPorAtendimento = custoFixoTotal / (Number(dados.estimativaAtendimentosMes) || 1);
+
+      // 3. Salvar a Inteligência Financeira
+      const { error: erroConfig } = await supabase
+        .from('configuracoes')
+        .update({
+          custo_fixo_por_atendimento: custoPorAtendimento.toFixed(2),
+          taxa_maquininha_pct: Number(dados.taxaMaquininha),
+          gastos_pessoais: dados.gastosPessoais
+        })
+        .eq('salao_id', salaoId);
+
+      if (erroConfig) throw erroConfig;
+
+      // 4. Salvar a Equipe
+      const equipeInsert = dados.equipe
+        .filter(m => m.nome.trim() !== '')
+        .map(m => ({
+          salao_id: salaoId,
+          nome: m.nome,
+          cargo: m.cargo,
+          salario_fixo: Number(m.salarioFixo) || 0
+        }));
+        
+      if (equipeInsert.length > 0) {
+        const { error: erroEquipe } = await supabase.from('profissionais').insert(equipeInsert);
+        if (erroEquipe) throw erroEquipe;
+      }
+
+      // 5. Salvar os Serviços (Carros-Chefes)
+      const comissaoPadrao = Number(dados.equipe[0]?.comissao) || 40; 
+      
+      const servicosInsert = dados.servicos
+        .filter(s => s.nome.trim() !== '')
+        .map(s => ({
+          salao_id: salaoId,
+          nome: s.nome,
+          preco_p: Number(s.preco) || 0,
+          custo_variavel: Number(s.custoMaterial) || 0,
+          requer_comprimento: s.requerComprimento,
+          porcentagem_profissional: comissaoPadrao
+        }));
+
+      if (servicosInsert.length > 0) {
+        const { error: erroServicos } = await supabase.from('procedimentos').insert(servicosInsert);
+        if (erroServicos) throw erroServicos;
+      }
+
+      // 6. Virar a chave: Salão Configurado!
+      const { error: erroSalao } = await supabase
+        .from('saloes')
+        .update({ configurado: true })
+        .eq('id', salaoId);
+
+      if (erroSalao) throw erroSalao;
+
+      alert("Mágica feita! Seu salão está configurado. 🚀");
+      
+      window.location.reload(); 
+
+    } catch (err) {
+      console.error('[Wizard] Erro:', err);
+      alert("Erro ao salvar configurações: " + err.message);
+    } finally {
       setLoading(false);
-      // window.location.href = '/dashboard';
-    }, 1500);
+    }
   };
 
   // ================= RENDERIZAÇÃO DOS PASSOS =================

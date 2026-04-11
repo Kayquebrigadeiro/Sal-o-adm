@@ -5,12 +5,11 @@ const Despesas = () => {
   const [despesas, setDespesas] = useState([]);
   const [loading, setLoading] = useState(true);
   
-  // Estado do formulário
   const [novaDespesa, setNovaDespesa] = useState({
     descricao: '',
     valor: '',
     data_vencimento: new Date().toISOString().split('T')[0],
-    tipo: 'PROFISSIONAL', // ou PESSOAL
+    tipo: 'PROFISSIONAL',
     paga: true
   });
 
@@ -21,7 +20,6 @@ const Despesas = () => {
   const carregarDespesas = async () => {
     setLoading(true);
     try {
-      // BLINDAGEM SAAS: Pega o Salão do usuário logado
       const { data: { user } } = await supabase.auth.getUser();
       const { data: perfil } = await supabase.from('perfis_acesso').select('salao_id').eq('auth_user_id', user.id).single();
       
@@ -49,7 +47,7 @@ const Despesas = () => {
       const { data: perfil } = await supabase.from('perfis_acesso').select('salao_id').eq('auth_user_id', user.id).single();
 
       const { error } = await supabase.from('despesas').insert([{
-        salao_id: perfil.salao_id, // Garante que vai pro salão certo
+        salao_id: perfil.salao_id,
         descricao: novaDespesa.descricao,
         valor: Number(novaDespesa.valor),
         data_vencimento: novaDespesa.data_vencimento,
@@ -61,19 +59,10 @@ const Despesas = () => {
 
       alert("Despesa registrada com sucesso!");
       setNovaDespesa({ ...novaDespesa, descricao: '', valor: '' });
-      carregarDespesas(); // Atualiza a lista
+      carregarDespesas(); 
     } catch (error) {
       alert("Erro ao salvar: " + error.message);
     }
-  };
-
-  const formatarBRL = (valor) => {
-    return new Intl.NumberFormat('pt-BR', {
-      style: 'currency',
-      currency: 'BRL',
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2
-    }).format(valor);
   };
 
   return (
@@ -85,7 +74,6 @@ const Despesas = () => {
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         
-        {/* Formulário de Nova Despesa */}
         <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 lg:col-span-1 h-fit">
           <h2 className="text-lg font-bold mb-4">Nova Saída</h2>
           <form onSubmit={salvarDespesa} className="space-y-4">
@@ -124,7 +112,6 @@ const Despesas = () => {
           </form>
         </div>
 
-        {/* Lista de Últimas Despesas */}
         <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 lg:col-span-2">
           <h2 className="text-lg font-bold mb-4">Últimas Movimentações</h2>
           {loading ? <p>Carregando...</p> : (
@@ -149,7 +136,7 @@ const Despesas = () => {
                           {d.tipo}
                         </span>
                       </td>
-                      <td className="p-3 text-right text-red-600 font-bold">- {formatarBRL(d.valor)}</td>
+                      <td className="p-3 text-right text-red-600 font-bold">- R$ {d.valor.toFixed(2)}</td>
                       <td className="p-3 text-center">
                         {d.paga ? <span className="text-emerald-500">✔️ Pago</span> : <span className="text-amber-500">⏳ Pendente</span>}
                       </td>
@@ -166,18 +153,7 @@ const Despesas = () => {
   );
 };
 
-export default Despesas;import { useState, useEffect } from 'react';
-import { supabase } from '../supabaseClient';
-
-function fmt(val) {
-  return Number(val || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
-}
-function toISO(date) {
-  const y = date.getFullYear(), m = String(date.getMonth()+1).padStart(2,'0'), d = String(date.getDate()).padStart(2,'0');
-  return `${y}-${m}-${d}`;
-}
-
-const TIPOS = ['ALUGUEL','ENERGIA','AGUA','INTERNET','MATERIAL','EQUIPAMENTO','FORNECEDOR','FUNCIONARIO','OUTRO'];
+export default Despesas;
 const MESES = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
 const vazio = { data: toISO(new Date()), descricao: '', tipo: 'OUTRO', valor: '', pago: false };
 

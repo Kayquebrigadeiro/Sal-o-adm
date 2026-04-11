@@ -40,7 +40,9 @@ serve(async (req) => {
         cargo: 'PROPRIETARIO',
         nome,
         salao_id: salao.id
-      }
+      },
+      // Opcional: pode passar redirectTo aqui também se necessário
+      // options: { emailRedirectTo: redirectTo }
     })
 
     if (authError) throw authError

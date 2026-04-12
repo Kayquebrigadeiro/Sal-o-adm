@@ -10,7 +10,7 @@ function gerarSenhaSegura() {
   ).join('');
 }
 
-export default function NovoSalao() {
+export default function NovoSalao({ userId }) {
   const navigate = useNavigate();
   const [etapa, setEtapa] = useState(1);
   const [carregando, setCarregando] = useState(false);
@@ -53,7 +53,7 @@ export default function NovoSalao() {
           nome:         form.nome_proprietaria,
           nome_salao:   form.nome_salao,
           telefone:     form.telefone,
-          vendedor_id:  session.user.id,
+          vendedor_id:  userId, // Usando userId da prop
           redirectTo:   window.location.origin + '/agenda',
         },
       });

@@ -13,14 +13,42 @@ serve(async (req) => {
     return new Response('ok', { headers: corsHeaders })
   }
 
-  try {
-    const { email, senha, nome, nome_salao, telefone, vendedor_id } = await req.json()
+  // LOG TEMPORÁRIO: Ver o que está chegando
+  const body = await req.json()
+  console.log('BODY RECEBIDO:', JSON.stringify(body))
 
-    // Usando a chave de Serviço (Bypassa RLS e não afeta a sessão do navegador)
-    const supabaseAdmin = createClient(
+  // Cria cliente admin no escopo externo para usar no rollback
+  const supabaseAdmin = createClient(
+    Deno.env.get('SUPABASE_URL') ?? '',
+    Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
+  )
+
+  try {
+    // Valida o token do vendedor (opcional, mas recomendado)
+    const authHeader = req.headers.get('Authorization')
+    if (!authHeader) {
+      throw new Error('Token de autoriza\u00e7\u00e3o n\u00e3o fornecido')
+    }
+
+    // Cria cliente com anon key para validar o token do vendedor
+    const supabaseClient = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
+      Deno.env.get('SUPABASE_ANON_KEY') ?? '',
+      { global: { headers: { Authorization: authHeader } } }
     )
+
+    // Valida se o usu\u00e1rio est\u00e1 autenticado
+    const { data: { user }, error: userError } = await supabaseClient.auth.getUser()
+    if (userError || !user) {
+      throw new Error('Token inv\u00e1lido ou sess\u00e3o expirada')
+    }
+
+    const { email, senha, nome, nome_salao, telefone, vendedor_id } = body
+
+    // Valida se o vendedor_id corresponde ao usu\u00e1rio autenticado
+    if (vendedor_id !== user.id) {
+      throw new Error('Vendedor n\u00e3o autorizado')
+    }
 
     // 1. Cria o salão
     const { data: salao, error: salaoError } = await supabaseAdmin
@@ -29,6 +57,7 @@ serve(async (req) => {
       .select('id')
       .single()
 
+    console.log('SALAO ERROR:', salaoError)
     if (salaoError) throw salaoError
 
     // 2. Cria a proprietária com e-mail real (email_confirm: false para enviar e-mail de ativação)
@@ -45,33 +74,51 @@ serve(async (req) => {
       // options: { emailRedirectTo: redirectTo }
     })
 
+    console.log('AUTH ERROR:', authError)
     if (authError) throw authError
 
-    // 3. Cria o perfil de acesso
-    const { error: perfilError } = await supabaseAdmin.from('perfis_acesso').insert({
-      auth_user_id: authData.user.id,
-      salao_id: salao.id,
-      cargo: 'PROPRIETARIO'
-    })
+    const authUserId = authData.user.id // Salva para rollback se necessário
+    const rollback = () => supabaseAdmin.auth.admin.deleteUser(authUserId)
 
-    if (perfilError) throw perfilError
+    // 3. Cria o perfil de acesso (upsert para evitar duplicatas)
+    const { error: perfilError } = await supabaseAdmin
+      .from('perfis_acesso')
+      .upsert(
+        {
+          auth_user_id: authUserId,
+          salao_id: salao.id,
+          cargo: 'PROPRIETARIO'
+        },
+        { onConflict: 'auth_user_id' }
+      )
+
+    console.log('PERFIL ERROR:', perfilError)
+    if (perfilError) {
+      await rollback()
+      throw perfilError
+    }
 
     // 4. Salva a credencial na tabela para o Vendedor consultar depois
     const { error: loginError } = await supabaseAdmin.from('logins_gerados').insert({
       vendedor_id,
       salao_id: salao.id,
-      email,
+      username: email,
       senha_hash: senha,
-      auth_user_id: authData.user.id
     })
 
-    if (loginError) throw loginError
+    console.log('LOGIN ERROR:', loginError)
+    if (loginError) {
+      await rollback()
+      throw loginError
+    }
 
     return new Response(JSON.stringify({ user: authData.user }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       status: 200,
     })
   } catch (error: any) {
+    console.error('ERRO CAPTURADO:', error)
+    
     return new Response(JSON.stringify({ error: error.message }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       status: 400,

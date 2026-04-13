@@ -3,9 +3,170 @@ import { supabase } from '../supabaseClient';
 import { useToast } from '../components/Toast';
 import PageHeader from '../components/PageHeader';
 import Modal from '../components/Modal';
-import { Plus, Pencil, Trash2, ToggleLeft, ToggleRight } from 'lucide-react';
+import { Plus, Pencil, Trash2, ToggleLeft, ToggleRight, CheckCircle } from 'lucide-react';
 
 const CATEGORIAS = ['CABELO', 'UNHAS', 'SOBRANCELHAS', 'CILIOS', 'OUTRO'];
+const fmt = (v) => Number(v || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+
+// Componente interno para Despesas Fixas
+function DespesasFixas({ salaoId }) {
+  const { showToast } = useToast();
+  const [despesas, setDespesas] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  const mesAtual = new Date().toISOString().slice(0, 7);
+  const inicioMes = `${mesAtual}-01`;
+  const fimMes = new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0).toISOString().split('T')[0];
+
+  useEffect(() => {
+    carregarDespesas();
+  }, [salaoId]);
+
+  const carregarDespesas = async () => {
+    setLoading(true);
+    try {
+      const { data } = await supabase
+        .from('despesas')
+        .select('*')
+        .eq('salao_id', salaoId)
+        .in('tipo', ['ALUGUEL', 'ENERGIA', 'AGUA', 'INTERNET'])
+        .gte('data', inicioMes)
+        .lte('data', fimMes)
+        .order('data', { ascending: false });
+
+      setDespesas(data || []);
+    } catch (error) {
+      showToast('Erro ao carregar despesas', 'error');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const marcarComoPaga = async (id, valorTotal) => {
+    try {
+      await supabase
+        .from('despesas')
+        .update({ valor_pago: valorTotal })
+        .eq('id', id);
+      showToast('Despesa marcada como paga', 'success');
+      carregarDespesas();
+    } catch (error) {
+      showToast('Erro ao atualizar', 'error');
+    }
+  };
+
+  const getBadgeColor = (tipo) => {
+    const cores = {
+      ALUGUEL: 'bg-purple-100 text-purple-700',
+      ENERGIA: 'bg-yellow-100 text-yellow-700',
+      AGUA: 'bg-blue-100 text-blue-700',
+      INTERNET: 'bg-indigo-100 text-indigo-700'
+    };
+    return cores[tipo] || 'bg-slate-100 text-slate-600';
+  };
+
+  const getLabel = (tipo) => {
+    const labels = {
+      ALUGUEL: 'Aluguel',
+      ENERGIA: 'Energia/Luz',
+      AGUA: 'Água',
+      INTERNET: 'Internet'
+    };
+    return labels[tipo] || tipo;
+  };
+
+  if (loading) return <div className="text-center py-8">Carregando...</div>;
+
+  const totalMes = despesas.reduce((acc, d) => acc + Number(d.valor || 0), 0);
+  const totalPago = despesas.reduce((acc, d) => acc + Number(d.valor_pago || 0), 0);
+  const totalPendente = totalMes - totalPago;
+
+  return (
+    <div className="space-y-6">
+      {/* Cards de Resumo */}
+      <div className="grid grid-cols-3 gap-4">
+        <div className="bg-white rounded-lg border border-slate-200 p-4">
+          <p className="text-xs text-slate-500 mb-1">Total do Mês</p>
+          <p className="text-2xl font-bold text-slate-900">{fmt(totalMes)}</p>
+        </div>
+        <div className="bg-white rounded-lg border border-slate-200 p-4">
+          <p className="text-xs text-slate-500 mb-1">Total Pago</p>
+          <p className="text-2xl font-bold text-emerald-600">{fmt(totalPago)}</p>
+        </div>
+        <div className="bg-white rounded-lg border border-slate-200 p-4">
+          <p className="text-xs text-slate-500 mb-1">Pendente</p>
+          <p className="text-2xl font-bold text-amber-600">{fmt(totalPendente)}</p>
+        </div>
+      </div>
+
+      {/* Tabela */}
+      <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
+        <table className="w-full">
+          <thead className="bg-slate-50 border-b border-slate-200">
+            <tr>
+              <th className="px-4 py-3 text-left text-xs font-medium text-slate-600">Data</th>
+              <th className="px-4 py-3 text-left text-xs font-medium text-slate-600">Descrição</th>
+              <th className="px-4 py-3 text-left text-xs font-medium text-slate-600">Tipo</th>
+              <th className="px-4 py-3 text-right text-xs font-medium text-slate-600">Valor</th>
+              <th className="px-4 py-3 text-right text-xs font-medium text-slate-600">Pago</th>
+              <th className="px-4 py-3 text-right text-xs font-medium text-slate-600">Pendente</th>
+              <th className="px-4 py-3 text-center text-xs font-medium text-slate-600">Ações</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-slate-100">
+            {despesas.length === 0 ? (
+              <tr>
+                <td colSpan="7" className="px-4 py-8 text-center text-sm text-slate-400">
+                  Nenhuma despesa fixa registrada neste mês
+                </td>
+              </tr>
+            ) : (
+              despesas.map(desp => {
+                const pendente = Number(desp.valor || 0) - Number(desp.valor_pago || 0);
+                const pago = pendente === 0;
+
+                return (
+                  <tr key={desp.id} className="hover:bg-slate-50">
+                    <td className="px-4 py-3 text-sm text-slate-700">
+                      {new Date(desp.data + 'T00:00:00').toLocaleDateString('pt-BR')}
+                    </td>
+                    <td className="px-4 py-3 text-sm text-slate-900 font-medium">{desp.descricao}</td>
+                    <td className="px-4 py-3">
+                      <span className={`px-2 py-1 rounded-full text-xs font-medium ${getBadgeColor(desp.tipo)}`}>
+                        {getLabel(desp.tipo)}
+                      </span>
+                    </td>
+                    <td className="px-4 py-3 text-sm text-right text-slate-900">{fmt(desp.valor)}</td>
+                    <td className="px-4 py-3 text-sm text-right text-emerald-600">{fmt(desp.valor_pago)}</td>
+                    <td className="px-4 py-3 text-sm text-right text-amber-600">{fmt(pendente)}</td>
+                    <td className="px-4 py-3 text-center">
+                      {!pago && (
+                        <button
+                          onClick={() => marcarComoPaga(desp.id, desp.valor)}
+                          className="inline-flex items-center gap-1 px-3 py-1 text-xs bg-emerald-500 text-white rounded-lg hover:bg-emerald-600 transition-colors"
+                        >
+                          <CheckCircle size={14} /> Marcar como Paga
+                        </button>
+                      )}
+                      {pago && (
+                        <span className="text-xs text-emerald-600 font-medium">✓ Pago</span>
+                      )}
+                    </td>
+                  </tr>
+                );
+              })
+            )}
+          </tbody>
+        </table>
+      </div>
+
+      <p className="text-xs text-slate-500 italic">
+        💡 Esta aba mostra apenas despesas fixas (Aluguel, Energia, Água, Internet) do mês atual. 
+        Para gerenciar todas as despesas, acesse a página "Despesas" no menu.
+      </p>
+    </div>
+  );
+}
 
 export default function Configuracoes({ salaoId }) {
   const { showToast } = useToast();
@@ -245,7 +406,8 @@ export default function Configuracoes({ salaoId }) {
         {[
           { key: 'procedimentos', label: 'Procedimentos' },
           { key: 'equipe', label: 'Equipe' },
-          { key: 'financeiro', label: 'Financeiro' }
+          { key: 'financeiro', label: 'Financeiro' },
+          { key: 'despesas', label: 'Despesas Fixas' }
         ].map(aba => (
           <button
             key={aba.key}
@@ -387,6 +549,11 @@ export default function Configuracoes({ salaoId }) {
             ))}
           </div>
         </div>
+      )}
+
+      {/* ═══════════════════════════════ ABA DESPESAS FIXAS ═══════════════════════════════ */}
+      {abaAtiva === 'despesas' && (
+        <DespesasFixas salaoId={salaoId} />
       )}
 
       {/* ═══════════════════════════════ ABA FINANCEIRO ═══════════════════════════════ */}

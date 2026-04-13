@@ -1,13 +1,13 @@
 import { NavLink } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 import { supabase } from '../supabaseClient';
-import { CalendarDays, LayoutDashboard, DollarSign, Receipt, Settings, LogOut, Car } from 'lucide-react';
+import { CalendarDays, LayoutDashboard, Scissors, ShoppingBag, Receipt, Settings, LogOut } from 'lucide-react';
 
 const itens = [
   { path: '/agenda',        label: 'Agenda',        icon: CalendarDays,     roles: ['PROPRIETARIO','FUNCIONARIO'] },
   { path: '/dashboard',     label: 'Dashboard',     icon: LayoutDashboard,  roles: ['PROPRIETARIO'] },
-  { path: '/homecar',       label: 'Home Car',      icon: Car,              roles: ['PROPRIETARIO'] },
-  { path: '/paralelos',     label: 'Atendimentos',  icon: DollarSign,       roles: ['PROPRIETARIO'] },
+  { path: '/paralelos',     label: 'Paralelos',     icon: Scissors,         roles: ['PROPRIETARIO'] },
+  { path: '/homecar',       label: 'HomeCare',      icon: ShoppingBag,      roles: ['PROPRIETARIO'] },
   { path: '/despesas',      label: 'Despesas',      icon: Receipt,          roles: ['PROPRIETARIO'] },
   { path: '/configuracoes', label: 'Configurações', icon: Settings,         roles: ['PROPRIETARIO'] },
 ];

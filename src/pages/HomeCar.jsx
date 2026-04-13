@@ -1,173 +1,337 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '../supabaseClient';
+import { useToast } from '../components/Toast';
+import PageHeader from '../components/PageHeader';
+import Modal from '../components/Modal';
+import { Plus, Pencil, Trash2 } from 'lucide-react';
 
-function fmt(val) {
-  return Number(val || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
-}
-
-function toISO(date) {
-  const y = date.getFullYear(), m = String(date.getMonth()+1).padStart(2,'0'), d = String(date.getDate()).padStart(2,'0');
-  return `${y}-${m}-${d}`;
-}
-
-const vazio = { data: toISO(new Date()), cliente: '', produto: '', custo_produto: '', valor_venda: '', valor_pago: '', obs: '' };
+const fmt = (v) => Number(v || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+const fmtData = (d) => new Date(d + 'T00:00:00').toLocaleDateString('pt-BR');
 
 export default function HomeCar({ salaoId }) {
-  const hoje = new Date();
-  const [ano, setAno] = useState(hoje.getFullYear());
-  const [mes, setMes] = useState(hoje.getMonth() + 1);
-  const [lista, setLista] = useState([]);
+  const { showToast } = useToast();
   const [loading, setLoading] = useState(true);
-  const [modal, setModal] = useState(false);
-  const [form, setForm] = useState(vazio);
-  const [salvando, setSalvando] = useState(false);
+  const [vendas, setVendas] = useState([]);
+  const [mesSelecionado, setMesSelecionado] = useState('');
+  const [meses, setMeses] = useState([]);
+  
+  const [modalAberto, setModalAberto] = useState(false);
+  const [vendaEditando, setVendaEditando] = useState(null);
+  const [form, setForm] = useState({
+    data: '',
+    cliente: '',
+    produto: '',
+    custo_produto: '',
+    valor_venda: '',
+    valor_pago: '',
+    obs: ''
+  });
 
-  useEffect(() => { if (salaoId) carregar(); }, [salaoId, ano, mes]);
+  useEffect(() => {
+    const mesesArray = [];
+    for (let i = 0; i < 12; i++) {
+      const d = new Date();
+      d.setMonth(d.getMonth() - i);
+      const mes = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+      mesesArray.push(mes);
+    }
+    setMeses(mesesArray);
+    setMesSelecionado(mesesArray[0]);
+  }, []);
 
-  const inicioMes = `${ano}-${String(mes).padStart(2,'0')}-01`;
-  const fimMes = mes === 12 ? `${ano+1}-01-01` : `${ano}-${String(mes+1).padStart(2,'0')}-01`;
+  useEffect(() => {
+    if (mesSelecionado) carregarVendas();
+  }, [mesSelecionado, salaoId]);
 
-  const carregar = async () => {
+  const carregarVendas = async () => {
     setLoading(true);
-    const { data } = await supabase
-      .from('homecare')
-      .select('*')
-      .eq('salao_id', salaoId)
-      .gte('data', inicioMes)
-      .lt('data', fimMes)
-      .order('data', { ascending: false });
-    setLista(data || []);
-    setLoading(false);
+    try {
+      const [ano, mes] = mesSelecionado.split('-');
+      const inicioMes = `${ano}-${mes}-01`;
+      const fimMes = new Date(ano, mes, 0).toISOString().split('T')[0];
+
+      const { data } = await supabase
+        .from('homecare')
+        .select('*')
+        .eq('salao_id', salaoId)
+        .gte('data', inicioMes)
+        .lte('data', fimMes)
+        .order('data', { ascending: false });
+
+      setVendas(data || []);
+    } catch (error) {
+      showToast('Erro ao carregar vendas', 'error');
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const salvar = async (e) => {
-    e.preventDefault();
-    setSalvando(true);
-    const payload = { ...form, salao_id: salaoId,
-      custo_produto: Number(form.custo_produto) || 0,
-      valor_venda: Number(form.valor_venda) || 0,
-      valor_pago: Number(form.valor_pago) || 0,
-    };
-    const { error } = await supabase.from('homecare').insert([payload]);
-    setSalvando(false);
-    if (error) { alert('Erro: ' + error.message); return; }
-    setModal(false);
-    setForm(vazio);
-    carregar();
+  const abrirModal = (venda = null) => {
+    if (venda) {
+      setVendaEditando(venda);
+      setForm({
+        data: venda.data,
+        cliente: venda.cliente,
+        produto: venda.produto,
+        custo_produto: venda.custo_produto,
+        valor_venda: venda.valor_venda,
+        valor_pago: venda.valor_pago,
+        obs: venda.obs || ''
+      });
+    } else {
+      setVendaEditando(null);
+      setForm({
+        data: new Date().toISOString().split('T')[0],
+        cliente: '',
+        produto: '',
+        custo_produto: '',
+        valor_venda: '',
+        valor_pago: '',
+        obs: ''
+      });
+    }
+    setModalAberto(true);
   };
 
-  const marcarPago = async (id, valor_venda) => {
-    setLista(l => l.map(i => i.id === id ? { ...i, valor_pago: valor_venda, valor_pendente: 0 } : i));
-    await supabase.from('homecare').update({ valor_pago: valor_venda }).eq('id', id);
-    carregar();
+  const salvar = async () => {
+    try {
+      const dados = {
+        salao_id: salaoId,
+        data: form.data,
+        cliente: form.cliente,
+        produto: form.produto,
+        custo_produto: Number(form.custo_produto),
+        valor_venda: Number(form.valor_venda),
+        valor_pago: Number(form.valor_pago),
+        obs: form.obs
+      };
+
+      if (vendaEditando) {
+        await supabase.from('homecare').update(dados).eq('id', vendaEditando.id);
+        showToast('Atualizado', 'success');
+      } else {
+        await supabase.from('homecare').insert(dados);
+        showToast('Criado', 'success');
+      }
+      setModalAberto(false);
+      carregarVendas();
+    } catch (error) {
+      showToast('Erro ao salvar', 'error');
+    }
   };
 
-  const totalVenda = lista.reduce((s, i) => s + Number(i.valor_venda || 0), 0);
-  const totalPago = lista.reduce((s, i) => s + Number(i.valor_pago || 0), 0);
-  const totalPendente = lista.reduce((s, i) => s + Number(i.valor_pendente || 0), 0);
+  const deletar = async (id) => {
+    if (!confirm('Deletar esta venda?')) return;
+    try {
+      await supabase.from('homecare').delete().eq('id', id);
+      showToast('Deletado', 'success');
+      carregarVendas();
+    } catch (error) {
+      showToast('Erro ao deletar', 'error');
+    }
+  };
 
-  const MESES = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
+  const totalVendas = vendas.reduce((acc, v) => acc + Number(v.valor_venda || 0), 0);
+  const totalRecebido = vendas.reduce((acc, v) => acc + Number(v.valor_pago || 0), 0);
+  const totalLucro = vendas.reduce((acc, v) => acc + Number(v.lucro || 0), 0);
+  const totalPendente = vendas.reduce((acc, v) => acc + Number(v.valor_pendente || 0), 0);
+
+  if (loading) return <div className="p-10 text-center">Carregando...</div>;
 
   return (
-    <div className="p-6 max-w-4xl">
-      <div className="flex items-center gap-4 mb-6">
-        <h1 className="text-xl font-semibold text-gray-800">Home Car</h1>
-        <div className="flex gap-2 ml-auto">
-          <select value={mes} onChange={e => setMes(Number(e.target.value))} className="border border-gray-200 rounded-lg px-3 py-1.5 text-sm">
-            {MESES.map((m,i) => <option key={i} value={i+1}>{m}</option>)}
-          </select>
-          <select value={ano} onChange={e => setAno(Number(e.target.value))} className="border border-gray-200 rounded-lg px-3 py-1.5 text-sm">
-            {[2023,2024,2025,2026].map(a => <option key={a}>{a}</option>)}
-          </select>
-          <button onClick={() => { setForm(vazio); setModal(true); }} className="bg-gray-800 text-white text-sm px-4 py-1.5 rounded-lg hover:bg-gray-900">
-            + Nova venda
-          </button>
+    <div className="max-w-6xl mx-auto px-6 py-8">
+      <PageHeader 
+        title="HomeCare" 
+        subtitle="Venda de produtos para uso em casa"
+        action={
+          <div className="flex gap-3">
+            <select
+              value={mesSelecionado}
+              onChange={e => setMesSelecionado(e.target.value)}
+              className="border border-slate-300 rounded-lg px-4 py-2 text-sm bg-white outline-none"
+            >
+              {meses.map(m => (
+                <option key={m} value={m}>
+                  {new Date(m + '-01').toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' })}
+                </option>
+              ))}
+            </select>
+            <button
+              onClick={() => abrirModal()}
+              className="flex items-center gap-2 px-4 py-2 bg-emerald-500 text-white rounded-lg hover:bg-emerald-600 transition-colors"
+            >
+              <Plus size={18} /> Nova Venda
+            </button>
+          </div>
+        }
+      />
+
+      {/* Cards de Resumo */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+        <div className="bg-white rounded-xl border border-slate-200 p-4">
+          <p className="text-xs text-slate-500 mb-1">Total Vendas</p>
+          <p className="text-2xl font-bold text-slate-900">{fmt(totalVendas)}</p>
+        </div>
+        <div className="bg-white rounded-xl border border-slate-200 p-4">
+          <p className="text-xs text-slate-500 mb-1">Total Recebido</p>
+          <p className="text-2xl font-bold text-emerald-600">{fmt(totalRecebido)}</p>
+        </div>
+        <div className="bg-white rounded-xl border border-slate-200 p-4">
+          <p className="text-xs text-slate-500 mb-1">Lucro Total</p>
+          <p className="text-2xl font-bold text-blue-600">{fmt(totalLucro)}</p>
+        </div>
+        <div className="bg-white rounded-xl border border-slate-200 p-4">
+          <p className="text-xs text-slate-500 mb-1">Pendências</p>
+          <p className="text-2xl font-bold text-amber-600">{fmt(totalPendente)}</p>
         </div>
       </div>
 
-      <div className="grid grid-cols-3 gap-4 mb-6">
-        <div className="bg-white rounded-xl border border-gray-200 p-4">
-          <p className="text-xs text-gray-500">Total vendido</p>
-          <p className="text-lg font-semibold text-gray-800">{fmt(totalVenda)}</p>
-        </div>
-        <div className="bg-white rounded-xl border border-gray-200 p-4">
-          <p className="text-xs text-gray-500">Recebido</p>
-          <p className="text-lg font-semibold text-green-700">{fmt(totalPago)}</p>
-        </div>
-        <div className="bg-white rounded-xl border border-gray-200 p-4">
-          <p className="text-xs text-gray-500">Pendente</p>
-          <p className="text-lg font-semibold text-yellow-600">{fmt(totalPendente)}</p>
-        </div>
-      </div>
-
-      <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
-        {loading ? (
-          <p className="p-6 text-sm text-gray-400">Carregando...</p>
-        ) : lista.length === 0 ? (
-          <p className="p-6 text-sm text-gray-400">Nenhuma venda neste mês.</p>
-        ) : (
-          <table className="w-full text-sm">
-            <thead className="bg-gray-50 border-b border-gray-200">
+      {/* Tabela */}
+      <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
+        <table className="w-full text-sm">
+          <thead className="bg-slate-50 border-b border-slate-200">
+            <tr>
+              <th className="text-left px-4 py-3 font-medium text-slate-700">Data</th>
+              <th className="text-left px-4 py-3 font-medium text-slate-700">Cliente</th>
+              <th className="text-left px-4 py-3 font-medium text-slate-700">Produto</th>
+              <th className="text-right px-4 py-3 font-medium text-slate-700">Custo</th>
+              <th className="text-right px-4 py-3 font-medium text-slate-700">Venda</th>
+              <th className="text-right px-4 py-3 font-medium text-slate-700">Pago</th>
+              <th className="text-right px-4 py-3 font-medium text-slate-700">Lucro</th>
+              <th className="text-right px-4 py-3 font-medium text-slate-700">Pendente</th>
+              <th className="text-center px-4 py-3 font-medium text-slate-700">Ações</th>
+            </tr>
+          </thead>
+          <tbody>
+            {vendas.length === 0 ? (
               <tr>
-                {['Data','Cliente','Produto','Custo','Valor','Pago','Pendente',''].map(h => (
-                  <th key={h} className="text-left px-4 py-3 text-xs text-gray-500 font-medium">{h}</th>
-                ))}
+                <td colSpan="9" className="text-center py-8 text-slate-400">Nenhuma venda neste mês</td>
               </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-50">
-              {lista.map(item => (
-                <tr key={item.id} className="hover:bg-gray-50">
-                  <td className="px-4 py-3 text-gray-500 text-xs">{item.data}</td>
-                  <td className="px-4 py-3 font-medium text-gray-800">{item.cliente}</td>
-                  <td className="px-4 py-3 text-gray-600">{item.produto}</td>
-                  <td className="px-4 py-3 text-gray-500">{fmt(item.custo_produto)}</td>
-                  <td className="px-4 py-3 font-medium">{fmt(item.valor_venda)}</td>
-                  <td className="px-4 py-3 text-green-700">{fmt(item.valor_pago)}</td>
+            ) : (
+              vendas.map(venda => (
+                <tr key={venda.id} className="border-b border-slate-100 hover:bg-slate-50">
+                  <td className="px-4 py-3">{fmtData(venda.data)}</td>
+                  <td className="px-4 py-3 font-medium">{venda.cliente}</td>
+                  <td className="px-4 py-3">{venda.produto}</td>
+                  <td className="px-4 py-3 text-right text-slate-600">{fmt(venda.custo_produto)}</td>
+                  <td className="px-4 py-3 text-right">{fmt(venda.valor_venda)}</td>
+                  <td className="px-4 py-3 text-right text-emerald-600">{fmt(venda.valor_pago)}</td>
+                  <td className="px-4 py-3 text-right text-blue-600">{fmt(venda.lucro)}</td>
+                  <td className="px-4 py-3 text-right text-amber-600">{fmt(venda.valor_pendente)}</td>
                   <td className="px-4 py-3">
-                    {Number(item.valor_pendente) > 0 ? (
-                      <span className="text-yellow-600 font-medium">{fmt(item.valor_pendente)}</span>
-                    ) : (
-                      <span className="text-green-600 text-xs">Pago</span>
-                    )}
-                  </td>
-                  <td className="px-4 py-3">
-                    {Number(item.valor_pendente) > 0 && (
-                      <button onClick={() => marcarPago(item.id, item.valor_venda)} className="text-xs text-gray-500 hover:text-gray-800 border border-gray-200 rounded px-2 py-1 hover:bg-gray-50">
-                        Marcar pago
+                    <div className="flex items-center justify-center gap-2">
+                      <button onClick={() => abrirModal(venda)} className="text-blue-500 hover:text-blue-700">
+                        <Pencil size={16} />
                       </button>
-                    )}
+                      <button onClick={() => deletar(venda.id)} className="text-red-500 hover:text-red-700">
+                        <Trash2 size={16} />
+                      </button>
+                    </div>
                   </td>
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        )}
+              ))
+            )}
+          </tbody>
+        </table>
       </div>
 
-      {modal && (
-        <div className="fixed inset-0 bg-black/40 flex items-center justify-center p-4 z-50" onClick={e => e.target === e.currentTarget && setModal(false)}>
-          <div className="bg-white rounded-2xl shadow-xl w-full max-w-md p-6">
-            <h2 className="text-lg font-semibold mb-4">Nova venda Home Car</h2>
-            <form onSubmit={salvar} className="space-y-3">
-              <div className="grid grid-cols-2 gap-3">
-                <div><label className="text-xs text-gray-600 block mb-1">Data</label><input type="date" required value={form.data} onChange={e => setForm({...form, data: e.target.value})} className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm" /></div>
-                <div><label className="text-xs text-gray-600 block mb-1">Cliente</label><input type="text" required value={form.cliente} onChange={e => setForm({...form, cliente: e.target.value})} className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm" /></div>
-              </div>
-              <div><label className="text-xs text-gray-600 block mb-1">Produto</label><input type="text" required value={form.produto} onChange={e => setForm({...form, produto: e.target.value})} className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm" /></div>
-              <div className="grid grid-cols-3 gap-3">
-                <div><label className="text-xs text-gray-600 block mb-1">Custo (R$)</label><input type="number" step="0.01" value={form.custo_produto} onChange={e => setForm({...form, custo_produto: e.target.value})} className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm" /></div>
-                <div><label className="text-xs text-gray-600 block mb-1">Venda (R$)</label><input type="number" step="0.01" required value={form.valor_venda} onChange={e => setForm({...form, valor_venda: e.target.value})} className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm" /></div>
-                <div><label className="text-xs text-gray-600 block mb-1">Pago (R$)</label><input type="number" step="0.01" value={form.valor_pago} onChange={e => setForm({...form, valor_pago: e.target.value})} className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm" /></div>
-              </div>
-              <div><label className="text-xs text-gray-600 block mb-1">Obs</label><input type="text" value={form.obs} onChange={e => setForm({...form, obs: e.target.value})} className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm" /></div>
-              <div className="flex gap-3 pt-2">
-                <button type="button" onClick={() => setModal(false)} className="flex-1 py-2.5 text-sm border border-gray-300 rounded-lg hover:bg-gray-50">Cancelar</button>
-                <button type="submit" disabled={salvando} className="flex-1 py-2.5 text-sm bg-gray-800 text-white rounded-lg hover:bg-gray-900 disabled:opacity-50">{salvando ? 'Salvando...' : 'Salvar'}</button>
-              </div>
-            </form>
+      {/* Modal */}
+      <Modal open={modalAberto} onClose={() => setModalAberto(false)} title={vendaEditando ? 'Editar Venda' : 'Nova Venda'}>
+        <div className="space-y-4">
+          <div>
+            <label className="block text-sm font-medium text-slate-700 mb-1">Data</label>
+            <input
+              type="date"
+              value={form.data}
+              onChange={e => setForm({ ...form, data: e.target.value })}
+              className="w-full border border-slate-300 rounded-lg px-3 py-2 outline-none focus:ring-2 focus:ring-emerald-500"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-slate-700 mb-1">Cliente</label>
+            <input
+              type="text"
+              value={form.cliente}
+              onChange={e => setForm({ ...form, cliente: e.target.value })}
+              placeholder="Nome do cliente"
+              className="w-full border border-slate-300 rounded-lg px-3 py-2 outline-none focus:ring-2 focus:ring-emerald-500"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-slate-700 mb-1">Produto</label>
+            <input
+              type="text"
+              value={form.produto}
+              onChange={e => setForm({ ...form, produto: e.target.value })}
+              placeholder="Ex: Shampoo Kerastase"
+              className="w-full border border-slate-300 rounded-lg px-3 py-2 outline-none focus:ring-2 focus:ring-emerald-500"
+            />
+          </div>
+
+          <div className="grid grid-cols-3 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-1">Custo (R$)</label>
+              <input
+                type="number"
+                step="0.01"
+                value={form.custo_produto}
+                onChange={e => setForm({ ...form, custo_produto: e.target.value })}
+                className="w-full border border-slate-300 rounded-lg px-3 py-2 outline-none focus:ring-2 focus:ring-emerald-500"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-1">Venda (R$)</label>
+              <input
+                type="number"
+                step="0.01"
+                value={form.valor_venda}
+                onChange={e => setForm({ ...form, valor_venda: e.target.value })}
+                className="w-full border border-slate-300 rounded-lg px-3 py-2 outline-none focus:ring-2 focus:ring-emerald-500"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-1">Pago (R$)</label>
+              <input
+                type="number"
+                step="0.01"
+                value={form.valor_pago}
+                onChange={e => setForm({ ...form, valor_pago: e.target.value })}
+                className="w-full border border-slate-300 rounded-lg px-3 py-2 outline-none focus:ring-2 focus:ring-emerald-500"
+              />
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-slate-700 mb-1">Observação</label>
+            <textarea
+              value={form.obs}
+              onChange={e => setForm({ ...form, obs: e.target.value })}
+              placeholder="Observações adicionais..."
+              rows="3"
+              className="w-full border border-slate-300 rounded-lg px-3 py-2 outline-none focus:ring-2 focus:ring-emerald-500"
+            />
+          </div>
+
+          <div className="flex justify-end gap-3 pt-4">
+            <button
+              onClick={() => setModalAberto(false)}
+              className="px-4 py-2 text-slate-600 hover:bg-slate-100 rounded-lg transition-colors"
+            >
+              Cancelar
+            </button>
+            <button
+              onClick={salvar}
+              className="px-4 py-2 bg-emerald-500 text-white rounded-lg hover:bg-emerald-600 transition-colors"
+            >
+              Salvar
+            </button>
           </div>
         </div>
-      )}
+      </Modal>
     </div>
   );
 }

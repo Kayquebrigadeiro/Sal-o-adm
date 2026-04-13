@@ -2,7 +2,8 @@ import { useState, useEffect } from 'react';
 import { supabase } from '../supabaseClient';
 import { useToast } from '../components/Toast';
 import PageHeader from '../components/PageHeader';
-import { Trash2, Plus } from 'lucide-react';
+import Modal from '../components/Modal';
+import { Plus, Pencil, Trash2, ToggleLeft, ToggleRight } from 'lucide-react';
 
 const CATEGORIAS = ['CABELO', 'UNHAS', 'SOBRANCELHAS', 'CILIOS', 'OUTRO'];
 
@@ -16,6 +17,29 @@ export default function Configuracoes({ salaoId }) {
   const [profissionais, setProfissionais] = useState([]);
   const [config, setConfig] = useState({ custo_fixo_por_atendimento: 29, taxa_maquininha_pct: 5, prolabore_mensal: 0 });
 
+  // Modais
+  const [modalProcAberto, setModalProcAberto] = useState(false);
+  const [modalProfAberto, setModalProfAberto] = useState(false);
+  const [editando, setEditando] = useState(null);
+
+  // Forms
+  const [formProc, setFormProc] = useState({
+    nome: '',
+    categoria: 'CABELO',
+    requer_comprimento: true,
+    preco_p: '',
+    preco_m: '',
+    preco_g: '',
+    porcentagem_profissional: '40',
+    custo_variavel: '0'
+  });
+
+  const [formProf, setFormProf] = useState({
+    nome: '',
+    cargo: 'FUNCIONARIO',
+    salario_fixo: ''
+  });
+
   useEffect(() => {
     carregarDados();
   }, [salaoId]);
@@ -24,7 +48,7 @@ export default function Configuracoes({ salaoId }) {
     setLoading(true);
     try {
       const [procRes, profRes, configRes] = await Promise.all([
-        supabase.from('procedimentos').select('*').eq('salao_id', salaoId).order('categoria'),
+        supabase.from('procedimentos').select('*').eq('salao_id', salaoId).order('categoria, nome'),
         supabase.from('profissionais').select('*').eq('salao_id', salaoId).order('nome'),
         supabase.from('configuracoes').select('*').eq('salao_id', salaoId).single()
       ]);
@@ -40,85 +64,160 @@ export default function Configuracoes({ salaoId }) {
   };
 
   // ═══════════════════════════════ PROCEDIMENTOS ═══════════════════════════════
-  const salvarProcedimento = async (proc) => {
+  const abrirModalProc = (proc = null) => {
+    if (proc) {
+      setEditando(proc);
+      setFormProc({
+        nome: proc.nome,
+        categoria: proc.categoria,
+        requer_comprimento: proc.requer_comprimento,
+        preco_p: proc.preco_p,
+        preco_m: proc.preco_m || '',
+        preco_g: proc.preco_g || '',
+        porcentagem_profissional: proc.porcentagem_profissional,
+        custo_variavel: proc.custo_variavel
+      });
+    } else {
+      setEditando(null);
+      setFormProc({
+        nome: '',
+        categoria: 'CABELO',
+        requer_comprimento: true,
+        preco_p: '',
+        preco_m: '',
+        preco_g: '',
+        porcentagem_profissional: '40',
+        custo_variavel: '0'
+      });
+    }
+    setModalProcAberto(true);
+  };
+
+  const salvarProcedimento = async () => {
+    if (!formProc.nome.trim()) {
+      showToast('Informe o nome do procedimento', 'error');
+      return;
+    }
+
     try {
-      if (proc.id) {
-        await supabase.from('procedimentos').update({
-          nome: proc.nome,
-          categoria: proc.categoria,
-          requer_comprimento: proc.requer_comprimento,
-          preco_p: proc.preco_p,
-          preco_m: proc.preco_m,
-          preco_g: proc.preco_g,
-          porcentagem_profissional: proc.porcentagem_profissional,
-          custo_variavel: proc.custo_variavel,
-          ativo: proc.ativo
-        }).eq('id', proc.id);
+      const dados = {
+        salao_id: salaoId,
+        nome: formProc.nome.trim(),
+        categoria: formProc.categoria,
+        requer_comprimento: formProc.requer_comprimento,
+        preco_p: Number(formProc.preco_p) || 0,
+        preco_m: formProc.requer_comprimento ? (Number(formProc.preco_m) || 0) : null,
+        preco_g: formProc.requer_comprimento ? (Number(formProc.preco_g) || 0) : null,
+        porcentagem_profissional: Number(formProc.porcentagem_profissional) || 40,
+        custo_variavel: Number(formProc.custo_variavel) || 0,
+        ativo: true
+      };
+
+      if (editando) {
+        await supabase.from('procedimentos').update(dados).eq('id', editando.id);
+        showToast('Procedimento atualizado', 'success');
       } else {
-        await supabase.from('procedimentos').insert({ ...proc, salao_id: salaoId });
+        await supabase.from('procedimentos').insert(dados);
+        showToast('Procedimento criado', 'success');
       }
-      showToast('Salvo', 'success');
+
+      setModalProcAberto(false);
       carregarDados();
     } catch (error) {
-      showToast('Erro ao salvar', 'error');
+      showToast('Erro ao salvar: ' + error.message, 'error');
     }
   };
 
-  const toggleAtivoProcedimento = async (id, ativo) => {
-    await supabase.from('procedimentos').update({ ativo: !ativo }).eq('id', id);
-    carregarDados();
+  const toggleAtivoProc = async (id, ativo) => {
+    try {
+      await supabase.from('procedimentos').update({ ativo: !ativo }).eq('id', id);
+      showToast(ativo ? 'Procedimento desativado' : 'Procedimento ativado', 'success');
+      carregarDados();
+    } catch (error) {
+      showToast('Erro ao atualizar', 'error');
+    }
   };
 
-  const adicionarProcedimento = () => {
-    setProcedimentos([...procedimentos, {
-      id: null,
-      nome: '',
-      categoria: 'OUTRO',
-      requer_comprimento: false,
-      preco_p: 0,
-      preco_m: 0,
-      preco_g: 0,
-      porcentagem_profissional: 40,
-      custo_variavel: 0,
-      ativo: true,
-      temp: true
-    }]);
+  const deletarProcedimento = async (id) => {
+    if (!confirm('Tem certeza que deseja deletar este procedimento?')) return;
+    try {
+      await supabase.from('procedimentos').delete().eq('id', id);
+      showToast('Procedimento deletado', 'success');
+      carregarDados();
+    } catch (error) {
+      showToast('Erro ao deletar', 'error');
+    }
   };
 
   // ═══════════════════════════════ PROFISSIONAIS ═══════════════════════════════
-  const salvarProfissional = async (prof) => {
+  const abrirModalProf = (prof = null) => {
+    if (prof) {
+      setEditando(prof);
+      setFormProf({
+        nome: prof.nome,
+        cargo: prof.cargo,
+        salario_fixo: prof.salario_fixo
+      });
+    } else {
+      setEditando(null);
+      setFormProf({
+        nome: '',
+        cargo: 'FUNCIONARIO',
+        salario_fixo: ''
+      });
+    }
+    setModalProfAberto(true);
+  };
+
+  const salvarProfissional = async () => {
+    if (!formProf.nome.trim()) {
+      showToast('Informe o nome do profissional', 'error');
+      return;
+    }
+
     try {
-      if (prof.id) {
-        await supabase.from('profissionais').update({
-          nome: prof.nome,
-          cargo: prof.cargo,
-          salario_fixo: prof.salario_fixo,
-          ativo: prof.ativo
-        }).eq('id', prof.id);
+      const dados = {
+        salao_id: salaoId,
+        nome: formProf.nome.trim(),
+        cargo: formProf.cargo,
+        salario_fixo: Number(formProf.salario_fixo) || 0,
+        ativo: true
+      };
+
+      if (editando) {
+        await supabase.from('profissionais').update(dados).eq('id', editando.id);
+        showToast('Profissional atualizado', 'success');
       } else {
-        await supabase.from('profissionais').insert({ ...prof, salao_id: salaoId });
+        await supabase.from('profissionais').insert(dados);
+        showToast('Profissional criado', 'success');
       }
-      showToast('Salvo', 'success');
+
+      setModalProfAberto(false);
       carregarDados();
     } catch (error) {
-      showToast('Erro ao salvar', 'error');
+      showToast('Erro ao salvar: ' + error.message, 'error');
     }
   };
 
-  const toggleAtivoProfissional = async (id, ativo) => {
-    await supabase.from('profissionais').update({ ativo: !ativo }).eq('id', id);
-    carregarDados();
+  const toggleAtivoProf = async (id, ativo) => {
+    try {
+      await supabase.from('profissionais').update({ ativo: !ativo }).eq('id', id);
+      showToast(ativo ? 'Profissional desativado' : 'Profissional ativado', 'success');
+      carregarDados();
+    } catch (error) {
+      showToast('Erro ao atualizar', 'error');
+    }
   };
 
-  const adicionarProfissional = () => {
-    setProfissionais([...profissionais, {
-      id: null,
-      nome: '',
-      cargo: 'FUNCIONARIO',
-      salario_fixo: 0,
-      ativo: true,
-      temp: true
-    }]);
+  const deletarProfissional = async (id) => {
+    if (!confirm('Tem certeza que deseja deletar este profissional?')) return;
+    try {
+      await supabase.from('profissionais').delete().eq('id', id);
+      showToast('Profissional deletado', 'success');
+      carregarDados();
+    } catch (error) {
+      showToast('Erro ao deletar', 'error');
+    }
   };
 
   // ═══════════════════════════════ CONFIGURAÇÕES ═══════════════════════════════
@@ -165,116 +264,69 @@ export default function Configuracoes({ salaoId }) {
       {/* ═══════════════════════════════ ABA PROCEDIMENTOS ═══════════════════════════════ */}
       {abaAtiva === 'procedimentos' && (
         <div className="space-y-6">
+          <div className="flex justify-end">
+            <button
+              onClick={() => abrirModalProc()}
+              className="flex items-center gap-2 px-4 py-2 bg-emerald-500 text-white rounded-lg hover:bg-emerald-600 transition-colors"
+            >
+              <Plus size={18} /> Novo Procedimento
+            </button>
+          </div>
+
           {CATEGORIAS.map(cat => {
             const procsCategoria = procedimentos.filter(p => p.categoria === cat);
+            if (procsCategoria.length === 0) return null;
+
             return (
-              <div key={cat} className="bg-white rounded-xl border border-slate-200 p-4">
-                <h3 className="text-sm font-semibold text-slate-700 mb-3">{cat}</h3>
-                <div className="space-y-2">
-                  <div className="grid grid-cols-12 gap-2 text-xs text-slate-400 mb-2">
-                    <span className="col-span-3">Nome</span>
-                    <span className="col-span-1 text-center">P R$</span>
-                    <span className="col-span-1 text-center">M R$</span>
-                    <span className="col-span-1 text-center">G R$</span>
-                    <span className="col-span-1 text-center">Com%</span>
-                    <span className="col-span-1 text-center">Custo</span>
-                    <span className="col-span-1 text-center">Ativo</span>
-                    <span className="col-span-1" />
-                  </div>
-                  {procsCategoria.map((proc, idx) => (
-                    <div key={proc.id || idx} className="grid grid-cols-12 gap-2 items-center">
-                      <input
-                        type="text"
-                        value={proc.nome}
-                        onChange={e => {
-                          const novos = [...procedimentos];
-                          const index = novos.findIndex(p => p === proc);
-                          novos[index].nome = e.target.value;
-                          setProcedimentos(novos);
-                        }}
-                        onBlur={() => proc.nome && salvarProcedimento(proc)}
-                        placeholder="Nome"
-                        className="col-span-3 border border-slate-300 rounded-lg px-2 py-2 text-sm outline-none focus:ring-2 focus:ring-emerald-500"
-                      />
-                      <input
-                        type="number"
-                        value={proc.preco_p}
-                        onChange={e => {
-                          const novos = [...procedimentos];
-                          const index = novos.findIndex(p => p === proc);
-                          novos[index].preco_p = e.target.value;
-                          setProcedimentos(novos);
-                        }}
-                        onBlur={() => proc.nome && salvarProcedimento(proc)}
-                        className="col-span-1 border border-slate-300 rounded-lg px-1 py-2 text-sm text-center outline-none focus:ring-2 focus:ring-emerald-500"
-                      />
-                      <input
-                        type="number"
-                        value={proc.preco_m}
-                        onChange={e => {
-                          const novos = [...procedimentos];
-                          const index = novos.findIndex(p => p === proc);
-                          novos[index].preco_m = e.target.value;
-                          setProcedimentos(novos);
-                        }}
-                        onBlur={() => proc.nome && salvarProcedimento(proc)}
-                        disabled={!proc.requer_comprimento}
-                        className="col-span-1 border border-slate-300 rounded-lg px-1 py-2 text-sm text-center outline-none focus:ring-2 focus:ring-emerald-500 disabled:bg-slate-100"
-                      />
-                      <input
-                        type="number"
-                        value={proc.preco_g}
-                        onChange={e => {
-                          const novos = [...procedimentos];
-                          const index = novos.findIndex(p => p === proc);
-                          novos[index].preco_g = e.target.value;
-                          setProcedimentos(novos);
-                        }}
-                        onBlur={() => proc.nome && salvarProcedimento(proc)}
-                        disabled={!proc.requer_comprimento}
-                        className="col-span-1 border border-slate-300 rounded-lg px-1 py-2 text-sm text-center outline-none focus:ring-2 focus:ring-emerald-500 disabled:bg-slate-100"
-                      />
-                      <input
-                        type="number"
-                        value={proc.porcentagem_profissional}
-                        onChange={e => {
-                          const novos = [...procedimentos];
-                          const index = novos.findIndex(p => p === proc);
-                          novos[index].porcentagem_profissional = e.target.value;
-                          setProcedimentos(novos);
-                        }}
-                        onBlur={() => proc.nome && salvarProcedimento(proc)}
-                        className="col-span-1 border border-slate-300 rounded-lg px-1 py-2 text-sm text-center outline-none focus:ring-2 focus:ring-emerald-500"
-                      />
-                      <input
-                        type="number"
-                        value={proc.custo_variavel}
-                        onChange={e => {
-                          const novos = [...procedimentos];
-                          const index = novos.findIndex(p => p === proc);
-                          novos[index].custo_variavel = e.target.value;
-                          setProcedimentos(novos);
-                        }}
-                        onBlur={() => proc.nome && salvarProcedimento(proc)}
-                        className="col-span-1 border border-slate-300 rounded-lg px-1 py-2 text-sm text-center outline-none focus:ring-2 focus:ring-emerald-500"
-                      />
-                      <div className="col-span-1 flex justify-center">
-                        <input
-                          type="checkbox"
-                          checked={proc.ativo}
-                          onChange={() => toggleAtivoProcedimento(proc.id, proc.ativo)}
-                          className="w-4 h-4"
-                        />
+              <div key={cat} className="bg-white rounded-xl border border-slate-200 overflow-hidden">
+                <div className="bg-slate-50 px-4 py-3 border-b border-slate-200">
+                  <h3 className="font-semibold text-slate-900">{cat}</h3>
+                </div>
+                <div className="divide-y divide-slate-100">
+                  {procsCategoria.map(proc => (
+                    <div key={proc.id} className="px-4 py-3 hover:bg-slate-50 transition-colors">
+                      <div className="flex items-center justify-between">
+                        <div className="flex-1">
+                          <p className="font-medium text-slate-900">{proc.nome}</p>
+                          <div className="flex gap-4 mt-1 text-sm text-slate-600">
+                            {proc.requer_comprimento ? (
+                              <>
+                                <span>P: R$ {proc.preco_p}</span>
+                                <span>M: R$ {proc.preco_m}</span>
+                                <span>G: R$ {proc.preco_g}</span>
+                              </>
+                            ) : (
+                              <span>R$ {proc.preco_p}</span>
+                            )}
+                            <span>• Comissão: {proc.porcentagem_profissional}%</span>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <button
+                            onClick={() => toggleAtivoProc(proc.id, proc.ativo)}
+                            className={`p-2 rounded-lg transition-colors ${
+                              proc.ativo ? 'text-emerald-600 hover:bg-emerald-50' : 'text-slate-400 hover:bg-slate-100'
+                            }`}
+                          >
+                            {proc.ativo ? <ToggleRight size={24} /> : <ToggleLeft size={24} />}
+                          </button>
+                          <button
+                            onClick={() => abrirModalProc(proc)}
+                            className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                          >
+                            <Pencil size={18} />
+                          </button>
+                          <button
+                            onClick={() => deletarProcedimento(proc.id)}
+                            className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                          >
+                            <Trash2 size={18} />
+                          </button>
+                        </div>
                       </div>
-                      <button onClick={() => toggleAtivoProcedimento(proc.id, true)} className="col-span-1 text-red-400 hover:text-red-600">
-                        <Trash2 size={16} />
-                      </button>
                     </div>
                   ))}
                 </div>
-                <button onClick={adicionarProcedimento} className="mt-3 text-sm text-emerald-600 hover:text-emerald-700 font-medium flex items-center gap-1">
-                  <Plus size={16} /> Adicionar
-                </button>
               </div>
             );
           })}
@@ -283,70 +335,57 @@ export default function Configuracoes({ salaoId }) {
 
       {/* ═══════════════════════════════ ABA EQUIPE ═══════════════════════════════ */}
       {abaAtiva === 'equipe' && (
-        <div className="bg-white rounded-xl border border-slate-200 p-4">
-          <div className="space-y-2">
-            <div className="grid grid-cols-12 gap-2 text-xs text-slate-400 mb-2">
-              <span className="col-span-5">Nome</span>
-              <span className="col-span-3">Cargo</span>
-              <span className="col-span-2 text-center">Salário Fixo R$</span>
-              <span className="col-span-1 text-center">Ativo</span>
-              <span className="col-span-1" />
-            </div>
-            {profissionais.map((prof, idx) => (
-              <div key={prof.id || idx} className="grid grid-cols-12 gap-2 items-center">
-                <input
-                  type="text"
-                  value={prof.nome}
-                  onChange={e => {
-                    const novos = [...profissionais];
-                    novos[idx].nome = e.target.value;
-                    setProfissionais(novos);
-                  }}
-                  onBlur={() => prof.nome && salvarProfissional(prof)}
-                  placeholder="Nome"
-                  className="col-span-5 border border-slate-300 rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-emerald-500"
-                />
-                <select
-                  value={prof.cargo}
-                  onChange={e => {
-                    const novos = [...profissionais];
-                    novos[idx].cargo = e.target.value;
-                    setProfissionais(novos);
-                    salvarProfissional(novos[idx]);
-                  }}
-                  className="col-span-3 border border-slate-300 rounded-lg px-2 py-2 text-sm bg-white outline-none"
-                >
-                  <option value="FUNCIONARIO">Funcionário</option>
-                  <option value="PROPRIETARIO">Proprietário</option>
-                </select>
-                <input
-                  type="number"
-                  value={prof.salario_fixo}
-                  onChange={e => {
-                    const novos = [...profissionais];
-                    novos[idx].salario_fixo = e.target.value;
-                    setProfissionais(novos);
-                  }}
-                  onBlur={() => prof.nome && salvarProfissional(prof)}
-                  className="col-span-2 border border-slate-300 rounded-lg px-2 py-2 text-sm text-center outline-none focus:ring-2 focus:ring-emerald-500"
-                />
-                <div className="col-span-1 flex justify-center">
-                  <input
-                    type="checkbox"
-                    checked={prof.ativo}
-                    onChange={() => toggleAtivoProfissional(prof.id, prof.ativo)}
-                    className="w-4 h-4"
-                  />
+        <div className="space-y-4">
+          <div className="flex justify-end">
+            <button
+              onClick={() => abrirModalProf()}
+              className="flex items-center gap-2 px-4 py-2 bg-emerald-500 text-white rounded-lg hover:bg-emerald-600 transition-colors"
+            >
+              <Plus size={18} /> Novo Profissional
+            </button>
+          </div>
+
+          <div className="bg-white rounded-xl border border-slate-200 divide-y divide-slate-100">
+            {profissionais.map(prof => (
+              <div key={prof.id} className="px-4 py-3 hover:bg-slate-50 transition-colors">
+                <div className="flex items-center justify-between">
+                  <div className="flex-1">
+                    <p className="font-medium text-slate-900">{prof.nome}</p>
+                    <div className="flex gap-4 mt-1 text-sm text-slate-600">
+                      <span className={`px-2 py-0.5 rounded-full text-xs ${
+                        prof.cargo === 'PROPRIETARIO' ? 'bg-purple-100 text-purple-700' : 'bg-blue-100 text-blue-700'
+                      }`}>
+                        {prof.cargo === 'PROPRIETARIO' ? 'Proprietário' : 'Funcionário'}
+                      </span>
+                      <span>Salário: R$ {prof.salario_fixo}</span>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={() => toggleAtivoProf(prof.id, prof.ativo)}
+                      className={`p-2 rounded-lg transition-colors ${
+                        prof.ativo ? 'text-emerald-600 hover:bg-emerald-50' : 'text-slate-400 hover:bg-slate-100'
+                      }`}
+                    >
+                      {prof.ativo ? <ToggleRight size={24} /> : <ToggleLeft size={24} />}
+                    </button>
+                    <button
+                      onClick={() => abrirModalProf(prof)}
+                      className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                    >
+                      <Pencil size={18} />
+                    </button>
+                    <button
+                      onClick={() => deletarProfissional(prof.id)}
+                      className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                    >
+                      <Trash2 size={18} />
+                    </button>
+                  </div>
                 </div>
-                <button onClick={() => toggleAtivoProfissional(prof.id, true)} className="col-span-1 text-red-400 hover:text-red-600">
-                  <Trash2 size={16} />
-                </button>
               </div>
             ))}
           </div>
-          <button onClick={adicionarProfissional} className="mt-4 text-sm text-emerald-600 hover:text-emerald-700 font-medium flex items-center gap-1">
-            <Plus size={16} /> Adicionar profissional
-          </button>
         </div>
       )}
 
@@ -372,10 +411,10 @@ export default function Configuracoes({ salaoId }) {
                 type="number"
                 step="0.1"
                 value={config.taxa_maquininha_pct}
-                onChange={e => setConfig({ ...config, taxa_maquininha_pct: e.target.value })}
-                className="w-full border border-slate-300 rounded-lg px-4 py-2 outline-none focus:ring-2 focus:ring-emerald-500"
+                disabled
+                className="w-full border border-slate-300 rounded-lg px-4 py-2 bg-slate-100 text-slate-600 cursor-not-allowed"
               />
-              <p className="text-xs text-slate-500 mt-1">Percentual descontado em pagamentos com cartão</p>
+              <p className="text-xs text-slate-500 mt-1">Taxa fixa de 5% - não editável</p>
             </div>
 
             <div>
@@ -399,6 +438,174 @@ export default function Configuracoes({ salaoId }) {
           </div>
         </div>
       )}
+
+      {/* Modal Procedimento */}
+      <Modal open={modalProcAberto} onClose={() => setModalProcAberto(false)} title={editando ? 'Editar Procedimento' : 'Novo Procedimento'}>
+        <div className="space-y-4">
+          <div>
+            <label className="block text-sm font-medium text-slate-700 mb-1">Nome *</label>
+            <input
+              type="text"
+              value={formProc.nome}
+              onChange={e => setFormProc({ ...formProc, nome: e.target.value })}
+              placeholder="Ex: Progressiva, Corte, Manicure..."
+              className="w-full border border-slate-300 rounded-lg px-3 py-2 outline-none focus:ring-2 focus:ring-emerald-500"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-slate-700 mb-1">Categoria *</label>
+            <select
+              value={formProc.categoria}
+              onChange={e => {
+                const cat = e.target.value;
+                setFormProc({ ...formProc, categoria: cat, requer_comprimento: cat === 'CABELO' });
+              }}
+              className="w-full border border-slate-300 rounded-lg px-3 py-2 bg-white outline-none focus:ring-2 focus:ring-emerald-500"
+            >
+              {CATEGORIAS.map(c => <option key={c} value={c}>{c}</option>)}
+            </select>
+          </div>
+
+          {formProc.requer_comprimento ? (
+            <div className="grid grid-cols-3 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1">Preço P (R$)</label>
+                <input
+                  type="number"
+                  step="0.01"
+                  value={formProc.preco_p}
+                  onChange={e => setFormProc({ ...formProc, preco_p: e.target.value })}
+                  className="w-full border border-slate-300 rounded-lg px-3 py-2 outline-none focus:ring-2 focus:ring-emerald-500"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1">Preço M (R$)</label>
+                <input
+                  type="number"
+                  step="0.01"
+                  value={formProc.preco_m}
+                  onChange={e => setFormProc({ ...formProc, preco_m: e.target.value })}
+                  className="w-full border border-slate-300 rounded-lg px-3 py-2 outline-none focus:ring-2 focus:ring-emerald-500"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1">Preço G (R$)</label>
+                <input
+                  type="number"
+                  step="0.01"
+                  value={formProc.preco_g}
+                  onChange={e => setFormProc({ ...formProc, preco_g: e.target.value })}
+                  className="w-full border border-slate-300 rounded-lg px-3 py-2 outline-none focus:ring-2 focus:ring-emerald-500"
+                />
+              </div>
+            </div>
+          ) : (
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-1">Preço (R$)</label>
+              <input
+                type="number"
+                step="0.01"
+                value={formProc.preco_p}
+                onChange={e => setFormProc({ ...formProc, preco_p: e.target.value })}
+                className="w-full border border-slate-300 rounded-lg px-3 py-2 outline-none focus:ring-2 focus:ring-emerald-500"
+              />
+            </div>
+          )}
+
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-1">Comissão (%)</label>
+              <input
+                type="number"
+                value={formProc.porcentagem_profissional}
+                onChange={e => setFormProc({ ...formProc, porcentagem_profissional: e.target.value })}
+                className="w-full border border-slate-300 rounded-lg px-3 py-2 outline-none focus:ring-2 focus:ring-emerald-500"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-1">Custo Variável (R$)</label>
+              <input
+                type="number"
+                step="0.01"
+                value={formProc.custo_variavel}
+                onChange={e => setFormProc({ ...formProc, custo_variavel: e.target.value })}
+                className="w-full border border-slate-300 rounded-lg px-3 py-2 outline-none focus:ring-2 focus:ring-emerald-500"
+              />
+            </div>
+          </div>
+
+          <div className="flex justify-end gap-3 pt-4">
+            <button
+              onClick={() => setModalProcAberto(false)}
+              className="px-4 py-2 text-slate-600 hover:bg-slate-100 rounded-lg transition-colors"
+            >
+              Cancelar
+            </button>
+            <button
+              onClick={salvarProcedimento}
+              className="px-4 py-2 bg-emerald-500 text-white rounded-lg hover:bg-emerald-600 transition-colors"
+            >
+              Salvar
+            </button>
+          </div>
+        </div>
+      </Modal>
+
+      {/* Modal Profissional */}
+      <Modal open={modalProfAberto} onClose={() => setModalProfAberto(false)} title={editando ? 'Editar Profissional' : 'Novo Profissional'}>
+        <div className="space-y-4">
+          <div>
+            <label className="block text-sm font-medium text-slate-700 mb-1">Nome *</label>
+            <input
+              type="text"
+              value={formProf.nome}
+              onChange={e => setFormProf({ ...formProf, nome: e.target.value })}
+              placeholder="Nome completo"
+              className="w-full border border-slate-300 rounded-lg px-3 py-2 outline-none focus:ring-2 focus:ring-emerald-500"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-slate-700 mb-1">Cargo *</label>
+            <select
+              value={formProf.cargo}
+              onChange={e => setFormProf({ ...formProf, cargo: e.target.value })}
+              className="w-full border border-slate-300 rounded-lg px-3 py-2 bg-white outline-none focus:ring-2 focus:ring-emerald-500"
+            >
+              <option value="FUNCIONARIO">Funcionário</option>
+              <option value="PROPRIETARIO">Proprietário</option>
+            </select>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-slate-700 mb-1">Salário Fixo (R$)</label>
+            <input
+              type="number"
+              step="0.01"
+              value={formProf.salario_fixo}
+              onChange={e => setFormProf({ ...formProf, salario_fixo: e.target.value })}
+              placeholder="0,00"
+              className="w-full border border-slate-300 rounded-lg px-3 py-2 outline-none focus:ring-2 focus:ring-emerald-500"
+            />
+          </div>
+
+          <div className="flex justify-end gap-3 pt-4">
+            <button
+              onClick={() => setModalProfAberto(false)}
+              className="px-4 py-2 text-slate-600 hover:bg-slate-100 rounded-lg transition-colors"
+            >
+              Cancelar
+            </button>
+            <button
+              onClick={salvarProfissional}
+              className="px-4 py-2 bg-emerald-500 text-white rounded-lg hover:bg-emerald-600 transition-colors"
+            >
+              Salvar
+            </button>
+          </div>
+        </div>
+      </Modal>
     </div>
   );
 }

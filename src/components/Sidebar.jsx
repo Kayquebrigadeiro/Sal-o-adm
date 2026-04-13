@@ -1,24 +1,39 @@
 import { NavLink } from 'react-router-dom';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { supabase } from '../supabaseClient';
+import { CalendarDays, LayoutDashboard, DollarSign, Receipt, Settings, LogOut, Car } from 'lucide-react';
 
 const itens = [
-  { path: '/agenda',        label: 'Agenda',        roles: ['PROPRIETARIO','FUNCIONARIO'] },
-  { path: '/dashboard',     label: 'Dashboard',     roles: ['PROPRIETARIO'] },
-  { path: '/homecar',       label: 'Home Car',      roles: ['PROPRIETARIO'] },
-  { path: '/paralelos',     label: 'Paralelos',     roles: ['PROPRIETARIO'] },
-  { path: '/despesas',      label: 'Despesas',      roles: ['PROPRIETARIO'] },
-  { path: '/configuracoes', label: 'Configurações', roles: ['PROPRIETARIO'] },
+  { path: '/agenda',        label: 'Agenda',        icon: CalendarDays,     roles: ['PROPRIETARIO','FUNCIONARIO'] },
+  { path: '/dashboard',     label: 'Dashboard',     icon: LayoutDashboard,  roles: ['PROPRIETARIO'] },
+  { path: '/homecar',       label: 'Home Car',      icon: Car,              roles: ['PROPRIETARIO'] },
+  { path: '/paralelos',     label: 'Atendimentos',  icon: DollarSign,       roles: ['PROPRIETARIO'] },
+  { path: '/despesas',      label: 'Despesas',      icon: Receipt,          roles: ['PROPRIETARIO'] },
+  { path: '/configuracoes', label: 'Configurações', icon: Settings,         roles: ['PROPRIETARIO'] },
 ];
 
-export default function Sidebar({ role, email }) {
+const formatarData = () => {
+  const dias = ['Domingo', 'Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado'];
+  const meses = ['janeiro', 'fevereiro', 'março', 'abril', 'maio', 'junho', 'julho', 'agosto', 'setembro', 'outubro', 'novembro', 'dezembro'];
+  const agora = new Date();
+  return `${dias[agora.getDay()]}, ${agora.getDate()} de ${meses[agora.getMonth()]}`;
+};
+
+export default function Sidebar({ role, email, salaoNome }) {
   const visiveis = itens.filter(i => i.roles.includes(role));
   const [saindo, setSaindo] = useState(false);
+  const [dataAtual, setDataAtual] = useState(formatarData());
 
-  // Menu para diferentes papéis
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setDataAtual(formatarData());
+    }, 60000); // Atualiza a cada minuto
+    return () => clearInterval(interval);
+  }, []);
+
   let menuItens = [];
   if (role === 'VENDEDOR') {
-    menuItens = [];  // VENDEDOR não usa sidebar padrão
+    menuItens = [];
   } else {
     menuItens = visiveis;
   }
@@ -36,7 +51,6 @@ export default function Sidebar({ role, email }) {
         setSaindo(false);
       } else {
         console.log('[Sidebar] Logout realizado com sucesso - aguardando redirecionamento...');
-        // Não precisa setSaindo(false) pois a página vai redirecionar
       }
     } catch (err) {
       console.error('[Sidebar] Erro na execução do logout:', err);
@@ -45,43 +59,60 @@ export default function Sidebar({ role, email }) {
     }
   };
 
+  const inicial = salaoNome ? salaoNome.charAt(0).toUpperCase() : email?.charAt(0).toUpperCase() || 'S';
+
   return (
-    <aside className="w-52 min-h-screen bg-gray-900 flex flex-col">
-      <div className="px-5 py-5 border-b border-gray-800">
-        <div className="w-8 h-8 bg-white rounded-lg flex items-center justify-center mb-3">
-          <span className="text-gray-900 text-sm font-bold">✂</span>
+    <aside className="w-64 min-h-screen bg-slate-900 flex flex-col">
+      {/* Logo e Nome do Salão */}
+      <div className="px-5 py-6 border-b border-slate-800">
+        <div className="flex items-center gap-3 mb-3">
+          <div className="w-10 h-10 bg-emerald-500 rounded-full flex items-center justify-center">
+            <span className="text-white text-lg font-bold">{inicial}</span>
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="text-white font-semibold text-sm truncate">{salaoNome || 'Salão'}</p>
+          </div>
         </div>
-        <p className="text-xs text-gray-400 truncate">{email}</p>
-        <p className="text-xs text-gray-600 mt-0.5 capitalize">
-          {role === 'PROPRIETARIO' ? 'Proprietária' : role === 'VENDEDOR' ? 'Vendedor/Admin' : 'Funcionária'}
-        </p>
+        <p className="text-xs text-slate-400">{dataAtual}</p>
       </div>
 
-      <nav className="flex-1 py-4 space-y-0.5 px-2">
-        {menuItens.map(item => (
-          <NavLink
-            key={item.path}
-            to={item.path}
-            className={({ isActive }) =>
-              `block px-3 py-2 rounded-lg text-sm transition-colors ${
-                isActive
-                  ? 'bg-white text-gray-900 font-medium'
-                  : 'text-gray-400 hover:bg-gray-800 hover:text-white'
-              }`
-            }
-          >
-            {item.label}
-          </NavLink>
-        ))}
+      {/* Menu de Navegação */}
+      <nav className="flex-1 py-4 space-y-1 px-3">
+        {menuItens.map(item => {
+          const Icon = item.icon;
+          return (
+            <NavLink
+              key={item.path}
+              to={item.path}
+              className={({ isActive }) =>
+                `flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-all ${
+                  isActive
+                    ? 'bg-white text-slate-900 font-medium shadow-sm'
+                    : 'text-slate-400 hover:bg-slate-800 hover:text-white'
+                }`
+              }
+            >
+              {({ isActive }) => (
+                <>
+                  <Icon size={18} className={isActive ? 'text-slate-900' : 'text-slate-400'} />
+                  <span>{item.label}</span>
+                </>
+              )}
+            </NavLink>
+          );
+        })}
       </nav>
 
-      <div className="px-4 py-4 border-t border-gray-800">
+      {/* Rodapé com Email e Logout */}
+      <div className="px-4 py-4 border-t border-slate-800">
+        <p className="text-xs text-slate-500 truncate mb-2">{email}</p>
         <button
           onClick={handleLogout}
           disabled={saindo}
-          className="w-full text-xs text-gray-500 hover:text-gray-300 hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed text-left px-2 py-1 rounded transition-colors"
+          className="w-full flex items-center gap-2 text-xs text-slate-400 hover:text-white hover:bg-slate-800 disabled:opacity-50 disabled:cursor-not-allowed px-3 py-2 rounded-lg transition-colors"
         >
-          {saindo ? '⏳ Saindo...' : 'Sair'}
+          <LogOut size={14} />
+          <span>{saindo ? 'Saindo...' : 'Sair'}</span>
         </button>
       </div>
     </aside>

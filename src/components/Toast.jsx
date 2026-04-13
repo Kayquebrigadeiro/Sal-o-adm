@@ -1,28 +1,59 @@
-import { useState } from 'react';
+import { useState, useEffect, createContext, useContext } from 'react';
+import { CheckCircle, XCircle, Info } from 'lucide-react';
 
-export function useToast() {
+const ToastContext = createContext();
+
+export const useToast = () => {
+  const context = useContext(ToastContext);
+  if (!context) {
+    throw new Error('useToast deve ser usado dentro de ToastProvider');
+  }
+  return context;
+};
+
+export function ToastProvider({ children }) {
   const [toasts, setToasts] = useState([]);
 
-  const mostrar = (mensagem, tipo = 'sucesso') => {
+  const showToast = (message, type = 'success') => {
     const id = Date.now();
-    setToasts(prev => [...prev, { id, mensagem, tipo }]);
-    setTimeout(() => setToasts(prev => prev.filter(t => t.id !== id)), 3000);
+    setToasts(prev => [...prev, { id, message, type }]);
+    
+    setTimeout(() => {
+      setToasts(prev => prev.filter(t => t.id !== id));
+    }, 3000);
   };
 
-  return { toasts, mostrar };
+  return (
+    <ToastContext.Provider value={{ showToast }}>
+      {children}
+      <div className="fixed bottom-6 left-6 z-50 space-y-2">
+        {toasts.map(toast => (
+          <Toast key={toast.id} message={toast.message} type={toast.type} />
+        ))}
+      </div>
+    </ToastContext.Provider>
+  );
 }
 
-export function ToastContainer({ toasts }) {
+function Toast({ message, type }) {
+  const icons = {
+    success: <CheckCircle size={18} />,
+    error: <XCircle size={18} />,
+    info: <Info size={18} />
+  };
+
+  const colors = {
+    success: 'bg-emerald-500 text-white',
+    error: 'bg-red-500 text-white',
+    info: 'bg-blue-500 text-white'
+  };
+
   return (
-    <div className="fixed top-4 right-4 z-50 flex flex-col gap-2">
-      {toasts.map(t => (
-        <div key={t.id} className={`px-4 py-3 rounded-lg text-sm shadow-lg text-white transition-all ${
-          t.tipo === 'sucesso' ? 'bg-green-700' :
-          t.tipo === 'erro'   ? 'bg-red-700'   : 'bg-gray-800'
-        }`}>
-          {t.mensagem}
-        </div>
-      ))}
+    <div className={`flex items-center gap-2 px-4 py-3 rounded-lg shadow-lg ${colors[type]} animate-slideUp`}>
+      {icons[type]}
+      <span className="text-sm font-medium">{message}</span>
     </div>
   );
 }
+
+// Adicionar CSS para animação no index.css

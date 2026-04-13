@@ -1,185 +1,229 @@
-﻿import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { supabase } from '../supabaseClient';
+import { useToast } from '../components/Toast';
+import PageHeader from '../components/PageHeader';
+import Modal from '../components/Modal';
+import { ChevronLeft, ChevronRight, Calendar, Plus } from 'lucide-react';
 
-const Agenda = () => {
-  const [dataAtual, setDataAtual] = useState(new Date());
+const fmt = (v) => Number(v || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+const fmtData = (d) => new Date(d + 'T00:00:00').toLocaleDateString('pt-BR', { weekday: 'long', day: '2-digit', month: 'long' });
+
+const gerarHorarios = () => {
+  const horarios = [];
+  for (let h = 8; h <= 19; h++) {
+    horarios.push(`${String(h).padStart(2, '0')}:00`);
+    if (h !== 19) horarios.push(`${String(h).padStart(2, '0')}:30`);
+  }
+  return horarios;
+};
+
+export default function Agenda({ salaoId }) {
+  const { showToast } = useToast();
+  const [loading, setLoading] = useState(true);
+  const [dataAtual, setDataAtual] = useState(new Date().toISOString().split('T')[0]);
+  
   const [profissionais, setProfissionais] = useState([]);
   const [procedimentos, setProcedimentos] = useState([]);
-  const [agendamentos, setAgendamentos] = useState([]);
-  const [loading, setLoading] = useState(true);
-
-  // Modal de Novo Agendamento
+  const [atendimentos, setAtendimentos] = useState([]);
+  
   const [modalAberto, setModalAberto] = useState(false);
-  const [slotSelecionado, setSlotSelecionado] = useState({ horario: '', profissional_id: '', profissional_nome: '' });
-  const [novoAgendamento, setNovoAgendamento] = useState({ cliente: '', procedimento_id: '', comprimento: 'M', obs: '' });
-
-  // NOVO: Modal de Checkout (Finalizar Atendimento)
-  const [modalCheckoutAberto, setModalCheckoutAberto] = useState(false);
+  const [modalCheckout, setModalCheckout] = useState(false);
   const [atendimentoSelecionado, setAtendimentoSelecionado] = useState(null);
-  const [valorRecebido, setValorRecebido] = useState('');
+  
+  const [form, setForm] = useState({
+    horario: '',
+    profissional_id: '',
+    procedimento_id: '',
+    comprimento: 'P',
+    cliente: '',
+    valor_cobrado: '',
+    obs: ''
+  });
 
-  const gerarHorarios = () => {
-    const horarios = [];
-    for (let h = 8; h <= 18; h++) {
-      horarios.push(`${h}:00`);
-      if (h !== 18) horarios.push(`${h}:30`);
-    }
-    return horarios;
-  };
+  const [checkoutForm, setCheckoutForm] = useState({ valor_pago: '' });
+
   const horarios = gerarHorarios();
 
   useEffect(() => {
-    fetchDadosDoDia();
-  }, [dataAtual]);
+    carregarDados();
+  }, [dataAtual, salaoId]);
 
-  const fetchDadosDoDia = async () => {
+  const carregarDados = async () => {
     setLoading(true);
     try {
-      const { data: { user } } = await supabase.auth.getUser();
-      const { data: perfil } = await supabase.from('perfis_acesso').select('salao_id').eq('auth_user_id', user?.id).single();
-      const salaoId = perfil?.salao_id;
+      const [profsRes, procsRes, atendsRes] = await Promise.all([
+        supabase.from('profissionais').select('*').eq('salao_id', salaoId).eq('ativo', true),
+        supabase.from('procedimentos').select('*').eq('salao_id', salaoId).eq('ativo', true),
+        supabase.from('atendimentos')
+          .select('*, profissionais(nome), procedimentos(nome, requer_comprimento)')
+          .eq('salao_id', salaoId)
+          .eq('data', dataAtual)
+          .order('horario')
+      ]);
 
-      if (!salaoId) return;
-
-      const { data: profs } = await supabase.from('profissionais').select('*').eq('salao_id', salaoId).eq('ativo', true);
-      setProfissionais(profs || []);
-
-      const { data: procs } = await supabase.from('procedimentos').select('*').eq('salao_id', salaoId).eq('ativo', true);
-      setProcedimentos(procs || []);
-
-      const dataFormatada = dataAtual.toISOString().split('T')[0];
-      const { data: agends } = await supabase
-        .from('atendimentos')
-        .select('*, profissionais(nome), procedimentos(nome, requer_comprimento)')
-        .eq('salao_id', salaoId)
-        .eq('data', dataFormatada)
-        .neq('status', 'CANCELADO');
-      
-      setAgendamentos(agends || []);
+      setProfissionais(profsRes.data || []);
+      setProcedimentos(procsRes.data || []);
+      setAtendimentos(atendsRes.data || []);
     } catch (error) {
-      console.error("Erro ao carregar agenda:", error);
+      showToast('Erro ao carregar agenda', 'error');
     } finally {
       setLoading(false);
     }
   };
 
   const mudarDia = (dias) => {
-    const novaData = new Date(dataAtual);
-    novaData.setDate(novaData.getDate() + dias);
-    setDataAtual(novaData);
+    const nova = new Date(dataAtual);
+    nova.setDate(nova.getDate() + dias);
+    setDataAtual(nova.toISOString().split('T')[0]);
   };
 
-  // --- FUNÇÕES DE NOVO AGENDAMENTO ---
-  const abrirModalNovo = (horario, prof) => {
-    setSlotSelecionado({ horario, profissional_id: prof.id, profissional_nome: prof.nome });
-    setNovoAgendamento({ cliente: '', procedimento_id: procedimentos[0]?.id || '', comprimento: 'M', obs: '' });
+  const irParaHoje = () => {
+    setDataAtual(new Date().toISOString().split('T')[0]);
+  };
+
+  const abrirModalNovo = (horario, profissionalId) => {
+    const proc = procedimentos[0];
+    setForm({
+      horario,
+      profissional_id: profissionalId,
+      procedimento_id: proc?.id || '',
+      comprimento: 'P',
+      cliente: '',
+      valor_cobrado: proc?.preco_p || '',
+      obs: ''
+    });
     setModalAberto(true);
   };
 
-  const salvarAgendamento = async (e) => {
-    e.preventDefault();
+  const handleProcedimentoChange = (procId) => {
+    const proc = procedimentos.find(p => p.id === procId);
+    setForm({
+      ...form,
+      procedimento_id: procId,
+      comprimento: proc?.requer_comprimento ? 'P' : null,
+      valor_cobrado: proc?.preco_p || ''
+    });
+  };
+
+  const handleComprimentoChange = (comp) => {
+    const proc = procedimentos.find(p => p.id === form.procedimento_id);
+    let valor = proc?.preco_p || 0;
+    if (comp === 'M') valor = proc?.preco_m || 0;
+    if (comp === 'G') valor = proc?.preco_g || 0;
+    setForm({ ...form, comprimento: comp, valor_cobrado: valor });
+  };
+
+  const salvarAgendamento = async () => {
+    if (!form.cliente.trim()) {
+      showToast('Informe o nome do cliente', 'error');
+      return;
+    }
+
     try {
-      const { data: { user } } = await supabase.auth.getUser();
-      const { data: perfil } = await supabase.from('perfis_acesso').select('salao_id').eq('auth_user_id', user.id).single();
-      const dataFormatada = dataAtual.toISOString().split('T')[0];
+      const proc = procedimentos.find(p => p.id === form.procedimento_id);
+      
+      await supabase.from('atendimentos').insert({
+        salao_id: salaoId,
+        data: dataAtual,
+        horario: form.horario + ':00',
+        profissional_id: form.profissional_id,
+        procedimento_id: form.procedimento_id,
+        comprimento: proc?.requer_comprimento ? form.comprimento : null,
+        cliente: form.cliente.trim(),
+        valor_cobrado: Number(form.valor_cobrado),
+        valor_pago: 0,
+        obs: form.obs,
+        status: 'AGENDADO'
+      });
 
-      const { error } = await supabase.from('atendimentos').insert([{
-        salao_id: perfil.salao_id,
-        data: dataFormatada,
-        horario: slotSelecionado.horario + ':00',
-        profissional_id: slotSelecionado.profissional_id,
-        procedimento_id: novoAgendamento.procedimento_id,
-        comprimento: novoAgendamento.comprimento,
-        cliente: novoAgendamento.cliente,
-        obs: novoAgendamento.obs
-      }]);
-
-      if (error) throw error;
+      showToast('Agendamento criado', 'success');
       setModalAberto(false);
-      fetchDadosDoDia();
+      carregarDados();
     } catch (error) {
-      alert("Erro ao salvar: " + error.message);
+      showToast('Erro ao salvar: ' + error.message, 'error');
     }
   };
 
-  // --- FUNÇÕES DE CHECKOUT / FINALIZAR ---
-  const abrirModalCheckout = (agendamento) => {
-    setAtendimentoSelecionado(agendamento);
-    setValorRecebido(agendamento.valor_pago || '');
-    setModalCheckoutAberto(true);
+  const abrirCheckout = (atendimento) => {
+    setAtendimentoSelecionado(atendimento);
+    setCheckoutForm({ valor_pago: atendimento.valor_cobrado });
+    setModalCheckout(true);
   };
 
   const finalizarAtendimento = async () => {
-    // ✅ Validação robusta: não aceita vazio nem número negativo
-    if (valorRecebido === '' || Number(valorRecebido) < 0) {
-      return alert("Insira um valor pago válido.");
-    }
+    try {
+      await supabase.from('atendimentos').update({
+        status: 'EXECUTADO',
+        valor_pago: Number(checkoutForm.valor_pago)
+      }).eq('id', atendimentoSelecionado.id);
 
-    const { error } = await supabase
-      .from('atendimentos')
-      .update({ 
-        status: 'EXECUTADO', 
-        valor_pago: Number(valorRecebido) 
-      })
-      .eq('id', atendimentoSelecionado.id);
-
-    if (error) alert("Erro ao finalizar: " + error.message);
-    else {
-      setModalCheckoutAberto(false);
-      setValorRecebido('');
-      fetchDadosDoDia();
+      showToast('Atendimento finalizado', 'success');
+      setModalCheckout(false);
+      carregarDados();
+    } catch (error) {
+      showToast('Erro ao finalizar', 'error');
     }
   };
 
   const cancelarAtendimento = async () => {
-    if(!window.confirm("Tem certeza que deseja cancelar este agendamento?")) return;
+    if (!confirm('Cancelar este agendamento?')) return;
     
-    const { error } = await supabase
-      .from('atendimentos')
-      .update({ status: 'CANCELADO' })
-      .eq('id', atendimentoSelecionado.id);
-
-    if (error) alert("Erro ao cancelar: " + error.message);
-    else {
-      setModalCheckoutAberto(false);
-      fetchDadosDoDia();
+    try {
+      await supabase.from('atendimentos').update({ status: 'CANCELADO' }).eq('id', atendimentoSelecionado.id);
+      showToast('Agendamento cancelado', 'success');
+      setModalCheckout(false);
+      carregarDados();
+    } catch (error) {
+      showToast('Erro ao cancelar', 'error');
     }
   };
 
-  const getAgendamento = (horario, profissionalId) => {
-    return agendamentos.find(a => 
+  const getAtendimento = (horario, profissionalId) => {
+    return atendimentos.find(a => 
       a.profissional_id === profissionalId && 
-      a.horario.substring(0, 5) === horario
+      a.horario.substring(0, 5) === horario &&
+      a.status !== 'CANCELADO'
     );
   };
 
-  return (
-    <div className="p-6 bg-gray-50 min-h-screen">
-      
-      <div className="flex justify-between items-center mb-6 bg-white p-4 rounded-xl shadow-sm border border-gray-100">
-        <div>
-          <h1 className="text-2xl font-bold text-slate-800">Agenda da Equipe</h1>
-          <p className="text-gray-500">Organize os horários de forma fácil.</p>
-        </div>
-        <div className="flex items-center gap-4">
-          <button onClick={() => mudarDia(-1)} className="p-2 bg-gray-100 hover:bg-gray-200 rounded-lg">&lt; Anterior</button>
-          <span className="font-semibold text-lg min-w-[150px] text-center">
-            {dataAtual.toLocaleDateString('pt-BR', { weekday: 'short', day: '2-digit', month: 'long' })}
-          </span>
-          <button onClick={() => mudarDia(1)} className="p-2 bg-gray-100 hover:bg-gray-200 rounded-lg">Próximo &gt;</button>
-        </div>
-      </div>
+  const totalAtendimentos = atendimentos.filter(a => a.status !== 'CANCELADO').length;
+  const procSelecionado = procedimentos.find(p => p.id === form.procedimento_id);
 
-      <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-x-auto">
-        {loading ? (
-          <div className="p-10 text-center text-gray-500">Carregando horários...</div>
-        ) : (
-          <table className="w-full text-sm text-left border-collapse">
+  if (loading) return <div className="p-10 text-center">Carregando agenda...</div>;
+
+  return (
+    <div className="max-w-7xl mx-auto px-6 py-8">
+      <PageHeader 
+        title="Agenda" 
+        subtitle={`${totalAtendimentos} agendamento(s) hoje`}
+        action={
+          <div className="flex items-center gap-3">
+            <button onClick={() => mudarDia(-1)} className="p-2 hover:bg-slate-100 rounded-lg transition-colors">
+              <ChevronLeft size={20} />
+            </button>
+            <div className="text-center min-w-[200px]">
+              <p className="text-sm font-semibold text-slate-900 capitalize">{fmtData(dataAtual)}</p>
+            </div>
+            <button onClick={() => mudarDia(1)} className="p-2 hover:bg-slate-100 rounded-lg transition-colors">
+              <ChevronRight size={20} />
+            </button>
+            <button onClick={irParaHoje} className="flex items-center gap-2 px-3 py-2 bg-slate-100 hover:bg-slate-200 rounded-lg text-sm transition-colors">
+              <Calendar size={16} />
+              Hoje
+            </button>
+          </div>
+        }
+      />
+
+      {/* Grade de Horários */}
+      <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm">
             <thead className="bg-slate-900 text-white">
               <tr>
-                <th className="p-3 border-b border-r border-slate-700 w-24 text-center">Horário</th>
+                <th className="px-4 py-3 text-center w-24 border-r border-slate-700">Horário</th>
                 {profissionais.map(prof => (
-                  <th key={prof.id} className="p-3 border-b border-slate-700 text-center min-w-[200px]">
+                  <th key={prof.id} className="px-4 py-3 text-center min-w-[200px] border-r border-slate-700">
                     {prof.nome}
                   </th>
                 ))}
@@ -187,39 +231,42 @@ const Agenda = () => {
             </thead>
             <tbody>
               {horarios.map(horario => (
-                <tr key={horario} className="hover:bg-gray-50 group">
-                  <td className="p-3 border-b border-r border-gray-200 text-center font-medium text-gray-600 bg-gray-50">
+                <tr key={horario} className="border-b border-slate-100 hover:bg-slate-50">
+                  <td className="px-4 py-3 text-center font-medium text-slate-600 bg-slate-50 border-r border-slate-200">
                     {horario}
                   </td>
                   {profissionais.map(prof => {
-                    const agendamento = getAgendamento(horario, prof.id);
+                    const atend = getAtendimento(horario, prof.id);
                     return (
-                      <td key={`${horario}-${prof.id}`} className="p-2 border-b border-r border-gray-200">
-                        {agendamento ? (
-                          // Card de Horário Ocupado (Agora é clicável para Checkout)
-                          <div 
-                            onClick={() => abrirModalCheckout(agendamento)}
-                            className={`p-2 border rounded-lg shadow-sm cursor-pointer transition-colors ${
-                              agendamento.status === 'EXECUTADO' ? 'bg-emerald-50 border-emerald-200' : 'bg-white'
+                      <td key={`${horario}-${prof.id}`} className="p-2 border-r border-slate-100">
+                        {atend ? (
+                          <div
+                            onClick={() => abrirCheckout(atend)}
+                            className={`p-3 rounded-lg cursor-pointer transition-all border-l-4 ${
+                              atend.status === 'EXECUTADO'
+                                ? 'bg-emerald-50 border-emerald-400 hover:bg-emerald-100'
+                                : 'bg-blue-50 border-blue-400 hover:bg-blue-100'
                             }`}
                           >
-                            <div className="flex justify-between items-start">
-                              <p className="font-bold">
-                                {agendamento.cliente}
-                              </p>
-                              {agendamento.status === 'EXECUTADO' && <span className="text-xs bg-emerald-200 text-emerald-700 px-1 rounded">✓</span>}
+                            <div className="flex items-center justify-between mb-1">
+                              <p className="font-semibold text-slate-900 text-sm">{atend.cliente}</p>
+                              {atend.status === 'EXECUTADO' && (
+                                <span className="text-xs bg-emerald-200 text-emerald-700 px-2 py-0.5 rounded-full">✓</span>
+                              )}
                             </div>
-                            <p className="text-xs truncate">
-                              {agendamento.procedimentos?.nome}
-                            </p>
+                            <p className="text-xs text-slate-600 truncate">{atend.procedimentos?.nome}</p>
+                            <p className="text-xs font-medium text-slate-700 mt-1">{fmt(atend.valor_cobrado)}</p>
+                            {atend.valor_pendente > 0 && (
+                              <p className="text-xs text-amber-600 mt-1">Pendente: {fmt(atend.valor_pendente)}</p>
+                            )}
                           </div>
                         ) : (
-                          <div 
-                            onClick={() => abrirModalNovo(horario, prof)}
-                            className="h-full min-h-[45px] w-full border-2 border-dashed border-transparent group-hover:border-gray-300 rounded-lg cursor-pointer flex items-center justify-center text-gray-400 hover:text-slate-900 hover:bg-gray-100 transition-all"
+                          <button
+                            onClick={() => abrirModalNovo(horario, prof.id)}
+                            className="w-full h-full min-h-[80px] border-2 border-dashed border-transparent hover:border-slate-300 hover:bg-slate-50 rounded-lg flex items-center justify-center text-slate-400 hover:text-slate-600 transition-all"
                           >
-                            + Marcar
-                          </div>
+                            <Plus size={20} />
+                          </button>
                         )}
                       </td>
                     );
@@ -228,124 +275,189 @@ const Agenda = () => {
               ))}
             </tbody>
           </table>
-        )}
+        </div>
       </div>
 
-      {/* Modal NOVO AGENDAMENTO */}
-      {modalAberto && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-2xl p-6 w-full max-w-md shadow-2xl">
-            <h3 className="text-xl font-bold mb-1">Novo Atendimento</h3>
-            <p className="text-sm text-gray-500 mb-4">{slotSelecionado.horario} com {slotSelecionado.profissional_nome}</p>
-            
-            <form onSubmit={salvarAgendamento} className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium mb-1">Nome da Cliente</label>
-                <input required type="text" value={novoAgendamento.cliente} onChange={e => setNovoAgendamento({...novoAgendamento, cliente: e.target.value})} className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-slate-900" placeholder="Ex: Maria" />
-              </div>
-              
-              <div>
-                <label className="block text-sm font-medium mb-1">Procedimento</label>
-                <select value={novoAgendamento.procedimento_id} onChange={e => setNovoAgendamento({...novoAgendamento, procedimento_id: e.target.value})} className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-slate-900">
-                  {procedimentos.map(p => (
-                    <option key={p.id} value={p.id}>{p.nome}</option>
-                  ))}
-                </select>
-              </div>
+      {/* Modal Novo Agendamento */}
+      <Modal open={modalAberto} onClose={() => setModalAberto(false)} title="Novo Agendamento">
+        <div className="space-y-4">
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-1">Horário</label>
+              <input
+                type="text"
+                value={form.horario}
+                disabled
+                className="w-full border border-slate-300 rounded-lg px-3 py-2 bg-slate-50 text-slate-600"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-1">Profissional</label>
+              <input
+                type="text"
+                value={profissionais.find(p => p.id === form.profissional_id)?.nome || ''}
+                disabled
+                className="w-full border border-slate-300 rounded-lg px-3 py-2 bg-slate-50 text-slate-600"
+              />
+            </div>
+          </div>
 
-              <div>
-                <label className="block text-sm font-medium mb-1">Tamanho do Cabelo</label>
-                <select value={novoAgendamento.comprimento} onChange={e => setNovoAgendamento({...novoAgendamento, comprimento: e.target.value})} className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-slate-900">
-                  <option value="P">Pequeno (P)</option>
-                  <option value="M">Médio (M)</option>
-                  <option value="G">Grande (G)</option>
-                </select>
-              </div>
+          <div>
+            <label className="block text-sm font-medium text-slate-700 mb-1">Cliente *</label>
+            <input
+              type="text"
+              value={form.cliente}
+              onChange={e => setForm({ ...form, cliente: e.target.value })}
+              placeholder="Nome do cliente"
+              className="w-full border border-slate-300 rounded-lg px-3 py-2 outline-none focus:ring-2 focus:ring-emerald-500"
+            />
+          </div>
 
-              <div className="flex justify-end gap-3 mt-6">
-                <button type="button" onClick={() => setModalAberto(false)} className="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors">Cancelar</button>
-                <button type="submit" className="px-4 py-2 bg-slate-900 text-white rounded-lg hover:bg-slate-800 transition-colors shadow-md">Confirmar Agendamento</button>
+          <div>
+            <label className="block text-sm font-medium text-slate-700 mb-1">Procedimento *</label>
+            <select
+              value={form.procedimento_id}
+              onChange={e => handleProcedimentoChange(e.target.value)}
+              className="w-full border border-slate-300 rounded-lg px-3 py-2 bg-white outline-none focus:ring-2 focus:ring-emerald-500"
+            >
+              {procedimentos.map(p => (
+                <option key={p.id} value={p.id}>{p.nome} - {p.categoria}</option>
+              ))}
+            </select>
+          </div>
+
+          {procSelecionado?.requer_comprimento && (
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-1">Tamanho do Cabelo *</label>
+              <div className="grid grid-cols-3 gap-2">
+                {['P', 'M', 'G'].map(comp => (
+                  <button
+                    key={comp}
+                    onClick={() => handleComprimentoChange(comp)}
+                    className={`py-2 px-4 rounded-lg border-2 transition-all ${
+                      form.comprimento === comp
+                        ? 'border-emerald-500 bg-emerald-50 text-emerald-700 font-semibold'
+                        : 'border-slate-300 hover:border-slate-400'
+                    }`}
+                  >
+                    {comp === 'P' ? 'Curto' : comp === 'M' ? 'Médio' : 'Longo'}
+                  </button>
+                ))}
               </div>
-            </form>
+            </div>
+          )}
+
+          <div>
+            <label className="block text-sm font-medium text-slate-700 mb-1">Valor a Cobrar (R$) *</label>
+            <input
+              type="number"
+              step="0.01"
+              value={form.valor_cobrado}
+              onChange={e => setForm({ ...form, valor_cobrado: e.target.value })}
+              className="w-full border border-slate-300 rounded-lg px-3 py-2 outline-none focus:ring-2 focus:ring-emerald-500"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-slate-700 mb-1">Observações</label>
+            <textarea
+              value={form.obs}
+              onChange={e => setForm({ ...form, obs: e.target.value })}
+              placeholder="Observações adicionais..."
+              rows="2"
+              className="w-full border border-slate-300 rounded-lg px-3 py-2 outline-none focus:ring-2 focus:ring-emerald-500"
+            />
+          </div>
+
+          <div className="flex justify-end gap-3 pt-4">
+            <button
+              onClick={() => setModalAberto(false)}
+              className="px-4 py-2 text-slate-600 hover:bg-slate-100 rounded-lg transition-colors"
+            >
+              Cancelar
+            </button>
+            <button
+              onClick={salvarAgendamento}
+              className="px-4 py-2 bg-emerald-500 text-white rounded-lg hover:bg-emerald-600 transition-colors"
+            >
+              Confirmar Agendamento
+            </button>
           </div>
         </div>
-      )}
+      </Modal>
 
-      {/* Modal CHECKOUT (FINALIZAR ATENDIMENTO) */}
-      {modalCheckoutAberto && atendimentoSelecionado && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50 animate-fadeIn">
-          <div className="bg-white rounded-2xl p-6 w-full max-w-sm shadow-2xl">
-            <h3 className="text-xl font-bold mb-1 text-slate-800">Finalizar Atendimento</h3>
-            <p className="text-sm text-gray-500 mb-6">
-              {atendimentoSelecionado.cliente} • {atendimentoSelecionado.horario.substring(0,5)}
-            </p>
-
-            <div className="space-y-3 mb-6 bg-gray-50 p-4 rounded-xl border">
+      {/* Modal Checkout */}
+      <Modal open={modalCheckout} onClose={() => setModalCheckout(false)} title="Finalizar Atendimento">
+        {atendimentoSelecionado && (
+          <div className="space-y-4">
+            <div className="bg-slate-50 rounded-lg p-4 space-y-2">
               <div className="flex justify-between text-sm">
-                <span className="text-gray-600">Serviço:</span>
+                <span className="text-slate-600">Cliente:</span>
+                <span className="font-medium">{atendimentoSelecionado.cliente}</span>
+              </div>
+              <div className="flex justify-between text-sm">
+                <span className="text-slate-600">Procedimento:</span>
                 <span className="font-medium">{atendimentoSelecionado.procedimentos?.nome}</span>
               </div>
               <div className="flex justify-between text-sm">
-                <span className="text-gray-600">Profissional:</span>
+                <span className="text-slate-600">Profissional:</span>
                 <span className="font-medium">{atendimentoSelecionado.profissionais?.nome}</span>
               </div>
-              <div className="flex justify-between text-sm font-bold text-emerald-600 border-t pt-2 mt-2">
-                <span>Valor Cobrado:</span>
-                <span>R$ {atendimentoSelecionado.valor_cobrado}</span>
+              <div className="flex justify-between text-sm border-t pt-2 mt-2">
+                <span className="text-slate-600">Valor a Cobrar:</span>
+                <span className="font-bold text-emerald-600">{fmt(atendimentoSelecionado.valor_cobrado)}</span>
               </div>
             </div>
 
             {atendimentoSelecionado.status === 'EXECUTADO' ? (
-              <div className="text-center p-3 bg-emerald-50 text-emerald-700 rounded-lg mb-6 border border-emerald-200">
-                ✔️ Este atendimento já foi finalizado.
+              <div className="text-center p-4 bg-emerald-50 text-emerald-700 rounded-lg border border-emerald-200">
+                ✓ Atendimento já finalizado
               </div>
             ) : (
               <>
-                <div className="mb-4">
-                  <label className="block text-sm font-medium text-slate-700 mb-1">Valor Pago Hoje (R$)</label>
-                  <input 
-                    type="number" 
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-1">Valor Pago Agora (R$)</label>
+                  <input
+                    type="number"
                     step="0.01"
-                    value={valorRecebido}
-                    onChange={e => setValorRecebido(e.target.value)}
-                    placeholder={atendimentoSelecionado.valor_cobrado}
-                    className="w-full p-3 border rounded-xl focus:ring-2 focus:ring-emerald-500"
+                    value={checkoutForm.valor_pago}
+                    onChange={e => setCheckoutForm({ valor_pago: e.target.value })}
+                    className="w-full border border-slate-300 rounded-lg px-3 py-2 outline-none focus:ring-2 focus:ring-emerald-500"
                   />
-                  {Number(valorRecebido) < atendimentoSelecionado.valor_cobrado && (
-                    <p className="text-xs text-amber-600 mt-1">⚠️ Restará um saldo pendente de R$ {(atendimentoSelecionado.valor_cobrado - Number(valorRecebido)).toFixed(2)}</p>
+                  {Number(checkoutForm.valor_pago) < atendimentoSelecionado.valor_cobrado && (
+                    <p className="text-xs text-amber-600 mt-1">
+                      ⚠️ Restará pendente: {fmt(atendimentoSelecionado.valor_cobrado - Number(checkoutForm.valor_pago))}
+                    </p>
                   )}
                 </div>
 
-                <button 
+                <button
                   onClick={finalizarAtendimento}
-                  className="w-full py-3 bg-emerald-500 text-white font-bold rounded-xl hover:bg-emerald-600 transition-colors shadow-md mb-3"
+                  className="w-full py-3 bg-emerald-500 text-white font-semibold rounded-lg hover:bg-emerald-600 transition-colors"
                 >
                   Confirmar e Finalizar
                 </button>
               </>
             )}
 
-            <div className="flex justify-between mt-4 border-t pt-4">
-              <button 
+            <div className="flex justify-between pt-4 border-t">
+              <button
                 onClick={cancelarAtendimento}
-                className="text-red-500 hover:bg-red-50 px-3 py-2 rounded-lg text-sm transition-colors"
                 disabled={atendimentoSelecionado.status === 'EXECUTADO'}
+                className="text-red-500 hover:bg-red-50 px-3 py-2 rounded-lg text-sm transition-colors disabled:opacity-50"
               >
                 Cancelar Agendamento
               </button>
-              <button 
-                onClick={() => setModalCheckoutAberto(false)}
+              <button
+                onClick={() => setModalCheckout(false)}
                 className="text-slate-600 hover:bg-slate-100 px-4 py-2 rounded-lg text-sm transition-colors"
               >
                 Fechar
               </button>
             </div>
           </div>
-        </div>
-      )}
-
+        )}
+      </Modal>
     </div>
   );
-};
-
-export default Agenda;
+}

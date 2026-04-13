@@ -4,18 +4,9 @@ import { useToast } from '../components/Toast';
 import PageHeader from '../components/PageHeader';
 import { Trash2, Plus } from 'lucide-react';
 
-const CATEGORIAS = ['CABELO', 'UNHAS', 'ESTETICA', 'OUTROS'];
-const DIAS_SEMANA = [
-  { key: 'seg', label: 'Segunda' },
-  { key: 'ter', label: 'Terça' },
-  { key: 'qua', label: 'Quarta' },
-  { key: 'qui', label: 'Quinta' },
-  { key: 'sex', label: 'Sexta' },
-  { key: 'sab', label: 'Sábado' },
-  { key: 'dom', label: 'Domingo' },
-];
+const CATEGORIAS = ['CABELO', 'UNHAS', 'SOBRANCELHAS', 'CILIOS', 'OUTRO'];
 
-const Configuracoes = ({ salaoId }) => {
+export default function Configuracoes({ salaoId }) {
   const { showToast } = useToast();
   const [abaAtiva, setAbaAtiva] = useState('procedimentos');
   const [loading, setLoading] = useState(true);
@@ -23,8 +14,7 @@ const Configuracoes = ({ salaoId }) => {
   // Estados
   const [procedimentos, setProcedimentos] = useState([]);
   const [profissionais, setProfissionais] = useState([]);
-  const [horario, setHorario] = useState({});
-  const [despesas, setDespesas] = useState([]);
+  const [config, setConfig] = useState({ custo_fixo_por_atendimento: 29, taxa_maquininha_pct: 5, prolabore_mensal: 0 });
 
   useEffect(() => {
     carregarDados();
@@ -33,17 +23,15 @@ const Configuracoes = ({ salaoId }) => {
   const carregarDados = async () => {
     setLoading(true);
     try {
-      const [procRes, profRes, salaoRes, despRes] = await Promise.all([
-        supabase.from('procedimentos').select('*').eq('salao_id', salaoId).eq('ativo', true),
-        supabase.from('profissionais').select('*').eq('salao_id', salaoId).eq('ativo', true),
-        supabase.from('saloes').select('horario').eq('id', salaoId).single(),
-        supabase.from('despesas').select('*').eq('salao_id', salaoId).eq('tipo', 'FIXA')
+      const [procRes, profRes, configRes] = await Promise.all([
+        supabase.from('procedimentos').select('*').eq('salao_id', salaoId).order('categoria'),
+        supabase.from('profissionais').select('*').eq('salao_id', salaoId).order('nome'),
+        supabase.from('configuracoes').select('*').eq('salao_id', salaoId).single()
       ]);
 
       if (procRes.data) setProcedimentos(procRes.data);
       if (profRes.data) setProfissionais(profRes.data);
-      if (salaoRes.data?.horario) setHorario(salaoRes.data.horario);
-      if (despRes.data) setDespesas(despRes.data);
+      if (configRes.data) setConfig(configRes.data);
     } catch (error) {
       showToast('Erro ao carregar dados', 'error');
     } finally {
@@ -55,9 +43,19 @@ const Configuracoes = ({ salaoId }) => {
   const salvarProcedimento = async (proc) => {
     try {
       if (proc.id) {
-        await supabase.from('procedimentos').update({ nome: proc.nome, valor: proc.valor, categoria: proc.categoria }).eq('id', proc.id);
+        await supabase.from('procedimentos').update({
+          nome: proc.nome,
+          categoria: proc.categoria,
+          requer_comprimento: proc.requer_comprimento,
+          preco_p: proc.preco_p,
+          preco_m: proc.preco_m,
+          preco_g: proc.preco_g,
+          porcentagem_profissional: proc.porcentagem_profissional,
+          custo_variavel: proc.custo_variavel,
+          ativo: proc.ativo
+        }).eq('id', proc.id);
       } else {
-        await supabase.from('procedimentos').insert({ ...proc, salao_id: salaoId, ativo: true });
+        await supabase.from('procedimentos').insert({ ...proc, salao_id: salaoId });
       }
       showToast('Salvo', 'success');
       carregarDados();
@@ -66,28 +64,39 @@ const Configuracoes = ({ salaoId }) => {
     }
   };
 
-  const deletarProcedimento = async (id) => {
-    if (!confirm('Deletar este procedimento?')) return;
-    try {
-      await supabase.from('procedimentos').update({ ativo: false }).eq('id', id);
-      showToast('Deletado', 'success');
-      carregarDados();
-    } catch (error) {
-      showToast('Erro ao deletar', 'error');
-    }
+  const toggleAtivoProcedimento = async (id, ativo) => {
+    await supabase.from('procedimentos').update({ ativo: !ativo }).eq('id', id);
+    carregarDados();
   };
 
   const adicionarProcedimento = () => {
-    setProcedimentos([...procedimentos, { id: null, nome: '', valor: 0, categoria: 'OUTROS', temp: true }]);
+    setProcedimentos([...procedimentos, {
+      id: null,
+      nome: '',
+      categoria: 'OUTRO',
+      requer_comprimento: false,
+      preco_p: 0,
+      preco_m: 0,
+      preco_g: 0,
+      porcentagem_profissional: 40,
+      custo_variavel: 0,
+      ativo: true,
+      temp: true
+    }]);
   };
 
   // ═══════════════════════════════ PROFISSIONAIS ═══════════════════════════════
   const salvarProfissional = async (prof) => {
     try {
       if (prof.id) {
-        await supabase.from('profissionais').update({ nome: prof.nome, cargo: prof.cargo, comissao_percentual: prof.comissao_percentual }).eq('id', prof.id);
+        await supabase.from('profissionais').update({
+          nome: prof.nome,
+          cargo: prof.cargo,
+          salario_fixo: prof.salario_fixo,
+          ativo: prof.ativo
+        }).eq('id', prof.id);
       } else {
-        await supabase.from('profissionais').insert({ ...prof, salao_id: salaoId, ativo: true });
+        await supabase.from('profissionais').insert({ ...prof, salao_id: salaoId });
       }
       showToast('Salvo', 'success');
       carregarDados();
@@ -96,76 +105,48 @@ const Configuracoes = ({ salaoId }) => {
     }
   };
 
-  const deletarProfissional = async (id) => {
-    if (!confirm('Deletar este profissional?')) return;
-    try {
-      await supabase.from('profissionais').update({ ativo: false }).eq('id', id);
-      showToast('Deletado', 'success');
-      carregarDados();
-    } catch (error) {
-      showToast('Erro ao deletar', 'error');
-    }
+  const toggleAtivoProfissional = async (id, ativo) => {
+    await supabase.from('profissionais').update({ ativo: !ativo }).eq('id', id);
+    carregarDados();
   };
 
   const adicionarProfissional = () => {
-    setProfissionais([...profissionais, { id: null, nome: '', cargo: 'FUNCIONARIO', comissao_percentual: 40, temp: true }]);
+    setProfissionais([...profissionais, {
+      id: null,
+      nome: '',
+      cargo: 'FUNCIONARIO',
+      salario_fixo: 0,
+      ativo: true,
+      temp: true
+    }]);
   };
 
-  // ═══════════════════════════════ HORÁRIOS ═══════════════════════════════
-  const salvarHorarios = async () => {
+  // ═══════════════════════════════ CONFIGURAÇÕES ═══════════════════════════════
+  const salvarConfiguracoes = async () => {
     try {
-      await supabase.from('saloes').update({ horario }).eq('id', salaoId);
-      showToast('Horários salvos', 'success');
-    } catch (error) {
-      showToast('Erro ao salvar horários', 'error');
-    }
-  };
-
-  // ═══════════════════════════════ DESPESAS ═══════════════════════════════
-  const salvarDespesa = async (desp) => {
-    try {
-      if (desp.id) {
-        await supabase.from('despesas').update({ descricao: desp.descricao, valor: desp.valor }).eq('id', desp.id);
-      } else {
-        await supabase.from('despesas').insert({ ...desp, salao_id: salaoId, tipo: 'FIXA', data: new Date().toISOString().split('T')[0], valor_pago: 0 });
-      }
-      showToast('Salvo', 'success');
-      carregarDados();
+      await supabase.from('configuracoes').update({
+        custo_fixo_por_atendimento: Number(config.custo_fixo_por_atendimento),
+        taxa_maquininha_pct: Number(config.taxa_maquininha_pct),
+        prolabore_mensal: Number(config.prolabore_mensal)
+      }).eq('salao_id', salaoId);
+      showToast('Configurações salvas', 'success');
     } catch (error) {
       showToast('Erro ao salvar', 'error');
     }
-  };
-
-  const deletarDespesa = async (id) => {
-    if (!confirm('Deletar esta despesa?')) return;
-    try {
-      await supabase.from('despesas').delete().eq('id', id);
-      showToast('Deletado', 'success');
-      carregarDados();
-    } catch (error) {
-      showToast('Erro ao deletar', 'error');
-    }
-  };
-
-  const adicionarDespesa = () => {
-    setDespesas([...despesas, { id: null, descricao: '', valor: 0, temp: true }]);
   };
 
   if (loading) return <div className="p-10 text-center">Carregando...</div>;
 
-  const totalDespesas = despesas.reduce((acc, d) => acc + Number(d.valor || 0), 0);
-
   return (
     <div className="max-w-6xl mx-auto px-6 py-8">
-      <PageHeader title="Configurações" subtitle="Gerencie procedimentos, equipe, horários e despesas" />
+      <PageHeader title="Configurações" subtitle="Gerencie procedimentos, equipe e valores" />
 
       {/* Abas */}
       <div className="flex gap-6 border-b border-slate-200 mb-6">
         {[
           { key: 'procedimentos', label: 'Procedimentos' },
           { key: 'equipe', label: 'Equipe' },
-          { key: 'horarios', label: 'Horários' },
-          { key: 'despesas', label: 'Despesas' }
+          { key: 'financeiro', label: 'Financeiro' }
         ].map(aba => (
           <button
             key={aba.key}
@@ -190,8 +171,18 @@ const Configuracoes = ({ salaoId }) => {
               <div key={cat} className="bg-white rounded-xl border border-slate-200 p-4">
                 <h3 className="text-sm font-semibold text-slate-700 mb-3">{cat}</h3>
                 <div className="space-y-2">
+                  <div className="grid grid-cols-12 gap-2 text-xs text-slate-400 mb-2">
+                    <span className="col-span-3">Nome</span>
+                    <span className="col-span-1 text-center">P R$</span>
+                    <span className="col-span-1 text-center">M R$</span>
+                    <span className="col-span-1 text-center">G R$</span>
+                    <span className="col-span-1 text-center">Com%</span>
+                    <span className="col-span-1 text-center">Custo</span>
+                    <span className="col-span-1 text-center">Ativo</span>
+                    <span className="col-span-1" />
+                  </div>
                   {procsCategoria.map((proc, idx) => (
-                    <div key={proc.id || idx} className="flex gap-2 items-center">
+                    <div key={proc.id || idx} className="grid grid-cols-12 gap-2 items-center">
                       <input
                         type="text"
                         value={proc.nome}
@@ -202,27 +193,81 @@ const Configuracoes = ({ salaoId }) => {
                           setProcedimentos(novos);
                         }}
                         onBlur={() => proc.nome && salvarProcedimento(proc)}
-                        placeholder="Nome do procedimento"
-                        className="flex-1 border border-slate-300 rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-emerald-500"
+                        placeholder="Nome"
+                        className="col-span-3 border border-slate-300 rounded-lg px-2 py-2 text-sm outline-none focus:ring-2 focus:ring-emerald-500"
                       />
-                      <div className="relative">
-                        <span className="absolute left-2.5 top-2 text-slate-400 text-sm">R$</span>
+                      <input
+                        type="number"
+                        value={proc.preco_p}
+                        onChange={e => {
+                          const novos = [...procedimentos];
+                          const index = novos.findIndex(p => p === proc);
+                          novos[index].preco_p = e.target.value;
+                          setProcedimentos(novos);
+                        }}
+                        onBlur={() => proc.nome && salvarProcedimento(proc)}
+                        className="col-span-1 border border-slate-300 rounded-lg px-1 py-2 text-sm text-center outline-none focus:ring-2 focus:ring-emerald-500"
+                      />
+                      <input
+                        type="number"
+                        value={proc.preco_m}
+                        onChange={e => {
+                          const novos = [...procedimentos];
+                          const index = novos.findIndex(p => p === proc);
+                          novos[index].preco_m = e.target.value;
+                          setProcedimentos(novos);
+                        }}
+                        onBlur={() => proc.nome && salvarProcedimento(proc)}
+                        disabled={!proc.requer_comprimento}
+                        className="col-span-1 border border-slate-300 rounded-lg px-1 py-2 text-sm text-center outline-none focus:ring-2 focus:ring-emerald-500 disabled:bg-slate-100"
+                      />
+                      <input
+                        type="number"
+                        value={proc.preco_g}
+                        onChange={e => {
+                          const novos = [...procedimentos];
+                          const index = novos.findIndex(p => p === proc);
+                          novos[index].preco_g = e.target.value;
+                          setProcedimentos(novos);
+                        }}
+                        onBlur={() => proc.nome && salvarProcedimento(proc)}
+                        disabled={!proc.requer_comprimento}
+                        className="col-span-1 border border-slate-300 rounded-lg px-1 py-2 text-sm text-center outline-none focus:ring-2 focus:ring-emerald-500 disabled:bg-slate-100"
+                      />
+                      <input
+                        type="number"
+                        value={proc.porcentagem_profissional}
+                        onChange={e => {
+                          const novos = [...procedimentos];
+                          const index = novos.findIndex(p => p === proc);
+                          novos[index].porcentagem_profissional = e.target.value;
+                          setProcedimentos(novos);
+                        }}
+                        onBlur={() => proc.nome && salvarProcedimento(proc)}
+                        className="col-span-1 border border-slate-300 rounded-lg px-1 py-2 text-sm text-center outline-none focus:ring-2 focus:ring-emerald-500"
+                      />
+                      <input
+                        type="number"
+                        value={proc.custo_variavel}
+                        onChange={e => {
+                          const novos = [...procedimentos];
+                          const index = novos.findIndex(p => p === proc);
+                          novos[index].custo_variavel = e.target.value;
+                          setProcedimentos(novos);
+                        }}
+                        onBlur={() => proc.nome && salvarProcedimento(proc)}
+                        className="col-span-1 border border-slate-300 rounded-lg px-1 py-2 text-sm text-center outline-none focus:ring-2 focus:ring-emerald-500"
+                      />
+                      <div className="col-span-1 flex justify-center">
                         <input
-                          type="number"
-                          value={proc.valor}
-                          onChange={e => {
-                            const novos = [...procedimentos];
-                            const index = novos.findIndex(p => p === proc);
-                            novos[index].valor = e.target.value;
-                            setProcedimentos(novos);
-                          }}
-                          onBlur={() => proc.nome && salvarProcedimento(proc)}
-                          placeholder="0"
-                          className="w-28 border border-slate-300 rounded-lg pl-7 pr-2 py-2 text-sm outline-none focus:ring-2 focus:ring-emerald-500"
+                          type="checkbox"
+                          checked={proc.ativo}
+                          onChange={() => toggleAtivoProcedimento(proc.id, proc.ativo)}
+                          className="w-4 h-4"
                         />
                       </div>
-                      <button onClick={() => deletarProcedimento(proc.id)} className="text-red-400 hover:text-red-600">
-                        <Trash2 size={18} />
+                      <button onClick={() => toggleAtivoProcedimento(proc.id, true)} className="col-span-1 text-red-400 hover:text-red-600">
+                        <Trash2 size={16} />
                       </button>
                     </div>
                   ))}
@@ -240,14 +285,15 @@ const Configuracoes = ({ salaoId }) => {
       {abaAtiva === 'equipe' && (
         <div className="bg-white rounded-xl border border-slate-200 p-4">
           <div className="space-y-2">
-            <div className="flex gap-2 text-xs text-slate-400 mb-2">
-              <span className="flex-1">Nome</span>
-              <span className="w-32">Cargo</span>
-              <span className="w-20 text-center">Comissão %</span>
-              <span className="w-8" />
+            <div className="grid grid-cols-12 gap-2 text-xs text-slate-400 mb-2">
+              <span className="col-span-5">Nome</span>
+              <span className="col-span-3">Cargo</span>
+              <span className="col-span-2 text-center">Salário Fixo R$</span>
+              <span className="col-span-1 text-center">Ativo</span>
+              <span className="col-span-1" />
             </div>
             {profissionais.map((prof, idx) => (
-              <div key={prof.id || idx} className="flex gap-2 items-center">
+              <div key={prof.id || idx} className="grid grid-cols-12 gap-2 items-center">
                 <input
                   type="text"
                   value={prof.nome}
@@ -258,7 +304,7 @@ const Configuracoes = ({ salaoId }) => {
                   }}
                   onBlur={() => prof.nome && salvarProfissional(prof)}
                   placeholder="Nome"
-                  className="flex-1 border border-slate-300 rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-emerald-500"
+                  className="col-span-5 border border-slate-300 rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-emerald-500"
                 />
                 <select
                   value={prof.cargo}
@@ -268,24 +314,32 @@ const Configuracoes = ({ salaoId }) => {
                     setProfissionais(novos);
                     salvarProfissional(novos[idx]);
                   }}
-                  className="w-32 border border-slate-300 rounded-lg px-2 py-2 text-sm bg-white outline-none"
+                  className="col-span-3 border border-slate-300 rounded-lg px-2 py-2 text-sm bg-white outline-none"
                 >
                   <option value="FUNCIONARIO">Funcionário</option>
-                  <option value="SOCIO">Sócio</option>
+                  <option value="PROPRIETARIO">Proprietário</option>
                 </select>
                 <input
                   type="number"
-                  value={prof.comissao_percentual}
+                  value={prof.salario_fixo}
                   onChange={e => {
                     const novos = [...profissionais];
-                    novos[idx].comissao_percentual = e.target.value;
+                    novos[idx].salario_fixo = e.target.value;
                     setProfissionais(novos);
                   }}
                   onBlur={() => prof.nome && salvarProfissional(prof)}
-                  className="w-20 border border-slate-300 rounded-lg px-2 py-2 text-sm text-center outline-none focus:ring-2 focus:ring-emerald-500"
+                  className="col-span-2 border border-slate-300 rounded-lg px-2 py-2 text-sm text-center outline-none focus:ring-2 focus:ring-emerald-500"
                 />
-                <button onClick={() => deletarProfissional(prof.id)} className="text-red-400 hover:text-red-600">
-                  <Trash2 size={18} />
+                <div className="col-span-1 flex justify-center">
+                  <input
+                    type="checkbox"
+                    checked={prof.ativo}
+                    onChange={() => toggleAtivoProfissional(prof.id, prof.ativo)}
+                    className="w-4 h-4"
+                  />
+                </div>
+                <button onClick={() => toggleAtivoProfissional(prof.id, true)} className="col-span-1 text-red-400 hover:text-red-600">
+                  <Trash2 size={16} />
                 </button>
               </div>
             ))}
@@ -296,99 +350,55 @@ const Configuracoes = ({ salaoId }) => {
         </div>
       )}
 
-      {/* ═══════════════════════════════ ABA HORÁRIOS ═══════════════════════════════ */}
-      {abaAtiva === 'horarios' && (
-        <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
-          {DIAS_SEMANA.map((dia, i) => (
-            <div key={dia.key} className={`flex items-center gap-3 px-4 py-3 ${i < DIAS_SEMANA.length - 1 ? 'border-b border-slate-100' : ''}`}>
+      {/* ═══════════════════════════════ ABA FINANCEIRO ═══════════════════════════════ */}
+      {abaAtiva === 'financeiro' && (
+        <div className="bg-white rounded-xl border border-slate-200 p-6 max-w-2xl">
+          <div className="space-y-6">
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-2">Custo fixo por atendimento (R$)</label>
               <input
-                type="checkbox"
-                checked={horario[dia.key]?.aberto || false}
-                onChange={e => setHorario({ ...horario, [dia.key]: { ...horario[dia.key], aberto: e.target.checked } })}
-                className="w-4 h-4"
+                type="number"
+                step="0.01"
+                value={config.custo_fixo_por_atendimento}
+                onChange={e => setConfig({ ...config, custo_fixo_por_atendimento: e.target.value })}
+                className="w-full border border-slate-300 rounded-lg px-4 py-2 outline-none focus:ring-2 focus:ring-emerald-500"
               />
-              <span className="text-sm w-16 font-medium text-slate-700">{dia.label}</span>
-              {horario[dia.key]?.aberto && (
-                <div className="flex items-center gap-2 ml-auto">
-                  <input
-                    type="time"
-                    value={horario[dia.key]?.abertura || '08:00'}
-                    onChange={e => setHorario({ ...horario, [dia.key]: { ...horario[dia.key], abertura: e.target.value } })}
-                    className="border border-slate-300 rounded-lg px-2 py-1.5 text-sm"
-                  />
-                  <span className="text-slate-400 text-xs">até</span>
-                  <input
-                    type="time"
-                    value={horario[dia.key]?.fechamento || '18:00'}
-                    onChange={e => setHorario({ ...horario, [dia.key]: { ...horario[dia.key], fechamento: e.target.value } })}
-                    className="border border-slate-300 rounded-lg px-2 py-1.5 text-sm"
-                  />
-                </div>
-              )}
+              <p className="text-xs text-slate-500 mt-1">Rateio de água, luz, aluguel por atendimento</p>
             </div>
-          ))}
-          <div className="p-4 bg-slate-50 flex justify-center">
-            <button onClick={salvarHorarios} className="px-6 py-2 bg-emerald-500 text-white font-semibold rounded-lg hover:bg-emerald-600">
-              Salvar horários
-            </button>
-          </div>
-        </div>
-      )}
 
-      {/* ═══════════════════════════════ ABA DESPESAS ═══════════════════════════════ */}
-      {abaAtiva === 'despesas' && (
-        <div className="bg-white rounded-xl border border-slate-200 p-4">
-          <div className="space-y-2">
-            <div className="flex gap-2 text-xs text-slate-400 mb-2">
-              <span className="flex-1">Despesa</span>
-              <span className="w-32">Valor mensal (R$)</span>
-              <span className="w-8" />
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-2">Taxa maquininha (%)</label>
+              <input
+                type="number"
+                step="0.1"
+                value={config.taxa_maquininha_pct}
+                onChange={e => setConfig({ ...config, taxa_maquininha_pct: e.target.value })}
+                className="w-full border border-slate-300 rounded-lg px-4 py-2 outline-none focus:ring-2 focus:ring-emerald-500"
+              />
+              <p className="text-xs text-slate-500 mt-1">Percentual descontado em pagamentos com cartão</p>
             </div>
-            {despesas.map((desp, idx) => (
-              <div key={desp.id || idx} className="flex gap-2 items-center">
-                <input
-                  type="text"
-                  value={desp.descricao}
-                  onChange={e => {
-                    const novos = [...despesas];
-                    novos[idx].descricao = e.target.value;
-                    setDespesas(novos);
-                  }}
-                  onBlur={() => desp.descricao && salvarDespesa(desp)}
-                  placeholder="Ex: Aluguel"
-                  className="flex-1 border border-slate-300 rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-emerald-500"
-                />
-                <div className="relative">
-                  <span className="absolute left-2.5 top-2 text-slate-400 text-sm">R$</span>
-                  <input
-                    type="number"
-                    value={desp.valor}
-                    onChange={e => {
-                      const novos = [...despesas];
-                      novos[idx].valor = e.target.value;
-                      setDespesas(novos);
-                    }}
-                    onBlur={() => desp.descricao && salvarDespesa(desp)}
-                    placeholder="0,00"
-                    className="w-32 border border-slate-300 rounded-lg pl-8 pr-3 py-2 text-sm outline-none focus:ring-2 focus:ring-emerald-500"
-                  />
-                </div>
-                <button onClick={() => deletarDespesa(desp.id)} className="text-red-400 hover:text-red-600">
-                  <Trash2 size={18} />
-                </button>
-              </div>
-            ))}
-          </div>
-          <button onClick={adicionarDespesa} className="mt-4 text-sm text-emerald-600 hover:text-emerald-700 font-medium flex items-center gap-1">
-            <Plus size={16} /> Adicionar despesa
-          </button>
-          <div className="mt-6 pt-4 border-t border-slate-200">
-            <p className="text-sm text-slate-600">Total fixo mensal: <strong className="text-slate-900">R$ {totalDespesas.toFixed(2)}</strong></p>
+
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-2">Pró-labore mensal (R$)</label>
+              <input
+                type="number"
+                step="0.01"
+                value={config.prolabore_mensal}
+                onChange={e => setConfig({ ...config, prolabore_mensal: e.target.value })}
+                className="w-full border border-slate-300 rounded-lg px-4 py-2 outline-none focus:ring-2 focus:ring-emerald-500"
+              />
+              <p className="text-xs text-slate-500 mt-1">Meta de retirada mensal para despesas pessoais</p>
+            </div>
+
+            <button
+              onClick={salvarConfiguracoes}
+              className="w-full py-3 bg-emerald-500 text-white font-semibold rounded-lg hover:bg-emerald-600 transition-colors"
+            >
+              Salvar Configurações
+            </button>
           </div>
         </div>
       )}
     </div>
   );
-};
-
-export default Configuracoes;
+}

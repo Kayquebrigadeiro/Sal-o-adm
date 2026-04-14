@@ -7,6 +7,7 @@ import Sidebar from './components/Sidebar';
 import Agenda from './pages/Agenda';
 import Clientes from './pages/Clientes';
 import Dashboard from './pages/Dashboard';
+import Precificacao from './pages/Precificacao';
 import HomeCar from './pages/HomeCar';
 import Paralelos from './pages/Paralelos';
 import Despesas from './pages/Despesas';
@@ -132,6 +133,7 @@ export default function App() {
                 <Route path="/agenda" element={<Agenda {...ctx} />} />
                 <Route path="/clientes" element={<Clientes {...ctx} />} />
                 <Route path="/dashboard" element={role === 'PROPRIETARIO' ? <Dashboard {...ctx} /> : <Navigate to="/agenda" />} />
+                <Route path="/precificacao" element={role === 'PROPRIETARIO' ? <Precificacao {...ctx} /> : <Navigate to="/agenda" />} />
                 <Route path="/homecar" element={role === 'PROPRIETARIO' ? <HomeCar {...ctx} /> : <Navigate to="/agenda" />} />
                 <Route path="/paralelos" element={role === 'PROPRIETARIO' ? <Paralelos {...ctx} /> : <Navigate to="/agenda" />} />
                 <Route path="/despesas" element={role === 'PROPRIETARIO' ? <Despesas {...ctx} /> : <Navigate to="/agenda" />} />

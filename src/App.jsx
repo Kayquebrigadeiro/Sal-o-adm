@@ -5,6 +5,7 @@ import { ToastProvider } from './components/Toast';
 import Login from './pages/Login';
 import Sidebar from './components/Sidebar';
 import Agenda from './pages/Agenda';
+import Clientes from './pages/Clientes';
 import Dashboard from './pages/Dashboard';
 import HomeCar from './pages/HomeCar';
 import Paralelos from './pages/Paralelos';
@@ -129,6 +130,7 @@ export default function App() {
             <div className="animate-fadeIn">
               <Routes>
                 <Route path="/agenda" element={<Agenda {...ctx} />} />
+                <Route path="/clientes" element={<Clientes {...ctx} />} />
                 <Route path="/dashboard" element={role === 'PROPRIETARIO' ? <Dashboard {...ctx} /> : <Navigate to="/agenda" />} />
                 <Route path="/homecar" element={role === 'PROPRIETARIO' ? <HomeCar {...ctx} /> : <Navigate to="/agenda" />} />
                 <Route path="/paralelos" element={role === 'PROPRIETARIO' ? <Paralelos {...ctx} /> : <Navigate to="/agenda" />} />

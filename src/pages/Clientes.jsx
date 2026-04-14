@@ -167,8 +167,8 @@ export default function Clientes({ salaoId }) {
           <div>
             <label className="text-sm font-bold text-slate-700 mb-1 block">Nome Completo</label>
             <input 
-              type="text" className="w-full border-2 border-slate-100 p-3 rounded-2xl focus:border-slate-900 outline-none"
-              value={form.nome} onChange={e => setForm({...form, nome: e.target.value})}
+              type="text" className="w-full border-2 border-slate-100 p-3 rounded-2xl focus:border-slate-900 outline-none uppercase"
+              value={form.nome} onChange={e => setForm({...form, nome: e.target.value.toUpperCase()})}
             />
           </div>
           <div>

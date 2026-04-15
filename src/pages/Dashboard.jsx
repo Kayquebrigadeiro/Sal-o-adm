@@ -1,119 +1,58 @@
-import { useState, useEffect } from 'react';
-import { supabase } from '../supabaseClient';
-import { Lock, TrendingUp, Users, DollarSign, Activity } from 'lucide-react';
+import React, { useState } from 'react';
+import { Lock, TrendingUp, DollarSign, Activity, Users } from 'lucide-react';
 import { 
   BarChart, Bar, LineChart, Line, XAxis, YAxis, CartesianGrid, 
-  Tooltip, ResponsiveContainer, Legend, PieChart, Pie, Cell 
+  Tooltip, ResponsiveContainer, Legend, PieChart, Pie, Cell, ComposedChart
 } from 'recharts';
 
-const fmt = (v) => Number(v || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
-const CORES = ['#10b981', '#0f172a', '#3b82f6', '#f59e0b', '#ef4444', '#8b5cf6'];
-
-export default function Dashboard({ salaoId }) {
-  const [loading, setLoading] = useState(true);
+const Dashboard = () => {
+  // 1. ESTADOS DE SEGURANÇA
   const [unlocked, setUnlocked] = useState(false);
   const [pin, setPin] = useState('');
-  const [pinCorreto, setPinCorreto] = useState('1234');
-  
-  // Estados para os Gráficos
-  const [dadosEvolucao, setDadosEvolucao] = useState([]);
-  const [dadosProfissionais, setDadosProfissionais] = useState([]);
-  const [dadosDespesas, setDadosDespesas] = useState([]);
-  const [resumoAtual, setResumoAtual] = useState({ faturamento: 0, lucro: 0, ticket: 0, atendimentos: 0 });
+  const PIN_CORRETO = '1234'; // Depois isso virá do banco de dados
 
-  useEffect(() => {
-    if (salaoId) carregarConfiguracoes();
-  }, [salaoId]);
+  // 2. DADOS SIMULADOS (Mock) PARA OS GRÁFICOS
+  const dadosEvolucao = [
+    { mes: 'Jan', faturamento: 8500, lucro: 3200, ticket: 140, atendimentos: 60 },
+    { mes: 'Fev', faturamento: 9200, lucro: 3800, ticket: 145, atendimentos: 63 },
+    { mes: 'Mar', faturamento: 11000, lucro: 4500, ticket: 152, atendimentos: 72 },
+    { mes: 'Abr', faturamento: 10500, lucro: 4100, ticket: 150, atendimentos: 70 },
+  ];
 
-  useEffect(() => {
-    if (unlocked && salaoId) carregarPainelSecreto();
-  }, [unlocked]);
+  const dadosComissoes = [
+    { nome: 'Ricardo', comissao: 2100 },
+    { nome: 'Amanda', comissao: 1850 },
+    { nome: 'Beatriz', comissao: 1200 },
+  ];
 
-  const carregarConfiguracoes = async () => {
-    const { data } = await supabase.from('saloes').select('pin_financeiro').eq('id', salaoId).single();
-    if (data?.pin_financeiro) setPinCorreto(data.pin_financeiro);
-  };
+  const dadosSaidas = [
+    { nome: 'Despesas Fixas (Luz, Água, Produtos)', valor: 4500 },
+    { nome: 'Retiradas Pessoais (Pró-labore)', valor: 3000 },
+  ];
+
+  const CORES_PIE = ['#ef4444', '#f59e0b']; // Vermelho para despesa, Laranja para retirada
 
   const verificarPin = (e) => {
     e.preventDefault();
-    if (pin === pinCorreto) setUnlocked(true);
-    else { alert('PIN Incorreto!'); setPin(''); }
-  };
-
-  const carregarPainelSecreto = async () => {
-    setLoading(true);
-    try {
-      // 1. Dados de Evolução Mensal (Faturamento, Lucro, Atendimentos, Ticket)
-      const { data: mensal } = await supabase
-        .from('fechamento_mensal')
-        .select('*')
-        .eq('salao_id', salaoId)
-        .order('mes', { ascending: true })
-        .limit(12);
-
-      const formatadoMensal = (mensal || []).map(m => ({
-        mes: new Date(m.mes + 'T12:00:00').toLocaleDateString('pt-BR', { month: 'short', year: '2-digit' }),
-        faturamento: Number(m.faturamento_bruto || 0),
-        lucro: Number(m.lucro_real || 0),
-        atendimentos: Number(m.total_atendimentos || 0),
-        ticket_medio: Number(m.faturamento_bruto || 0) / (Number(m.total_atendimentos) || 1)
-      }));
-      setDadosEvolucao(formatadoMensal);
-
-      if (formatadoMensal.length > 0) {
-        const ultimoMes = formatadoMensal[formatadoMensal.length - 1];
-        setResumoAtual({
-          faturamento: ultimoMes.faturamento,
-          lucro: ultimoMes.lucro,
-          ticket: ultimoMes.ticket_medio,
-          atendimentos: ultimoMes.atendimentos
-        });
-      }
-
-      // 2. Comissões por Profissional (Mês Atual)
-      const dataHoje = new Date();
-      const primeiroDiaMes = new Date(dataHoje.getFullYear(), dataHoje.getMonth(), 1).toISOString().split('T')[0];
-      
-      const { data: profs } = await supabase
-        .from('rendimento_por_profissional')
-        .select('profissional, rendimento_bruto')
-        .eq('salao_id', salaoId)
-        .gte('mes', primeiroDiaMes);
-
-      setDadosProfissionais((profs || []).map(p => ({
-        nome: p.profissional,
-        comissao: Number(p.rendimento_bruto || 0)
-      })));
-
-      // 3. Despesas x Gastos Pessoais (Mês Atual)
-      const [resDespesas, resGastos] = await Promise.all([
-        supabase.from('despesas').select('valor').eq('salao_id', salaoId).gte('data', primeiroDiaMes),
-        supabase.from('gastos_pessoais').select('valor').eq('salao_id', salaoId).gte('criado_em', primeiroDiaMes)
-      ]);
-
-      const totalDespesas = (resDespesas.data || []).reduce((acc, curr) => acc + Number(curr.valor), 0);
-      const totalGastosPessoais = (resGastos.data || []).reduce((acc, curr) => acc + Number(curr.valor), 0);
-
-      setDadosDespesas([
-        { nome: 'Despesas do Salão', valor: totalDespesas },
-        { nome: 'Gastos Pessoais', valor: totalGastosPessoais }
-      ]);
-
-    } catch (err) {
-      console.error(err);
+    if (pin === PIN_CORRETO) {
+      setUnlocked(true);
+    } else {
+      alert('PIN Incorreto!');
+      setPin('');
     }
-    setLoading(false);
   };
 
-  // Custom Tooltip para Moeda
+  const fmt = (v) => Number(v || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+
+  // Custom Tooltip para formatar como moeda nos gráficos
   const TooltipMoeda = ({ active, payload, label }) => {
     if (active && payload && payload.length) {
       return (
         <div className="bg-white p-3 border border-slate-200 shadow-xl rounded-xl">
           <p className="font-bold text-slate-800 mb-2">{label}</p>
           {payload.map((entry, index) => (
-            <p key={index} style={{ color: entry.color }} className="text-sm font-bold">
-              {entry.name}: {fmt(entry.value)}
+            <p key={index} style={{ color: entry.color }} className="text-xs font-bold uppercase">
+              {entry.name}: {entry.name === 'Atendimentos' ? entry.value : fmt(entry.value)}
             </p>
           ))}
         </div>
@@ -125,132 +64,134 @@ export default function Dashboard({ salaoId }) {
   // --- TELA DE BLOQUEIO ---
   if (!unlocked) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-[80vh] animate-fadeIn">
-        <div className="bg-white p-8 rounded-3xl shadow-xl border border-slate-100 w-full max-w-md text-center">
-          <div className="w-16 h-16 bg-slate-900 text-emerald-400 rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-lg">
+      <div className="flex flex-col items-center justify-center min-h-screen bg-slate-50 p-4">
+        <div className="bg-white p-8 rounded-3xl shadow-lg border border-slate-200 w-full max-w-sm text-center">
+          <div className="w-16 h-16 bg-slate-900 text-emerald-400 rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-md">
             <Lock size={32} />
           </div>
-          <h2 className="text-2xl font-bold text-slate-800 mb-2">Aba Secreta</h2>
-          <p className="text-slate-500 mb-8 text-sm">Insira seu PIN para visualizar os gráficos de faturamento.</p>
+          <h2 className="text-2xl font-black text-slate-800 mb-2">Aba Secreta</h2>
+          <p className="text-slate-500 mb-8 text-sm font-medium">Acesso restrito à gestão financeira.</p>
           <form onSubmit={verificarPin} className="space-y-4">
             <input 
-              type="password" maxLength={4} placeholder="••••"
-              className="w-full text-center text-4xl tracking-[1em] font-bold border-2 border-slate-100 rounded-2xl py-4 focus:border-slate-900 outline-none"
+              type="password" maxLength={4} placeholder="PIN"
+              className="w-full text-center text-4xl tracking-[0.5em] font-black border-b-2 border-slate-200 py-4 outline-none focus:border-emerald-500 bg-transparent"
               value={pin} onChange={e => setPin(e.target.value)} autoFocus
             />
-            <button type="submit" className="w-full bg-slate-900 text-white py-4 rounded-2xl font-bold hover:bg-slate-800">Desbloquear Painel</button>
+            <button type="submit" className="w-full bg-slate-900 text-white py-4 rounded-xl font-bold hover:bg-slate-800 transition-colors mt-4">
+              Desbloquear Painel
+            </button>
           </form>
         </div>
       </div>
     );
   }
 
-  // --- DASHBOARD GRÁFICOS ---
+  // --- TELA DO DASHBOARD ---
+  const mesAtual = dadosEvolucao[dadosEvolucao.length - 1];
+
   return (
-    <div className="p-6 max-w-[1600px] mx-auto animate-fadeIn space-y-6">
-      
-      {/* HEADER DE RESUMO RÁPIDO */}
-      <div className="flex justify-between items-center mb-4">
+    <div className="p-6 bg-slate-50 min-h-screen font-sans">
+      <div className="flex justify-between items-center mb-8">
         <div>
-          <h1 className="text-3xl font-black text-slate-900 tracking-tight">Painel de Resultados</h1>
-          <p className="text-slate-500">Visão consolidada do seu negócio.</p>
+          <h1 className="text-2xl font-black text-slate-800">Painel Financeiro</h1>
+          <p className="text-slate-500 text-sm">Visão consolidada de resultados.</p>
         </div>
-        <button onClick={() => setUnlocked(false)} className="bg-slate-100 p-3 rounded-full text-slate-500 hover:bg-slate-200" title="Trancar Painel"><Lock size={20}/></button>
+        <button 
+          onClick={() => { setUnlocked(false); setPin(''); }} 
+          className="flex items-center gap-2 bg-white px-4 py-2 rounded-lg border border-slate-200 text-slate-500 font-bold hover:bg-slate-100 text-sm"
+        >
+          <Lock size={16} /> Bloquear
+        </button>
       </div>
 
-      {/* CARDS METRICAS */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+      {/* CARDS DE RESUMO (TOPO) */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
         <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm border-l-4 border-l-slate-900">
-          <p className="text-xs font-bold text-slate-400 uppercase flex items-center gap-2"><TrendingUp size={14}/> Faturamento Bruto (Mês)</p>
-          <h3 className="text-2xl font-black text-slate-900 mt-1">{fmt(resumoAtual.faturamento)}</h3>
+          <p className="text-[10px] font-bold text-slate-400 uppercase flex items-center gap-1 mb-1"><TrendingUp size={12}/> Faturamento (Mês)</p>
+          <h3 className="text-2xl font-black text-slate-800">{fmt(mesAtual.faturamento)}</h3>
         </div>
         <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm border-l-4 border-l-emerald-500">
-          <p className="text-xs font-bold text-slate-400 uppercase flex items-center gap-2"><DollarSign size={14}/> Lucro Líquido (Mês)</p>
-          <h3 className="text-2xl font-black text-emerald-600 mt-1">{fmt(resumoAtual.lucro)}</h3>
+          <p className="text-[10px] font-bold text-slate-400 uppercase flex items-center gap-1 mb-1"><DollarSign size={12}/> Lucro Líquido (Mês)</p>
+          <h3 className="text-2xl font-black text-emerald-600">{fmt(mesAtual.lucro)}</h3>
         </div>
         <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm border-l-4 border-l-blue-500">
-          <p className="text-xs font-bold text-slate-400 uppercase flex items-center gap-2"><Activity size={14}/> Ticket Médio</p>
-          <h3 className="text-2xl font-black text-blue-600 mt-1">{fmt(resumoAtual.ticket)}</h3>
+          <p className="text-[10px] font-bold text-slate-400 uppercase flex items-center gap-1 mb-1"><Activity size={12}/> Ticket Médio</p>
+          <h3 className="text-2xl font-black text-blue-600">{fmt(mesAtual.ticket)}</h3>
         </div>
         <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm border-l-4 border-l-purple-500">
-          <p className="text-xs font-bold text-slate-400 uppercase flex items-center gap-2"><Users size={14}/> Atendimentos</p>
-          <h3 className="text-2xl font-black text-purple-600 mt-1">{resumoAtual.atendimentos}</h3>
+          <p className="text-[10px] font-bold text-slate-400 uppercase flex items-center gap-1 mb-1"><Users size={12}/> Atendimentos</p>
+          <h3 className="text-2xl font-black text-purple-600">{mesAtual.atendimentos}</h3>
         </div>
       </div>
 
       {/* GRID DE GRÁFICOS */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         
-        {/* GRÁFICO 1: FATURAMENTO X LUCRO */}
-        <div className="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm h-[400px]">
-          <h3 className="font-bold text-slate-800 mb-6 uppercase text-sm tracking-wider">Faturamento vs Lucro Líquido</h3>
+        {/* GRÁFICO 1: Faturamento x Lucro */}
+        <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm h-80">
+          <h3 className="text-xs font-black text-slate-800 uppercase tracking-widest mb-4">Faturamento vs Lucro</h3>
           <ResponsiveContainer width="100%" height="85%">
-            <BarChart data={dadosEvolucao} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
+            <BarChart data={dadosEvolucao} margin={{ top: 0, right: 0, left: -20, bottom: 0 }}>
               <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
-              <XAxis dataKey="mes" axisLine={false} tickLine={false} tick={{fill: '#94a3b8', fontSize: 12}} dy={10} />
-              <YAxis hide />
+              <XAxis dataKey="mes" axisLine={false} tickLine={false} tick={{fill: '#94a3b8', fontSize: 12}} />
+              <YAxis axisLine={false} tickLine={false} tick={{fill: '#94a3b8', fontSize: 12}} tickFormatter={(val) => `R$${val/1000}k`} />
               <Tooltip content={<TooltipMoeda />} cursor={{fill: '#f8fafc'}} />
-              <Legend verticalAlign="top" height={36} iconType="circle" />
+              <Legend iconType="circle" wrapperStyle={{ fontSize: '12px', fontWeight: 'bold' }} />
               <Bar dataKey="faturamento" name="Faturamento Bruto" fill="#0f172a" radius={[4, 4, 0, 0]} />
               <Bar dataKey="lucro" name="Lucro Líquido" fill="#10b981" radius={[4, 4, 0, 0]} />
             </BarChart>
           </ResponsiveContainer>
         </div>
 
-        {/* GRÁFICO 2: TICKET MÉDIO E VOLUME (Misto) */}
-        <div className="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm h-[400px]">
-          <h3 className="font-bold text-slate-800 mb-6 uppercase text-sm tracking-wider">Ticket Médio & Volume de Atendimentos</h3>
+        {/* GRÁFICO 2: Ticket Médio x Volume (Composed) */}
+        <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm h-80">
+          <h3 className="text-xs font-black text-slate-800 uppercase tracking-widest mb-4">Ticket Médio & Atendimentos</h3>
           <ResponsiveContainer width="100%" height="85%">
-            <LineChart data={dadosEvolucao} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
+            <ComposedChart data={dadosEvolucao} margin={{ top: 0, right: 0, left: -20, bottom: 0 }}>
               <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
-              <XAxis dataKey="mes" axisLine={false} tickLine={false} tick={{fill: '#94a3b8', fontSize: 12}} dy={10} />
-              <YAxis yAxisId="left" hide />
-              <YAxis yAxisId="right" orientation="right" hide />
+              <XAxis dataKey="mes" axisLine={false} tickLine={false} tick={{fill: '#94a3b8', fontSize: 12}} />
+              <YAxis yAxisId="left" axisLine={false} tickLine={false} tick={{fill: '#94a3b8', fontSize: 12}} />
+              <YAxis yAxisId="right" orientation="right" axisLine={false} tickLine={false} tick={{fill: '#94a3b8', fontSize: 12}} />
               <Tooltip content={<TooltipMoeda />} />
-              <Legend verticalAlign="top" height={36} iconType="circle" />
-              <Line yAxisId="left" type="monotone" dataKey="ticket_medio" name="Ticket Médio (R$)" stroke="#3b82f6" strokeWidth={4} dot={{r: 6}} activeDot={{r: 8}} />
-              <Line yAxisId="right" type="monotone" dataKey="atendimentos" name="Qtd. Atendimentos" stroke="#a855f7" strokeWidth={4} dot={{r: 6}} />
-            </LineChart>
+              <Legend iconType="circle" wrapperStyle={{ fontSize: '12px', fontWeight: 'bold' }} />
+              <Bar yAxisId="right" dataKey="atendimentos" name="Atendimentos" fill="#e2e8f0" radius={[4, 4, 0, 0]} barSize={40} />
+              <Line yAxisId="left" type="monotone" dataKey="ticket" name="Ticket Médio (R$)" stroke="#3b82f6" strokeWidth={3} dot={{r: 4}} />
+            </ComposedChart>
           </ResponsiveContainer>
         </div>
 
-        {/* GRÁFICO 3: COMISSÕES POR PROFISSIONAL */}
-        <div className="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm h-[400px]">
-          <h3 className="font-bold text-slate-800 mb-6 uppercase text-sm tracking-wider">Valor Pago em Comissão (Mês Atual)</h3>
+        {/* GRÁFICO 3: Comissões Pagas */}
+        <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm h-80">
+          <h3 className="text-xs font-black text-slate-800 uppercase tracking-widest mb-4">Comissões a Pagar (Mês)</h3>
           <ResponsiveContainer width="100%" height="85%">
-            <BarChart data={dadosProfissionais} layout="vertical" margin={{ top: 0, right: 20, left: 0, bottom: 0 }}>
+            <BarChart data={dadosComissoes} layout="vertical" margin={{ top: 0, right: 20, left: 0, bottom: 0 }}>
               <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="#f1f5f9" />
               <XAxis type="number" hide />
-              <YAxis dataKey="nome" type="category" axisLine={false} tickLine={false} tick={{fill: '#475569', fontSize: 12, fontWeight: 'bold'}} width={100} />
+              <YAxis dataKey="nome" type="category" axisLine={false} tickLine={false} tick={{fill: '#475569', fontSize: 12, fontWeight: 'bold'}} width={80} />
               <Tooltip content={<TooltipMoeda />} cursor={{fill: '#f8fafc'}} />
-              <Bar dataKey="comissao" name="Comissão Paga" fill="#f59e0b" radius={[0, 6, 6, 0]} barSize={24}>
-                {dadosProfissionais.map((entry, index) => (
-                  <Cell key={`cell-${index}`} fill={CORES[index % CORES.length]} />
-                ))}
-              </Bar>
+              <Bar dataKey="comissao" name="Comissão" fill="#3b82f6" radius={[0, 4, 4, 0]} barSize={24} />
             </BarChart>
           </ResponsiveContainer>
         </div>
 
-        {/* GRÁFICO 4: CUSTOS E GASTOS PESSOAIS */}
-        <div className="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm h-[400px] flex flex-col">
-          <h3 className="font-bold text-slate-800 mb-2 uppercase text-sm tracking-wider">Distribuição de Saídas (Mês Atual)</h3>
-          <p className="text-xs text-slate-400 mb-6">Proporção entre despesas do salão e retiradas pessoais.</p>
+        {/* GRÁFICO 4: Distribuição de Saídas */}
+        <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm h-80 flex flex-col">
+          <h3 className="text-xs font-black text-slate-800 uppercase tracking-widest mb-1">Distribuição de Saídas</h3>
+          <p className="text-[10px] text-slate-400 font-bold mb-4">Custos Operacionais vs Retirada Pessoal</p>
           <div className="flex-1">
             <ResponsiveContainer width="100%" height="100%">
               <PieChart>
                 <Pie 
-                  data={dadosDespesas} 
-                  cx="50%" cy="50%" 
-                  innerRadius={80} outerRadius={120} 
-                  paddingAngle={5} dataKey="valor"
-                  stroke="none"
+                  data={dadosSaidas} cx="50%" cy="50%" 
+                  innerRadius={60} outerRadius={90} 
+                  paddingAngle={5} dataKey="valor" stroke="none"
                 >
-                  <Cell fill="#ef4444" /> {/* Vermelho para Despesas */}
-                  <Cell fill="#f97316" /> {/* Laranja para Gastos Pessoais */}
+                  {dadosSaidas.map((entry, index) => (
+                    <Cell key={`cell-${index}`} fill={CORES_PIE[index % CORES_PIE.length]} />
+                  ))}
                 </Pie>
                 <Tooltip content={<TooltipMoeda />} />
-                <Legend verticalAlign="bottom" height={36} iconType="circle" />
+                <Legend verticalAlign="bottom" iconType="circle" wrapperStyle={{ fontSize: '11px', fontWeight: 'bold' }} />
               </PieChart>
             </ResponsiveContainer>
           </div>
@@ -259,4 +200,6 @@ export default function Dashboard({ salaoId }) {
       </div>
     </div>
   );
-}
+};
+
+export default Dashboard;

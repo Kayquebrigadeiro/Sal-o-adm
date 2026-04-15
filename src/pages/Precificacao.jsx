@@ -1,179 +1,164 @@
-import { useState, useEffect } from 'react';
-import { supabase } from '../supabaseClient';
-import { useToast } from '../components/Toast';
-import Modal from '../components/Modal';
-import { Calculator, Settings2, Save, AlertCircle, Percent, Plus, Trash2 } from 'lucide-react';
+import React, { useState } from 'react';
+import { Plus, Trash2 } from 'lucide-react';
 
-const fmt = (v) => Number(v || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+const Precificacao = () => {
+  const [configs, setConfigs] = useState({
+    custo_fixo_atendimento: 29.00,
+    taxa_maquininha: 5.0,
+    margem_alvo: 20.0
+  });
 
-export default function Precificacao({ salaoId }) {
-  const { showToast } = useToast();
-  const [loading, setLoading] = useState(true);
-  
-  const [config, setConfig] = useState(null);
-  const [procedimentos, setProcedimentos] = useState([]);
-  
-  const [modalAberto, setModalAberto] = useState(false);
-  const [form, setForm] = useState(null);
+  const [procedimentos, setProcedimentos] = useState([
+    { id: 1, nome: 'Progressiva', comissao: 30, custo_p: 20, custo_m: 35, custo_g: 50, preco_p: 150, preco_m: 220, preco_g: 300 },
+    { id: 2, nome: 'Mechas',      comissao: 40, custo_p: 45, custo_m: 70, custo_g: 100, preco_p: 350, preco_m: 500, preco_g: 750 },
+  ]);
 
-  useEffect(() => {
-    if (salaoId) carregarDados();
-  }, [salaoId]);
+  const calcularLinha = (item, tamanho) => {
+    const faturamento  = Number(item[`preco_${tamanho}`] || 0);
+    const custoMaterial = Number(item[`custo_${tamanho}`] || 0);
+    const comissaoVal  = faturamento * (Number(item.comissao || 0) / 100);
+    const taxaVal      = faturamento * (configs.taxa_maquininha / 100);
+    const custoFixo    = Number(configs.custo_fixo_atendimento);
 
-  const carregarDados = async () => {
-    setLoading(true);
-    const [resConfig, resProc] = await Promise.all([
-      supabase.from('configuracoes').select('*').eq('salao_id', salaoId).single(),
-      supabase.from('procedimentos').select('*').eq('salao_id', salaoId).eq('ativo', true).order('nome')
-    ]);
-    setConfig(resConfig.data);
-    setProcedimentos(resProc.data || []);
-    setLoading(false);
+    const lucro  = faturamento - custoMaterial - comissaoVal - taxaVal - custoFixo;
+    const margem = faturamento > 0 ? (lucro / faturamento) * 100 : 0;
+    return { lucro, margem };
   };
 
-  const abrirNovo = () => {
-    setForm({
-      nome: '',
-      categoria: 'CABELO',
-      requer_comprimento: true,
-      porcentagem_profissional: 40,
-      custo_material_p: 0, custo_material_m: 0, custo_material_g: 0,
-      preco_p: 0, preco_m: 0, preco_g: 0
-    });
-    setModalAberto(true);
+  const handleUpdate = (id, campo, valor) => {
+    setProcedimentos(prev => prev.map(p =>
+      p.id === id ? { ...p, [campo]: valor } : p
+    ));
   };
 
-  const salvarProcedimento = async () => {
-    if (!form.nome) return showToast('Nome é obrigatório', 'error');
-
-    const payload = { ...form, salao_id: salaoId };
-    let error;
-
-    if (form.id) {
-      const { error: err } = await supabase.from('procedimentos').update(payload).eq('id', form.id);
-      error = err;
-    } else {
-      const { error: err } = await supabase.from('procedimentos').insert([payload]);
-      error = err;
-    }
-
-    if (error) showToast('Erro ao salvar', 'error');
-    else {
-      showToast('Procedimento salvo!', 'success');
-      setModalAberto(false);
-      carregarDados();
-    }
-  };
-
-  const deletarProcedimento = async (id) => {
-    if (!confirm('Deseja desativar este procedimento?')) return;
-    const { error } = await supabase.from('procedimentos').update({ ativo: false }).eq('id', id);
-    if (!error) carregarDados();
-  };
-
-  const calcularPrecoIdeal = (custoMaterial) => {
-    if (!config || !form) return 0;
-    const taxasPct = (Number(config.taxa_maquininha_pct || 0) + Number(form.porcentagem_profissional || 0) + Number(config.margem_lucro_desejada_pct || 0)) / 100;
-    if (taxasPct >= 1) return 0; 
-    let preco = (Number(config.custo_fixo_por_atendimento || 0) + Number(custoMaterial || 0)) / (1 - taxasPct);
-    return Math.ceil(preco / 5) * 5; 
-  };
+  const fmt = (v) => Number(v).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
 
   return (
-    <div className="p-6 max-w-7xl mx-auto animate-fadeIn">
-      <div className="flex justify-between items-start mb-8">
-        <div>
-          <h1 className="text-3xl font-black text-slate-900 tracking-tight flex items-center gap-2">
-            <Calculator className="text-emerald-600" /> Precificação Inteligente
-          </h1>
-          <p className="text-slate-500">Ajuste seus custos e margens para garantir o lucro real.</p>
-        </div>
-        <button onClick={abrirNovo} className="bg-slate-900 text-white px-6 py-3 rounded-2xl font-bold flex items-center gap-2 hover:bg-slate-800 transition-all shadow-lg shadow-slate-200">
-          <Plus size={20} /> Novo Procedimento
-        </button>
-      </div>
+    <div className="p-6 bg-slate-50 min-h-screen font-sans">
+      <h1 className="text-2xl font-bold mb-6 text-slate-800">Precificação Estratégica</h1>
 
-      {/* PAINEL GLOBAL */}
-      <div className="bg-slate-900 rounded-3xl p-6 mb-8 shadow-xl text-white">
-        <h3 className="font-bold mb-4 flex items-center gap-2 text-emerald-400">
-          <Settings2 size={20} /> Taxas Globais (Impactam todos os preços)
-        </h3>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <div className="bg-slate-800 p-4 rounded-2xl">
-            <label className="block text-[10px] font-bold text-slate-400 uppercase mb-2">Custo Fixo / Atendimento</label>
-            <input type="number" className="bg-transparent text-2xl font-black outline-none w-full" value={config?.custo_fixo_por_atendimento || ''} onChange={e => setConfig({...config, custo_fixo_por_atendimento: e.target.value})} />
-            <p className="text-[10px] text-slate-500 mt-1">Luz, Aluguel, Sistema, etc.</p>
+      {/* CONFIGURAÇÕES GLOBAIS */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+        <div className="bg-slate-900 text-white p-4 rounded-xl shadow-lg">
+          <label className="block text-xs uppercase opacity-70 mb-1">Custo Fixo / Atendimento</label>
+          <div className="flex items-center">
+            <span className="mr-2">R$</span>
+            <input type="number" className="bg-transparent border-b border-slate-700 w-full outline-none focus:border-emerald-400 text-xl font-bold"
+              value={configs.custo_fixo_atendimento}
+              onChange={(e) => setConfigs({...configs, custo_fixo_atendimento: e.target.value})} />
           </div>
-          <div className="bg-slate-800 p-4 rounded-2xl">
-            <label className="block text-[10px] font-bold text-slate-400 uppercase mb-2">Taxa Maquininha (%)</label>
-            <input type="number" className="bg-transparent text-2xl font-black outline-none w-full" value={config?.taxa_maquininha_pct || ''} onChange={e => setConfig({...config, taxa_maquininha_pct: e.target.value})} />
-          </div>
-          <div className="bg-emerald-900/30 border border-emerald-500/20 p-4 rounded-2xl">
-            <label className="block text-[10px] font-bold text-emerald-400 uppercase mb-2">Margem de Lucro Alvo (%)</label>
-            <input type="number" className="bg-transparent text-2xl font-black text-emerald-400 outline-none w-full" value={config?.margem_lucro_desejada_pct || ''} onChange={e => setConfig({...config, margem_lucro_desejada_pct: e.target.value})} />
-          </div>
+        </div>
+        <div className="bg-slate-900 text-white p-4 rounded-xl shadow-lg">
+          <label className="block text-xs uppercase opacity-70 mb-1">Taxa Maquininha (%)</label>
+          <input type="number" className="bg-transparent border-b border-slate-700 w-full outline-none focus:border-emerald-400 text-xl font-bold"
+            value={configs.taxa_maquininha}
+            onChange={(e) => setConfigs({...configs, taxa_maquininha: e.target.value})} />
+        </div>
+        <div className="bg-slate-900 text-white p-4 rounded-xl shadow-lg">
+          <label className="block text-xs uppercase opacity-70 mb-1">Margem Alvo (%)</label>
+          <input type="number" className="bg-transparent border-b border-slate-700 w-full outline-none focus:border-emerald-400 text-xl font-bold"
+            value={configs.margem_alvo}
+            onChange={(e) => setConfigs({...configs, margem_alvo: e.target.value})} />
         </div>
       </div>
 
-      {/* LISTA DE SERVIÇOS */}
-      <div className="grid grid-cols-1 gap-3">
-        {procedimentos.map(proc => (
-          <div key={proc.id} className="bg-white border border-slate-200 p-5 rounded-3xl flex items-center justify-between group hover:shadow-md transition-all">
-            <div className="flex items-center gap-6">
-               <div className="bg-slate-50 p-3 rounded-2xl text-slate-400 group-hover:text-emerald-500 transition-colors">
-                 <Calculator size={24} />
-               </div>
-               <div>
-                 <h4 className="font-bold text-slate-900">{proc.nome}</h4>
-                 <div className="flex gap-4 mt-1">
-                   <p className="text-xs font-bold text-slate-400 uppercase">Comissão: <span className="text-slate-600">{proc.porcentagem_profissional}%</span></p>
-                   <p className="text-xs font-bold text-slate-400 uppercase">Preço (M): <span className="text-emerald-600 font-black">{fmt(proc.preco_m)}</span></p>
-                 </div>
-               </div>
-            </div>
-            <div className="flex gap-2">
-               <button onClick={() => { setForm(proc); setModalAberto(true); }} className="px-4 py-2 bg-slate-100 text-slate-700 rounded-xl font-bold text-sm hover:bg-slate-200">Editar Custos</button>
-               <button onClick={() => deletarProcedimento(proc.id)} className="p-2 text-slate-300 hover:text-red-500"><Trash2 size={18} /></button>
-            </div>
-          </div>
-        ))}
+      {/* TABELA */}
+      <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-x-auto">
+        <table className="w-full text-left border-collapse text-xs">
+          <thead>
+            {/* Linha de grupos */}
+            <tr className="bg-slate-900 text-white text-xs uppercase font-bold">
+              <th className="p-3" rowSpan={2}>Serviço</th>
+              <th className="p-3 text-center" rowSpan={2}>Comissão %</th>
+              <th className="p-3 text-center border-l border-slate-700" colSpan={3}>Cabelo P</th>
+              <th className="p-3 text-center border-l border-slate-700" colSpan={3}>Cabelo M</th>
+              <th className="p-3 text-center border-l border-slate-700" colSpan={3}>Cabelo G</th>
+              <th className="p-3 text-center" rowSpan={2}>Ações</th>
+            </tr>
+            <tr className="bg-slate-800 text-slate-300 text-xs uppercase font-bold">
+              <th className="p-2 text-center border-l border-slate-700">Custo</th>
+              <th className="p-2 text-center">Preço</th>
+              <th className="p-2 text-right text-emerald-400">Lucro</th>
+              <th className="p-2 text-center border-l border-slate-700">Custo</th>
+              <th className="p-2 text-center">Preço</th>
+              <th className="p-2 text-right text-emerald-400">Lucro</th>
+              <th className="p-2 text-center border-l border-slate-700">Custo</th>
+              <th className="p-2 text-center">Preço</th>
+              <th className="p-2 text-right text-emerald-400">Lucro</th>
+            </tr>
+          </thead>
+          <tbody>
+            {procedimentos.map(item => {
+              const p = calcularLinha(item, 'p');
+              const m = calcularLinha(item, 'm');
+              const g = calcularLinha(item, 'g');
+              return (
+                <tr key={item.id} className="border-b border-slate-100 hover:bg-slate-50 transition-colors">
+                  {/* Nome */}
+                  <td className="p-2">
+                    <input className="w-full bg-transparent border-none focus:ring-1 focus:ring-emerald-500 rounded p-1 font-medium"
+                      value={item.nome} onChange={(e) => handleUpdate(item.id, 'nome', e.target.value)} />
+                  </td>
+                  {/* Comissão */}
+                  <td className="p-2">
+                    <input type="number" className="w-16 bg-transparent border-none text-center focus:ring-1 focus:ring-emerald-500 rounded p-1"
+                      value={item.comissao} onChange={(e) => handleUpdate(item.id, 'comissao', e.target.value)} />
+                  </td>
+                  {/* P */}
+                  <td className="p-2 border-l border-slate-100">
+                    <input type="number" className="w-16 bg-transparent border-none text-center focus:ring-1 focus:ring-emerald-500 rounded p-1"
+                      value={item.custo_p} onChange={(e) => handleUpdate(item.id, 'custo_p', e.target.value)} />
+                  </td>
+                  <td className="p-2">
+                    <input type="number" className="w-16 bg-transparent border-none text-center font-bold focus:ring-1 focus:ring-emerald-500 rounded p-1"
+                      value={item.preco_p} onChange={(e) => handleUpdate(item.id, 'preco_p', e.target.value)} />
+                  </td>
+                  <td className={`p-2 text-right font-black ${p.lucro < 0 ? 'text-red-500' : 'text-emerald-600'}`}>
+                    {fmt(p.lucro)}
+                  </td>
+                  {/* M */}
+                  <td className="p-2 border-l border-slate-100">
+                    <input type="number" className="w-16 bg-transparent border-none text-center focus:ring-1 focus:ring-emerald-500 rounded p-1"
+                      value={item.custo_m} onChange={(e) => handleUpdate(item.id, 'custo_m', e.target.value)} />
+                  </td>
+                  <td className="p-2">
+                    <input type="number" className="w-16 bg-transparent border-none text-center font-bold focus:ring-1 focus:ring-emerald-500 rounded p-1"
+                      value={item.preco_m} onChange={(e) => handleUpdate(item.id, 'preco_m', e.target.value)} />
+                  </td>
+                  <td className={`p-2 text-right font-black ${m.lucro < 0 ? 'text-red-500' : 'text-emerald-600'}`}>
+                    {fmt(m.lucro)}
+                  </td>
+                  {/* G */}
+                  <td className="p-2 border-l border-slate-100">
+                    <input type="number" className="w-16 bg-transparent border-none text-center focus:ring-1 focus:ring-emerald-500 rounded p-1"
+                      value={item.custo_g} onChange={(e) => handleUpdate(item.id, 'custo_g', e.target.value)} />
+                  </td>
+                  <td className="p-2">
+                    <input type="number" className="w-16 bg-transparent border-none text-center font-bold focus:ring-1 focus:ring-emerald-500 rounded p-1"
+                      value={item.preco_g} onChange={(e) => handleUpdate(item.id, 'preco_g', e.target.value)} />
+                  </td>
+                  <td className={`p-2 text-right font-black ${g.lucro < 0 ? 'text-red-500' : 'text-emerald-600'}`}>
+                    {fmt(g.lucro)}
+                  </td>
+                  {/* Ações */}
+                  <td className="p-2 text-center text-slate-400">
+                    <button className="hover:text-red-500"><Trash2 size={16} /></button>
+                  </td>
+                </tr>
+              );
+            })}
+            <tr className="bg-emerald-50/50">
+              <td className="p-2" colSpan={12}>
+                <button className="flex items-center text-emerald-600 font-bold text-xs p-2 hover:underline">
+                  <Plus size={14} className="mr-1" /> ADICIONAR NOVO SERVIÇO
+                </button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
       </div>
-
-      {/* MODAL EDITAR/NOVO */}
-      {form && (
-        <Modal open={modalAberto} onClose={() => setModalAberto(false)} title={form.id ? `Ajustar: ${form.nome}` : "Novo Procedimento"}>
-          <div className="space-y-5">
-            {!form.id && (
-              <input type="text" placeholder="Nome do Serviço (ex: Hidratação Ouro)" className="text-xl font-bold w-full border-b-2 outline-none py-2 focus:border-emerald-500 uppercase" value={form.nome} onChange={e => setForm({...form, nome: e.target.value.toUpperCase()})} />
-            )}
-            
-            <div className="flex items-center justify-between p-4 bg-blue-50 rounded-2xl">
-               <span className="text-sm font-bold text-blue-800">Comissão do Profissional (%)</span>
-               <input type="number" className="w-20 p-2 rounded-xl font-black text-center outline-none" value={form.porcentagem_profissional} onChange={e => setForm({...form, porcentagem_profissional: e.target.value})} />
-            </div>
-
-            <div className="grid grid-cols-3 gap-3">
-              {['P', 'M', 'G'].map(t => (
-                <div key={t} className="p-4 border border-slate-100 rounded-2xl bg-slate-50/50">
-                  <p className="text-center font-black text-slate-300 mb-3">CABELO {t}</p>
-                  <label className="text-[10px] font-bold text-slate-400 uppercase">Custo Produto</label>
-                  <input type="number" className="w-full font-bold mb-4 border-b bg-transparent" value={form[`custo_material_${t.toLowerCase()}`]} onChange={e => setForm({...form, [`custo_material_${t.toLowerCase()}`]: e.target.value})} />
-                  
-                  <div className="mb-4">
-                    <p className="text-[10px] font-bold text-emerald-700 uppercase">Ideal Planilha</p>
-                    <p className="text-lg font-black text-emerald-600">{fmt(calcularPrecoIdeal(form[`custo_material_${t.toLowerCase()}`]))}</p>
-                  </div>
-
-                  <label className="text-[10px] font-bold text-slate-400 uppercase">Preço Final</label>
-                  <input type="number" className="w-full font-black text-slate-900 border-b-2 border-slate-900 bg-transparent text-lg" value={form[`preco_${t.toLowerCase()}`]} onChange={e => setForm({...form, [`preco_${t.toLowerCase()}`]: e.target.value})} />
-                </div>
-              ))}
-            </div>
-
-            <button onClick={salvarProcedimento} className="w-full bg-slate-900 text-white py-4 rounded-2xl font-bold shadow-lg">Salvar Configurações</button>
-          </div>
-        </Modal>
-      )}
     </div>
   );
-}
+};
+
+export default Precificacao;

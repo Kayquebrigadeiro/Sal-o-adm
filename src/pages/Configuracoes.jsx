@@ -112,8 +112,8 @@ export default function Configuracoes({ salaoId }) {
           <div>
             <label className="text-sm font-bold text-slate-700 mb-1 block">Nome Completo</label>
             <input 
-              type="text" className="w-full border-2 border-slate-100 p-3 rounded-2xl focus:border-slate-900 outline-none transition-all uppercase"
-              value={form.nome} onChange={e => setForm({...form, nome: e.target.value.toUpperCase()})}
+              type="text" className="w-full border-2 border-slate-100 p-3 rounded-2xl focus:border-slate-900 outline-none transition-all"
+              value={form.nome} onChange={e => setForm({...form, nome: e.target.value})}
               placeholder="Ex: Maria Silva"
             />
           </div>

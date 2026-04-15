@@ -1,331 +1,323 @@
-import { useState, useEffect, useMemo } from 'react';
-import { supabase } from '../supabaseClient';
-import { useToast } from '../components/Toast';
-import Modal from '../components/Modal';
-import { 
-  ChevronLeft, ChevronRight, Plus, Eye, EyeOff, 
-  UserPlus, AlertCircle, Clock, CheckCircle2 
-} from 'lucide-react';
+import React, { useState } from 'react';
+import { Clock, User, Scissors, DollarSign, X, CheckCircle2, AlertCircle, AlertTriangle, UserPlus, List } from 'lucide-react';
 
-const fmt = (v) => Number(v || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
-const HORARIOS = [];
-for (let h = 8; h <= 20; h++) {
-  HORARIOS.push(`${String(h).padStart(2, '0')}:00`);
-  if (h < 20) HORARIOS.push(`${String(h).padStart(2, '0')}:30`);
-}
+const Agenda = () => {
+  // 1. CONFIGURAÇÕES GLOBAIS
+  const configs = { custo_fixo: 29.0, taxa_maquininha: 5.0 };
 
-export default function Agenda({ salaoId }) {
-  const { showToast } = useToast();
-  const [loading, setLoading] = useState(true);
-  const [dataAtual, setDataAtual] = useState(new Date().toISOString().split('T')[0]);
-  
-  // Dados do BD
-  const [config, setConfig] = useState(null);
-  const [profissionais, setProfissionais] = useState([]);
-  const [procedimentos, setProcedimentos] = useState([]);
-  const [clientes, setClientes] = useState([]);
-  const [atendimentos, setAtendimentos] = useState([]);
-  
-  // Estados dos Modais
+  // 2. DADOS BASE
+  const profissionais = [
+    { id: 1, nome: 'Ricardo' },
+    { id: 2, nome: 'Amanda' },
+    { id: 3, nome: 'Beatriz' }
+  ];
+
+  const procedimentos = [
+    { id: 1, nome: 'Progressiva', comissao: 30, custo_p: 20, custo_m: 35, custo_g: 50, preco_p: 150, preco_m: 220, preco_g: 300 },
+    { id: 2, nome: 'Mechas', comissao: 40, custo_p: 45, custo_m: 70, custo_g: 100, preco_p: 350, preco_m: 500, preco_g: 750 },
+    { id: 3, nome: 'Corte', comissao: 50, custo_p: 5, custo_m: 5, custo_g: 5, preco_p: 80, preco_m: 80, preco_g: 80 }
+  ];
+
+  // ESTADO DOS CLIENTES (CRM)
+  const [clientes, setClientes] = useState([
+    { id: 1, nome: 'JULIANA SILVA', telefone: '11999999999' },
+    { id: 2, nome: 'MARIA CLARA', telefone: '11888888888' }
+  ]);
+
+  const horarios = ['08:00', '09:00', '10:00', '11:00', '12:00', '13:00', '14:00', '15:00', '16:00', '17:00', '18:00', '19:00'];
+
+  // 3. ESTADOS DA TELA
+  const [agendamentos, setAgendamentos] = useState([
+    { id: 1, hora: '09:00', profId: 1, clienteNome: 'JULIANA SILVA', servico: 'Progressiva', tamanho: 'M', valor: 220, lucro: 85.50 }
+  ]);
   const [modalAberto, setModalAberto] = useState(false);
-  const [mostrarAlerta, setMostrarAlerta] = useState(false);
-  const [modalDetalhes, setModalDetalhes] = useState(false);
-  const [atendimentoSelecionado, setAtendimentoSelecionado] = useState(null);
+  const [selecao, setSelecao] = useState({ hora: '', profId: null });
   
-  const [form, setForm] = useState({
-    cliente_id: '',
-    profissional_id: '',
-    procedimento_id: '',
-    comprimento: 'M',
-    data: dataAtual,
-    horario: '09:00',
-    valor_cobrado: ''
-  });
+  // Controle do Formulário
+  const [novo, setNovo] = useState({ clienteId: '', procId: '', tamanho: 'M', valor: 0 });
+  const [isNovoCliente, setIsNovoCliente] = useState(false);
+  const [formNovoCliente, setFormNovoCliente] = useState({ nome: '', telefone: '' });
 
-  const [modalCliente, setModalCliente] = useState(false);
-  const [formCliente, setFormCliente] = useState({ nome: '', telefone: '' });
+  // 4. LÓGICA DE CÁLCULO
+  const calcularPrevisto = () => {
+    const proc = procedimentos.find(p => p.id === Number(novo.procId));
+    if (!proc) return { lucro: 0, margem: 0, prejuizo: false, valorSugerido: 0 };
 
-  useEffect(() => {
-    if (salaoId) carregarDados();
-  }, [salaoId, dataAtual]);
-
-  const carregarDados = async () => {
-    setLoading(true);
-    try {
-      const [resConfig, resProf, resProc, resCli, resAtend] = await Promise.all([
-        supabase.from('configuracoes').select('*').eq('salao_id', salaoId).single(),
-        supabase.from('profissionais').select('*').eq('salao_id', salaoId).eq('ativo', true),
-        supabase.from('procedimentos').select('*').eq('salao_id', salaoId).eq('ativo', true),
-        supabase.from('clientes').select('*').eq('salao_id', salaoId).order('nome'),
-        supabase.from('atendimentos').select('*, profissionais(nome), procedimentos(nome)')
-          .eq('salao_id', salaoId)
-          .eq('data', dataAtual)
-          .neq('status', 'CANCELADO')
-      ]);
-
-      setConfig(resConfig.data);
-      setProfissionais(resProf.data || []);
-      setProcedimentos(resProc.data || []);
-      setClientes(resCli.data || []);
-      setAtendimentos(resAtend.data || []);
-    } catch (err) {
-      showToast('Erro ao carregar dados', 'error');
-    }
-    setLoading(false);
+    const faturamento = Number(novo.valor || 0);
+    const custoMaterial = proc[`custo_${novo.tamanho.toLowerCase()}`];
+    const comissaoVal = faturamento * (proc.comissao / 100);
+    const taxaVal = faturamento * (configs.taxa_maquininha / 100);
+    
+    const lucro = faturamento - custoMaterial - configs.custo_fixo - comissaoVal - taxaVal;
+    return {
+      lucro,
+      margem: faturamento > 0 ? (lucro / faturamento) * 100 : 0,
+      prejuizo: lucro < 0,
+      valorSugerido: proc[`preco_${novo.tamanho.toLowerCase()}`]
+    };
   };
 
-  const calculoFinanceiro = useMemo(() => {
-    if (!config || !form.procedimento_id) return null;
-    const proc = procedimentos.find(p => p.id === form.procedimento_id);
-    if (!proc) return null;
-
-    const custoMaterial = proc[`custo_material_${form.comprimento.toLowerCase()}`] || proc.custo_variavel || 0;
-    const taxaTotalPct = (config.taxa_maquininha_pct || 0) + (proc.porcentagem_profissional || 0) + (config.margem_lucro_desejada_pct || 20);
-    
-    let precoRecomendado = (config.custo_fixo_por_atendimento + custoMaterial) / (1 - (taxaTotalPct / 100));
-    precoRecomendado = Math.ceil(precoRecomendado / 5) * 5; 
-
-    const valorCobrado = Number(form.valor_cobrado || 0);
-    const perda = precoRecomendado - valorCobrado;
-    return { recomendado: precoRecomendado, perda: perda > 0 ? perda : 0, temPerda: valorCobrado > 0 && perda > 0 };
-  }, [form.procedimento_id, form.comprimento, form.valor_cobrado, procedimentos, config]);
-
-  const abrirNovoAgendamento = (profId = '', hora = '09:00') => {
-    setForm({
-      cliente_id: '',
-      profissional_id: profId,
-      procedimento_id: '',
-      comprimento: 'M',
-      data: dataAtual,
-      horario: hora,
-      valor_cobrado: ''
-    });
-    setMostrarAlerta(false);
+  const abrirAgendamento = (hora, profId) => {
+    setSelecao({ hora, profId });
+    setNovo({ clienteId: '', procId: '', tamanho: 'M', valor: 0 });
+    setIsNovoCliente(false);
+    setFormNovoCliente({ nome: '', telefone: '' });
     setModalAberto(true);
   };
 
-  const salvarAgendamento = async () => {
-    if(!form.cliente_id || !form.procedimento_id || !form.profissional_id) return showToast('Campos obrigatórios!', 'error');
-    const cli = clientes.find(c => c.id === form.cliente_id);
-    
-    const { error } = await supabase.from('atendimentos').insert([{
-      salao_id: salaoId,
-      data: form.data,
-      horario: form.horario,
-      profissional_id: form.profissional_id,
-      procedimento_id: form.procedimento_id,
-      comprimento: form.comprimento,
-      cliente: cli.nome,
-      valor_cobrado: form.valor_cobrado || calculoFinanceiro?.recomendado || 0,
-      status: 'AGENDADO'
-    }]);
+  const salvar = () => {
+    let nomeClienteFinal = '';
 
-    if (error) showToast('Erro ao agendar', 'error');
-    else {
-      showToast('Agendado!', 'success');
-      setModalAberto(false);
-      carregarDados();
+    // Se for cliente nova, salva na lista de clientes primeiro
+    if (isNovoCliente) {
+      if (!formNovoCliente.nome) return alert('Digite o nome da cliente!');
+      const novoId = Date.now();
+      nomeClienteFinal = formNovoCliente.nome.toUpperCase();
+      setClientes([...clientes, { id: novoId, nome: nomeClienteFinal, telefone: formNovoCliente.telefone }]);
+    } else {
+      if (!novo.clienteId) return alert('Selecione uma cliente!');
+      nomeClienteFinal = clientes.find(c => c.id === Number(novo.clienteId)).nome;
     }
+
+    const proc = procedimentos.find(p => p.id === Number(novo.procId));
+    const { lucro } = calcularPrevisto();
+    
+    const novoAgend = {
+      id: Date.now(),
+      hora: selecao.hora,
+      profId: selecao.profId,
+      clienteNome: nomeClienteFinal,
+      servico: proc.nome,
+      tamanho: novo.tamanho,
+      valor: novo.valor,
+      lucro: lucro
+    };
+    
+    setAgendamentos([...agendamentos, novoAgend]);
+    setModalAberto(false);
   };
 
-  const mudarData = (dias) => {
-    const d = new Date(dataAtual + 'T12:00:00');
-    d.setDate(d.getDate() + dias);
-    setDataAtual(d.toISOString().split('T')[0]);
-  };
+  const fmt = (v) => Number(v).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
 
   return (
-    <div className="p-4 sm:p-6 max-w-[1600px] mx-auto">
-      {/* Header com Navegação de Data */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
-        <div>
-          <h1 className="text-2xl font-bold text-slate-800 flex items-center gap-2">
-            <Clock className="text-emerald-600" /> Agenda do Dia
-          </h1>
-          <div className="flex items-center gap-2 mt-1">
-            <button onClick={() => mudarData(-1)} className="p-1 hover:bg-slate-200 rounded"><ChevronLeft size={20}/></button>
-            <span className="font-semibold text-slate-600">
-              {new Date(dataAtual + 'T12:00:00').toLocaleDateString('pt-BR', { weekday: 'long', day: '2-digit', month: 'long' })}
-            </span>
-            <button onClick={() => mudarData(1)} className="p-1 hover:bg-slate-200 rounded"><ChevronRight size={20}/></button>
-          </div>
-        </div>
-        <button 
-          onClick={() => abrirNovoAgendamento()}
-          className="w-full sm:w-auto bg-slate-900 text-white px-5 py-2.5 rounded-xl flex items-center justify-center gap-2 font-bold shadow-lg shadow-slate-200 active:scale-95 transition-all"
-        >
-          <Plus size={20} /> Novo Agendamento
-        </button>
+    <div className="p-4 bg-slate-50 min-h-screen font-sans">
+      <div className="mb-6">
+        <h1 className="text-2xl font-black text-slate-800">Agenda de Controle</h1>
+        <p className="text-slate-500 text-sm">Clique no horário para lançar o faturamento.</p>
       </div>
 
-      {/* GRADE VISUAL DA AGENDA */}
-      <div className="bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden">
-        <div className="overflow-x-auto">
-          <div className="min-w-[800px]">
-            {/* Header da Grade (Profissionais) */}
-            <div className="flex border-b bg-slate-50">
-              <div className="w-20 border-r py-3"></div>
-              {profissionais.map(prof => (
-                <div key={prof.id} className="flex-1 text-center py-3 border-r font-bold text-slate-700 uppercase text-xs tracking-wider">
-                  {prof.nome}
-                </div>
+      {/* GRADE ESTILO PLANILHA */}
+      <div className="bg-white border border-slate-200 rounded-xl overflow-hidden shadow-sm">
+        <table className="w-full border-collapse">
+          <thead>
+            <tr className="bg-slate-900 text-white">
+              <th className="p-3 border border-slate-700 text-xs w-20">HORA</th>
+              {profissionais.map(p => (
+                <th key={p.id} className="p-3 border border-slate-700 text-xs uppercase tracking-widest">{p.nome}</th>
               ))}
+            </tr>
+          </thead>
+          <tbody>
+            {horarios.map(hora => (
+              <tr key={hora}>
+                <td className="p-3 border border-slate-100 bg-slate-50 text-center font-bold text-slate-400 text-xs">{hora}</td>
+                {profissionais.map(prof => {
+                  const agend = agendamentos.find(a => a.hora === hora && a.profId === prof.id);
+                  return (
+                    <td 
+                      key={prof.id} 
+                      onClick={() => !agend && abrirAgendamento(hora, prof.id)}
+                      className={`p-1 border border-slate-100 h-16 cursor-pointer transition-all ${!agend ? 'hover:bg-emerald-50' : ''}`}
+                    >
+                      {agend ? (
+                        <div className="h-full w-full bg-slate-800 text-white rounded-lg p-2 text-[10px] relative overflow-hidden group">
+                          <div className="font-bold border-b border-slate-600 mb-1">{agend.clienteNome}</div>
+                          <div>{agend.servico} ({agend.tamanho})</div>
+                          <div className={`absolute bottom-1 right-1 px-1 rounded font-black ${agend.lucro > 0 ? 'bg-emerald-500' : 'bg-red-500'}`}>
+                            {fmt(agend.lucro)}
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="h-full w-full flex items-center justify-center opacity-0 hover:opacity-100">
+                          <PlusIcon />
+                        </div>
+                      )}
+                    </td>
+                  );
+                })}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+
+      {/* PAINEL LATERAL (MODAL) */}
+      {modalAberto && (
+        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex justify-end z-50">
+          <div className="w-full max-w-md bg-white h-full shadow-2xl p-6 overflow-y-auto animate-slideInRight">
+            <div className="flex justify-between items-center mb-8">
+              <div>
+                <h2 className="text-xl font-black text-slate-900">Novo Atendimento</h2>
+                <p className="text-xs text-slate-500 font-bold uppercase">{selecao.hora} — Prof. {profissionais.find(p => p.id === selecao.profId)?.nome}</p>
+              </div>
+              <button onClick={() => setModalAberto(false)} className="p-2 hover:bg-slate-100 rounded-full"><X /></button>
             </div>
 
-            {/* Linhas de Horário */}
-            <div className="relative">
-              {HORARIOS.map(hora => (
-                <div key={hora} className="flex border-b group h-14">
-                  {/* Hora na lateral */}
-                  <div className="w-20 border-r flex items-center justify-center text-[11px] font-bold text-slate-400 bg-slate-50/50">
-                    {hora}
+            <div className="space-y-6">
+              
+              {/* BLOCO DE CLIENTE: SELECIONAR OU CADASTRAR */}
+              <div className="bg-slate-50 p-4 rounded-xl border border-slate-200">
+                <div className="flex justify-between items-center mb-3">
+                  <label className="text-[10px] font-black uppercase text-slate-500">Cliente</label>
+                  <button 
+                    onClick={() => setIsNovoCliente(!isNovoCliente)}
+                    className="text-[10px] font-bold text-blue-600 flex items-center gap-1 hover:underline"
+                  >
+                    {isNovoCliente ? <><List size={12}/> Escolher da Lista</> : <><UserPlus size={12}/> Cadastrar Nova</>}
+                  </button>
+                </div>
+
+                {isNovoCliente ? (
+                  <div className="space-y-3">
+                    <input 
+                      type="text" 
+                      placeholder="NOME DA CLIENTE"
+                      className="w-full border border-slate-300 rounded-lg p-2 outline-none focus:border-blue-500 font-bold text-sm uppercase"
+                      value={formNovoCliente.nome} 
+                      onChange={e => setFormNovoCliente({...formNovoCliente, nome: e.target.value.toUpperCase()})}
+                    />
+                    <input 
+                      type="text" 
+                      placeholder="WhatsApp (Ex: 11999999999)"
+                      className="w-full border border-slate-300 rounded-lg p-2 outline-none focus:border-blue-500 font-bold text-sm"
+                      value={formNovoCliente.telefone} 
+                      onChange={e => setFormNovoCliente({...formNovoCliente, telefone: e.target.value})}
+                    />
                   </div>
-                  
-                  {/* Células por Profissional */}
-                  {profissionais.map(prof => {
-                    const agendamento = atendimentos.find(a => 
-                      a.profissional_id === prof.id && 
-                      a.horario.slice(0, 5) === hora
-                    );
+                ) : (
+                  <select 
+                    className="w-full border border-slate-300 rounded-lg p-2 outline-none focus:border-emerald-500 font-bold text-sm bg-white"
+                    value={novo.clienteId}
+                    onChange={e => setNovo({...novo, clienteId: e.target.value})}
+                  >
+                    <option value="">Selecione a cliente...</option>
+                    {clientes.map(c => <option key={c.id} value={c.id}>{c.nome}</option>)}
+                  </select>
+                )}
+              </div>
 
-                    return (
-                      <div 
-                        key={prof.id} 
-                        className="flex-1 border-r relative group-hover:bg-slate-50/30 transition-colors"
-                        onClick={() => !agendamento && abrirNovoAgendamento(prof.id, hora)}
-                      >
-                        {!agendamento && (
-                          <div className="absolute inset-0 opacity-0 group-hover:opacity-100 flex items-center justify-center pointer-events-none">
-                            <Plus size={16} className="text-slate-300" />
-                          </div>
-                        )}
+              {/* SERVIÇO E TAMANHO */}
+              <div>
+                <label className="text-[10px] font-black uppercase text-slate-400">Serviço</label>
+                <select 
+                  className="w-full border-b-2 border-slate-100 py-2 outline-none focus:border-emerald-500 font-bold bg-transparent"
+                  onChange={e => {
+                    const p = procedimentos.find(x => x.id === Number(e.target.value));
+                    setNovo({...novo, procId: e.target.value, valor: p ? p[`preco_${novo.tamanho.toLowerCase()}`] : 0});
+                  }}
+                >
+                  <option value="">Selecione...</option>
+                  {procedimentos.map(p => <option key={p.id} value={p.id}>{p.nome}</option>)}
+                </select>
+              </div>
 
-                        {agendamento && (
-                          <div 
-                            onClick={(e) => { e.stopPropagation(); setAtendimentoSelecionado(agendamento); setModalDetalhes(true); }}
-                            className={`absolute inset-1 p-2 rounded-lg border text-left cursor-pointer transition-all hover:scale-[1.02] shadow-sm z-10
-                              ${agendamento.status === 'EXECUTADO' 
-                                ? 'bg-emerald-50 border-emerald-200 text-emerald-800' 
-                                : 'bg-blue-50 border-blue-200 text-blue-800'}`}
-                          >
-                            <p className="text-[10px] font-bold uppercase truncate">{agendamento.procedimentos?.nome}</p>
-                            <p className="text-[11px] font-medium truncate">{agendamento.cliente}</p>
-                            {agendamento.status === 'EXECUTADO' && <CheckCircle2 size={12} className="absolute bottom-1 right-1 text-emerald-500" />}
-                          </div>
-                        )}
-                      </div>
-                    );
-                  })}
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* MODAL DE NOVO AGENDAMENTO (Cálculo incluído) */}
-      <Modal open={modalAberto} onClose={() => setModalAberto(false)} title="Agendar Horário">
-        <div className="space-y-4">
-          <div className="bg-slate-50 p-3 rounded-lg flex items-center gap-3 mb-2 border">
-             <Clock size={18} className="text-slate-400" />
-             <span className="text-sm font-bold text-slate-600">{horaFormatada(form.horario)}</span>
-             <span className="text-slate-300">|</span>
-             <span className="text-sm font-medium text-slate-500">{new Date(form.data + 'T12:00:00').toLocaleDateString()}</span>
-          </div>
-
-          <div>
-            <div className="flex justify-between mb-1">
-              <label className="text-sm font-medium">Cliente</label>
-              <button onClick={() => setModalCliente(true)} className="text-xs text-emerald-600 font-bold">+ Nova Cliente</button>
-            </div>
-            <select className="w-full border p-2.5 rounded-xl bg-white" value={form.cliente_id} onChange={e => setForm({ ...form, cliente_id: e.target.value })}>
-              <option value="">Selecione...</option>
-              {clientes.map(c => <option key={c.id} value={c.id}>{c.nome} {c.telefone ? `(${c.telefone})` : ''}</option>)}
-            </select>
-          </div>
-
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="text-sm font-medium mb-1 block">Profissional</label>
-              <select className="w-full border p-2.5 rounded-xl" value={form.profissional_id} onChange={e => setForm({ ...form, profissional_id: e.target.value })}>
-                {profissionais.map(p => <option key={p.id} value={p.id}>{p.nome}</option>)}
-              </select>
-            </div>
-            <div>
-              <label className="text-sm font-medium mb-1 block">Procedimento</label>
-              <select className="w-full border p-2.5 rounded-xl" value={form.procedimento_id} onChange={e => setForm({ ...form, procedimento_id: e.target.value })}>
-                <option value="">Selecione...</option>
-                {procedimentos.map(p => <option key={p.id} value={p.id}>{p.nome}</option>)}
-              </select>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-3 gap-4">
-            <div>
-              <label className="text-sm font-medium mb-1 block">Tamanho</label>
-              <select className="w-full border p-2.5 rounded-xl" value={form.comprimento} onChange={e => setForm({ ...form, comprimento: e.target.value })}>
-                <option value="P">P</option><option value="M">M</option><option value="G">G</option>
-              </select>
-            </div>
-            <div className="col-span-2">
-              <label className="text-sm font-medium mb-1 block">Valor a Cobrar (R$)</label>
-              <input type="number" className="w-full border p-2.5 rounded-xl font-bold text-lg" placeholder={calculoFinanceiro?.recomendado || "0.00"} value={form.valor_cobrado} onChange={e => setForm({ ...form, valor_cobrado: e.target.value })} />
-            </div>
-          </div>
-
-          {calculoFinanceiro?.temPerda && (
-            <div className={`p-3 rounded-xl border transition-all cursor-pointer ${mostrarAlerta ? 'bg-red-50 border-red-200' : 'bg-slate-50 border-slate-200'}`} onClick={() => setMostrarAlerta(true)}>
-              {!mostrarAlerta ? (
-                <div className="flex items-center justify-between text-slate-500 text-xs font-bold uppercase tracking-tight">
-                  <span>Análise de Lucro Disponível</span><Eye size={14} />
-                </div>
-              ) : (
-                <div className="animate-fadeIn">
-                  <div className="flex items-center gap-2 text-red-700 font-bold text-sm mb-1"><AlertCircle size={16} /> Alerta de Perda</div>
-                  <p className="text-xs text-red-800">
-                    O valor ideal é <strong>{fmt(calculoFinanceiro.recomendado)}</strong>. 
-                    Neste preço, você deixa de ganhar <strong>{fmt(calculoFinanceiro.perda)}</strong>.
-                  </p>
-                </div>
-              )}
-            </div>
-          )}
-
-          <button onClick={salvarAgendamento} className="w-full bg-slate-900 text-white py-4 rounded-xl font-bold hover:bg-slate-800 transition-all mt-4">Confirmar Agendamento</button>
-        </div>
-      </Modal>
-
-      {/* MODAL DETALHES DO AGENDAMENTO */}
-      <Modal open={modalDetalhes} onClose={() => setModalDetalhes(false)} title="Detalhes do Atendimento">
-        {atendimentoSelecionado && (
-          <div className="space-y-4">
-            <div className="bg-slate-50 p-4 rounded-xl border">
-              <p className="text-xs font-bold text-slate-400 uppercase">Cliente</p>
-              <p className="text-xl font-bold text-slate-800">{atendimentoSelecionado.cliente}</p>
-              <div className="flex gap-4 mt-3">
-                <div>
-                  <p className="text-[10px] font-bold text-slate-400 uppercase">Procedimento</p>
-                  <p className="font-semibold text-slate-700">{atendimentoSelecionado.procedimentos?.nome} ({atendimentoSelecionado.comprimento})</p>
-                </div>
-                <div>
-                  <p className="text-[10px] font-bold text-slate-400 uppercase">Valor</p>
-                  <p className="font-bold text-emerald-600">{fmt(atendimentoSelecionado.valor_cobrado)}</p>
+              <div>
+                <label className="text-[10px] font-black uppercase text-slate-400">Tamanho do Cabelo</label>
+                <div className="flex gap-4 mt-2">
+                  {['P', 'M', 'G'].map(t => (
+                    <button 
+                      key={t}
+                      onClick={() => {
+                        const p = procedimentos.find(x => x.id === Number(novo.procId));
+                        setNovo({...novo, tamanho: t, valor: p ? p[`preco_${t.toLowerCase()}`] : 0});
+                      }}
+                      className={`flex-1 py-2 rounded-xl font-black border-2 transition-all ${novo.tamanho === t ? 'bg-slate-900 border-slate-900 text-white' : 'border-slate-100 text-slate-400'}`}
+                    >
+                      {t}
+                    </button>
+                  ))}
                 </div>
               </div>
-            </div>
-            
-            <div className="grid grid-cols-2 gap-3">
-               <button className="py-3 border border-slate-200 rounded-xl font-bold text-slate-600 hover:bg-slate-50">Editar</button>
-               <button className="py-3 bg-emerald-600 text-white rounded-xl font-bold hover:bg-emerald-700">Finalizar (Pago)</button>
+
+              {/* VALOR E CÁLCULO COM ALERTA DE PREJUÍZO */}
+              {(() => {
+                const { lucro, margem, prejuizo, valorSugerido } = calcularPrevisto();
+                return (
+                  <div className={`p-4 rounded-2xl border-2 transition-all duration-300 ${
+                    prejuizo ? 'bg-red-50 border-red-500 animate-pulse' : 'bg-slate-50 border-transparent'
+                  }`}>
+                    <div className="flex justify-between items-start mb-1">
+                      <label className="text-[10px] font-black uppercase text-slate-400">Valor Cobrado (R$)</label>
+                      {valorSugerido > 0 && (
+                        <span className="text-[9px] font-black bg-slate-200 text-slate-600 px-2 py-1 rounded">
+                          SUGERIDO: {fmt(valorSugerido)}
+                        </span>
+                      )}
+                    </div>
+                    <input
+                      type="number"
+                      className={`w-full bg-transparent text-4xl font-black outline-none ${
+                        prejuizo ? 'text-red-600' : 'text-slate-900'
+                      }`}
+                      value={novo.valor}
+                      onChange={e => setNovo({...novo, valor: e.target.value})}
+                    />
+
+                    <div className={`mt-4 pt-4 border-t ${
+                      prejuizo ? 'border-red-200' : 'border-slate-200'
+                    } flex justify-between items-end`}>
+                      <div>
+                        <p className="text-[10px] font-bold text-slate-400 uppercase">Lucro Líquido</p>
+                        <p className={`text-xl font-black ${prejuizo ? 'text-red-600' : 'text-emerald-600'}`}>
+                          {fmt(lucro)}
+                        </p>
+                      </div>
+                      <div className="text-right">
+                        {prejuizo ? (
+                          <div className="flex items-center gap-1 text-red-600 animate-bounce">
+                            <AlertTriangle size={18} />
+                            <span className="text-[10px] font-black uppercase">Prejuízo!</span>
+                          </div>
+                        ) : (
+                          <>
+                            <p className="text-[10px] font-bold text-slate-400 uppercase">Margem</p>
+                            <p className="text-sm font-black text-blue-600">{margem.toFixed(1)}%</p>
+                          </>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                );
+              })()}
+
+              {(() => {
+                const { prejuizo } = calcularPrevisto();
+                return (
+                  <button
+                    onClick={salvar}
+                    className={`w-full py-4 rounded-2xl font-black text-lg transition-all shadow-xl ${
+                      prejuizo
+                        ? 'bg-red-600 text-white shadow-red-200 hover:bg-red-700'
+                        : 'bg-emerald-600 text-white shadow-emerald-100 hover:bg-emerald-700'
+                    }`}
+                  >
+                    {prejuizo ? 'CONFIRMAR MESMO COM PREJUÍZO' : 'CONFIRMAR ATENDIMENTO'}
+                  </button>
+                );
+              })()}
             </div>
           </div>
-        )}
-      </Modal>
-
+        </div>
+      )}
     </div>
   );
-}
+};
 
-function horaFormatada(h) {
-  return h?.slice(0, 5) || '00:00';
-}
+const PlusIcon = () => (
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" className="text-emerald-200">
+    <line x1="12" y1="5" x2="12" y2="19"></line>
+    <line x1="5" y1="12" x2="19" y2="12"></line>
+  </svg>
+);
+
+export default Agenda;

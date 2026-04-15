@@ -37,6 +37,7 @@ const Agenda = () => {
   const [novo, setNovo] = useState({ clienteId: '', procId: '', tamanho: 'M', valor: 0 });
   const [isNovoCliente, setIsNovoCliente] = useState(false);
   const [formNovoCliente, setFormNovoCliente] = useState({ nome: '', telefone: '' });
+  const [ignorarPrejuizo, setIgnorarPrejuizo] = useState(false);
 
   // 4. LÓGICA DE CÁLCULO
   const calcularPrevisto = () => {
@@ -90,11 +91,12 @@ const Agenda = () => {
       servico: proc.nome,
       tamanho: novo.tamanho,
       valor: novo.valor,
-      lucro: lucro
+      lucro: ignorarPrejuizo ? null : lucro
     };
     
     setAgendamentos([...agendamentos, novoAgend]);
     setModalAberto(false);
+    setIgnorarPrejuizo(false);
   };
 
   const fmt = (v) => Number(v).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
@@ -244,7 +246,7 @@ const Agenda = () => {
                 const { lucro, margem, prejuizo, valorSugerido } = calcularPrevisto();
                 return (
                   <div className={`p-4 rounded-2xl border-2 transition-all duration-300 ${
-                    prejuizo ? 'bg-red-50 border-red-500 animate-pulse' : 'bg-slate-50 border-transparent'
+                    prejuizo && !ignorarPrejuizo ? 'bg-red-50 border-red-500 animate-pulse' : 'bg-slate-50 border-transparent'
                   }`}>
                     <div className="flex justify-between items-start mb-1">
                       <label className="text-[10px] font-black uppercase text-slate-400">Valor Cobrado (R$)</label>
@@ -268,15 +270,33 @@ const Agenda = () => {
                     } flex justify-between items-end`}>
                       <div>
                         <p className="text-[10px] font-bold text-slate-400 uppercase">Lucro Líquido</p>
-                        <p className={`text-xl font-black ${prejuizo ? 'text-red-600' : 'text-emerald-600'}`}>
-                          {fmt(lucro)}
+                        <p className={`text-xl font-black ${ignorarPrejuizo ? 'text-slate-400' : prejuizo ? 'text-red-600' : 'text-emerald-600'}`}>
+                          {ignorarPrejuizo ? '—' : fmt(lucro)}
                         </p>
                       </div>
                       <div className="text-right">
-                        {prejuizo ? (
-                          <div className="flex items-center gap-1 text-red-600 animate-bounce">
-                            <AlertTriangle size={18} />
-                            <span className="text-[10px] font-black uppercase">Prejuízo!</span>
+                        {prejuizo && !ignorarPrejuizo ? (
+                          <div className="flex flex-col items-end gap-1">
+                            <div className="flex items-center gap-1 text-red-600 animate-bounce">
+                              <AlertTriangle size={18} />
+                              <span className="text-[10px] font-black uppercase">Prejuízo!</span>
+                            </div>
+                            <button
+                              onClick={() => setIgnorarPrejuizo(true)}
+                              className="text-[9px] font-black text-slate-400 hover:text-slate-600 underline uppercase"
+                            >
+                              Deixar nulo
+                            </button>
+                          </div>
+                        ) : ignorarPrejuizo ? (
+                          <div className="flex flex-col items-end gap-1">
+                            <span className="text-[10px] font-black text-slate-400 uppercase">Lucro: —</span>
+                            <button
+                              onClick={() => setIgnorarPrejuizo(false)}
+                              className="text-[9px] font-black text-blue-500 hover:text-blue-700 underline uppercase"
+                            >
+                              Mostrar valor
+                            </button>
                           </div>
                         ) : (
                           <>

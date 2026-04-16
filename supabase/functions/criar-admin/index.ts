@@ -38,12 +38,8 @@ serve(async (req) => {
       )
     }
 
-    // Cria o perfil com cargo VENDEDOR (salao_id especial para vendedores)
-    await supabaseAdmin.from('perfis_acesso').insert({
-      auth_user_id: user.user.id,
-      salao_id: '00000000-0000-0000-0000-000000000000',
-      cargo: 'VENDEDOR'
-    })
+    // O perfil VENDEDOR é criado automaticamente pelo trigger handle_new_user_salao
+    // (com salao_id = NULL, que é o correto para vendedores)
 
     return new Response(
       JSON.stringify({ user_id: user.user.id, success: true }), 

@@ -1,9 +1,10 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { supabase } from '../supabaseClient';
 import { useToast } from '../components/Toast';
+import { FinancialEngine } from '../services/FinancialEngine';
 import PageHeader from '../components/PageHeader';
 import Modal from '../components/Modal';
-import { Plus, Pencil, Trash2 } from 'lucide-react';
+import { Plus, Pencil, Trash2, TrendingUp, AlertTriangle } from 'lucide-react';
 
 const fmt = (v) => Number(v || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
 const fmtData = (d) => new Date(d + 'T00:00:00').toLocaleDateString('pt-BR');
@@ -304,6 +305,47 @@ export default function HomeCar({ salaoId }) {
               />
             </div>
           </div>
+
+          {/* ─── Preview de Lucro (Motor Financeiro) ─── */}
+          {(form.valor_venda && form.custo_produto) && (() => {
+            const preview = FinancialEngine.calcularHomeCare({
+              valorVenda: Number(form.valor_venda) || 0,
+              custoProduto: Number(form.custo_produto) || 0,
+              valorPago: Number(form.valor_pago) || 0,
+            });
+            return (
+              <div className={`rounded-xl p-4 border ${preview.lucro < 0 ? 'bg-red-50 border-red-200' : 'bg-emerald-50 border-emerald-200'}`}>
+                <div className="flex items-center gap-2 mb-2">
+                  {preview.lucro < 0 ? (
+                    <AlertTriangle size={14} className="text-red-500" />
+                  ) : (
+                    <TrendingUp size={14} className="text-emerald-600" />
+                  )}
+                  <span className="text-xs font-bold text-slate-600 uppercase">Preview Financeiro</span>
+                </div>
+                <div className="grid grid-cols-3 gap-3 text-center">
+                  <div>
+                    <p className="text-[10px] text-slate-400 font-bold">LUCRO</p>
+                    <p className={`text-lg font-black ${preview.lucro < 0 ? 'text-red-600' : 'text-emerald-600'}`}>
+                      {fmt(preview.lucro)}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-[10px] text-slate-400 font-bold">MARGEM</p>
+                    <p className={`text-lg font-black ${preview.margemLucro < 0 ? 'text-red-600' : 'text-emerald-600'}`}>
+                      {preview.margemLucro.toFixed(1)}%
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-[10px] text-slate-400 font-bold">PENDÊNCIA</p>
+                    <p className={`text-lg font-black ${preview.pendencia > 0 ? 'text-amber-600' : 'text-slate-400'}`}>
+                      {fmt(preview.pendencia)}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            );
+          })()}
 
           <div>
             <label className="block text-sm font-medium text-slate-700 mb-1">Observação</label>

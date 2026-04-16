@@ -1,16 +1,18 @@
 import { NavLink } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 import { supabase } from '../supabaseClient';
-import { CalendarDays, LayoutDashboard, Calculator, PackageOpen, Receipt, Settings, LogOut, Users } from 'lucide-react';
+import { CalendarDays, LayoutDashboard, Calculator, PackageOpen, Receipt, Settings, LogOut, Users, Package, Landmark } from 'lucide-react';
 
 const itens = [
   { path: '/agenda',        label: 'Agenda',        icon: CalendarDays,     roles: ['PROPRIETARIO','FUNCIONARIO'] },
   { path: '/clientes',      label: 'Clientes',      icon: Users,            roles: ['PROPRIETARIO','FUNCIONARIO'] },
   { path: '/dashboard',     label: 'Dashboard',     icon: LayoutDashboard,  roles: ['PROPRIETARIO'] },
   { path: '/precificacao',  label: 'Precificação',  icon: Calculator,       roles: ['PROPRIETARIO'] },
-  { path: '/homecar',       label: 'Produtos',      icon: PackageOpen,      roles: ['PROPRIETARIO'] },
+  { path: '/homecar',       label: 'HomeCare',      icon: PackageOpen,      roles: ['PROPRIETARIO'] },
+  { path: '/catalogo',      label: 'Catálogo',      icon: Package,          roles: ['PROPRIETARIO'] },
+  { path: '/custos-fixos',  label: 'Custos Fixos',  icon: Landmark,         roles: ['PROPRIETARIO'] },
   { path: '/despesas',      label: 'Despesas',      icon: Receipt,          roles: ['PROPRIETARIO'] },
-  { path: '/configuracoes', label: 'Config',        icon: Settings,         roles: ['PROPRIETARIO'] },
+  { path: '/configuracoes', label: 'Equipe',        icon: Settings,         roles: ['PROPRIETARIO'] },
 ];
 
 export default function Sidebar({ role, email, salaoNome }) {

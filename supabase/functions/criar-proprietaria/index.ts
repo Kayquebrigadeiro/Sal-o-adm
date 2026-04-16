@@ -103,7 +103,7 @@ serve(async (req) => {
       vendedor_id,
       salao_id: salao.id,
       username: email,
-      senha_hash: senha,
+      senha_temporaria: senha,
     })
 
     console.log('LOGIN ERROR:', loginError)

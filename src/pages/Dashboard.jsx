@@ -1,7 +1,11 @@
 import { useState, useEffect, useMemo } from 'react';
 import { supabase } from '../supabaseClient';
 import { FinancialEngine } from '../services/FinancialEngine';
-import { Lock, TrendingUp, DollarSign, Activity, Users, AlertCircle, Package, ArrowUpRight, ArrowDownRight, CheckCircle, Heart, Bookmark } from 'lucide-react';
+import {
+  Lock, TrendingUp, DollarSign, Activity, Users, AlertCircle,
+  Package, ArrowUpRight, ArrowDownRight, CheckCircle, Heart,
+  Bookmark, CalendarDays, Sparkles, ShieldCheck
+} from 'lucide-react';
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid,
   Tooltip, ResponsiveContainer, Legend, PieChart, Pie, Cell, ComposedChart, Line, Area, AreaChart
@@ -10,7 +14,24 @@ import {
 const fmt = (v) => Number(v || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
 const MESES_PT = ['', 'Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
 const CORES_PROC = ['#6366f1', '#8b5cf6', '#a78bfa', '#c4b5fd', '#818cf8', '#7c3aed', '#5b21b6', '#4f46e5'];
-const CORES_PIE = ['#ef4444', '#f59e0b', '#6366f1', '#10b981'];
+const CORES_PIE = ['#f43f5e', '#f59e0b', '#6366f1', '#10b981'];
+
+// KPI Card com design inspirado nas referências Supplierj + Avec
+const KpiCard = ({ icon: Icon, label, value, subtitle, gradientFrom, gradientTo, iconBg, textColor }) => (
+  <div className="bg-white rounded-2xl border border-slate-100 shadow-sm hover:shadow-md transition-all duration-300 overflow-hidden group">
+    <div className="p-5 flex items-start gap-4">
+      <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${gradientFrom} ${gradientTo} flex items-center justify-center shadow-lg flex-shrink-0 group-hover:scale-105 transition-transform`}>
+        <Icon size={20} className="text-white" />
+      </div>
+      <div className="flex-1 min-w-0">
+        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-0.5">{label}</p>
+        <h3 className={`text-xl font-black ${textColor || 'text-slate-800'} truncate`}>{value}</h3>
+        {subtitle && <p className="text-[10px] text-slate-400 mt-0.5">{subtitle}</p>}
+      </div>
+    </div>
+    <div className={`h-1 bg-gradient-to-r ${gradientFrom} ${gradientTo} opacity-60`} />
+  </div>
+);
 
 const Dashboard = ({ salaoId }) => {
   // ─── Estado de segurança ───
@@ -219,20 +240,24 @@ const Dashboard = ({ salaoId }) => {
   // ─── TELA DE BLOQUEIO ───
   if (!unlocked) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 p-4">
-        <div className="bg-white p-8 rounded-3xl shadow-lg border border-slate-200 w-full max-w-sm text-center">
-          <div className="w-16 h-16 bg-gradient-to-br from-slate-900 to-slate-700 text-emerald-400 rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-lg">
-            <Lock size={32} />
+      <div className="flex flex-col items-center justify-center min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 p-4 relative overflow-hidden">
+        {/* Blobs decorativos */}
+        <div className="absolute top-0 right-0 w-[400px] h-[400px] bg-rose-500/10 rounded-full blur-[100px]" />
+        <div className="absolute bottom-0 left-0 w-[350px] h-[350px] bg-amber-500/10 rounded-full blur-[80px]" />
+
+        <div className="bg-white/[0.07] backdrop-blur-xl p-8 rounded-3xl shadow-2xl border border-white/10 w-full max-w-sm text-center relative animate-fadeIn">
+          <div className="w-16 h-16 bg-gradient-to-br from-rose-500 to-amber-500 text-white rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-xl shadow-rose-500/30">
+            <Lock size={28} />
           </div>
-          <h2 className="text-2xl font-black text-slate-800 mb-2">Painel Financeiro</h2>
-          <p className="text-slate-500 mb-8 text-sm font-medium">Acesso restrito à gestão financeira.</p>
+          <h2 className="text-2xl font-black text-white mb-2">Painel Financeiro</h2>
+          <p className="text-slate-400 mb-8 text-sm font-medium">Acesso restrito à gestão financeira.</p>
           <form onSubmit={verificarPin} className="space-y-4">
             <input
               type="password" maxLength={4} placeholder="PIN"
-              className="w-full text-center text-4xl tracking-[0.5em] font-black border-b-2 border-slate-200 py-4 outline-none focus:border-emerald-500 bg-transparent"
+              className="w-full text-center text-4xl tracking-[0.5em] font-black bg-white/[0.07] border border-white/10 text-white rounded-xl py-4 outline-none focus:ring-2 focus:ring-rose-500/50 focus:border-rose-500/50 placeholder:text-slate-600"
               value={pin} onChange={e => setPin(e.target.value)} autoFocus
             />
-            <button type="submit" className="w-full bg-gradient-to-r from-slate-900 to-slate-800 text-white py-4 rounded-xl font-bold hover:from-slate-800 hover:to-slate-700 transition-all mt-4 shadow-lg">
+            <button type="submit" className="w-full bg-gradient-to-r from-rose-500 to-amber-500 text-white py-4 rounded-xl font-bold hover:from-rose-600 hover:to-amber-600 transition-all mt-4 shadow-xl shadow-rose-500/20">
               Desbloquear Painel
             </button>
           </form>
@@ -243,84 +268,92 @@ const Dashboard = ({ salaoId }) => {
 
   // ─── TELA DO DASHBOARD ───
   return (
-    <div className="p-6 bg-slate-50 min-h-screen font-sans">
+    <div className="p-6 bg-gradient-to-br from-slate-50 to-rose-50/30 min-h-screen font-sans">
       {/* Header */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8 gap-4">
         <div>
-          <h1 className="text-2xl font-black text-slate-800">Painel Financeiro</h1>
-          <p className="text-slate-500 text-sm">Visão consolidada de resultados reais.</p>
+          <div className="flex items-center gap-2 mb-1">
+            <Sparkles size={16} className="text-rose-400" />
+            <h1 className="text-2xl font-black bg-gradient-to-r from-slate-800 to-slate-600 bg-clip-text text-transparent">Painel Financeiro</h1>
+          </div>
+          <p className="text-slate-400 text-sm">Visão consolidada de resultados em tempo real.</p>
         </div>
         <div className="flex items-center gap-3">
-          <select
-            value={mesSelecionado}
-            onChange={e => setMesSelecionado(e.target.value)}
-            className="border border-slate-200 rounded-xl px-4 py-2.5 text-sm bg-white outline-none focus:ring-2 focus:ring-emerald-500 font-medium"
-          >
-            {meses.map(m => (
-              <option key={m} value={m}>
-                {new Date(m + '-01').toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' })}
-              </option>
-            ))}
-          </select>
+          <div className="bg-white rounded-xl border border-slate-200 shadow-sm px-1 py-1 flex items-center">
+            <CalendarDays size={14} className="text-slate-400 ml-2 mr-1" />
+            <select
+              value={mesSelecionado}
+              onChange={e => setMesSelecionado(e.target.value)}
+              className="border-0 px-2 py-2 text-sm bg-transparent outline-none font-medium text-slate-700 cursor-pointer"
+            >
+              {meses.map(m => (
+                <option key={m} value={m}>
+                  {new Date(m + '-01').toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' })}
+                </option>
+              ))}
+            </select>
+          </div>
           <button
             onClick={() => { setUnlocked(false); setPin(''); }}
-            className="flex items-center gap-2 bg-white px-4 py-2.5 rounded-xl border border-slate-200 text-slate-500 font-bold hover:bg-slate-100 text-sm transition-colors"
+            className="flex items-center gap-2 bg-white px-4 py-2.5 rounded-xl border border-slate-200 text-slate-500 font-bold hover:bg-slate-50 text-sm transition-all shadow-sm"
           >
-            <Lock size={16} /> Bloquear
+            <Lock size={14} /> Bloquear
           </button>
         </div>
       </div>
 
       {loading ? (
         <div className="flex items-center justify-center py-20">
-          <div className="animate-pulse text-slate-400 font-medium">Carregando dados financeiros...</div>
+          <div className="flex items-center gap-3 text-slate-400 font-medium">
+            <div className="w-5 h-5 border-2 border-rose-300 border-t-transparent rounded-full animate-spin" />
+            Carregando dados financeiros...
+          </div>
         </div>
       ) : (
         <>
-          {/* ═══ CARDS DE RESUMO ═══ */}
+          {/* ═══ CARDS KPI COLORIDOS (inspirado Supplierj) ═══ */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 mb-8">
-            <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm relative overflow-hidden">
-              <div className="absolute top-0 right-0 w-16 h-16 bg-slate-900/5 rounded-full -mr-4 -mt-4" />
-              <p className="text-[10px] font-bold text-slate-400 uppercase flex items-center gap-1 mb-1"><TrendingUp size={12} /> Faturamento</p>
-              <h3 className="text-xl font-black text-slate-800">{fmt(mesAtual?.faturamento_bruto)}</h3>
-            </div>
-            <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm relative overflow-hidden">
-              <div className="absolute top-0 right-0 w-16 h-16 bg-emerald-500/5 rounded-full -mr-4 -mt-4" />
-              <p className="text-[10px] font-bold text-slate-400 uppercase flex items-center gap-1 mb-1"><DollarSign size={12} /> Lucro Líquido</p>
-              <h3 className={`text-xl font-black ${Number(mesAtual?.lucro_real) < 0 ? 'text-red-500' : 'text-emerald-600'}`}>
-                {fmt(mesAtual?.lucro_real)}
-              </h3>
-            </div>
-            <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm relative overflow-hidden">
-              <div className="absolute top-0 right-0 w-16 h-16 bg-blue-500/5 rounded-full -mr-4 -mt-4" />
-              <p className="text-[10px] font-bold text-slate-400 uppercase flex items-center gap-1 mb-1"><Activity size={12} /> Ticket Médio</p>
-              <h3 className="text-xl font-black text-blue-600">
-                {fmt(mesAtual?.total_atendimentos > 0 ? Number(mesAtual.faturamento_bruto) / Number(mesAtual.total_atendimentos) : 0)}
-              </h3>
-            </div>
-            <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm relative overflow-hidden">
-              <div className="absolute top-0 right-0 w-16 h-16 bg-violet-500/5 rounded-full -mr-4 -mt-4" />
-              <p className="text-[10px] font-bold text-slate-400 uppercase flex items-center gap-1 mb-1"><Users size={12} /> Atendimentos</p>
-              <h3 className="text-xl font-black text-violet-600">{mesAtual?.total_atendimentos || 0}</h3>
-            </div>
-            <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm relative overflow-hidden">
-              <div className="absolute top-0 right-0 w-16 h-16 bg-amber-500/5 rounded-full -mr-4 -mt-4" />
-              <p className="text-[10px] font-bold text-slate-400 uppercase flex items-center gap-1 mb-1"><Package size={12} /> HomeCare</p>
-              <h3 className="text-xl font-black text-amber-600">{fmt(homecareDados.lucro)}</h3>
-              <p className="text-[10px] text-slate-400 mt-0.5">{homecareDados.vendas} vendas</p>
-            </div>
+            <KpiCard
+              icon={TrendingUp} label="Faturamento"
+              value={fmt(mesAtual?.faturamento_bruto)}
+              gradientFrom="from-blue-500" gradientTo="to-blue-600"
+            />
+            <KpiCard
+              icon={DollarSign} label="Lucro Líquido"
+              value={fmt(mesAtual?.lucro_real)}
+              textColor={Number(mesAtual?.lucro_real) < 0 ? 'text-red-500' : 'text-emerald-600'}
+              gradientFrom="from-emerald-500" gradientTo="to-emerald-600"
+            />
+            <KpiCard
+              icon={Activity} label="Ticket Médio"
+              value={fmt(mesAtual?.total_atendimentos > 0 ? Number(mesAtual.faturamento_bruto) / Number(mesAtual.total_atendimentos) : 0)}
+              gradientFrom="from-violet-500" gradientTo="to-violet-600"
+            />
+            <KpiCard
+              icon={Users} label="Atendimentos"
+              value={mesAtual?.total_atendimentos || 0}
+              gradientFrom="from-amber-500" gradientTo="to-orange-500"
+            />
+            <KpiCard
+              icon={Package} label="HomeCare"
+              value={fmt(homecareDados.lucro)}
+              subtitle={`${homecareDados.vendas} vendas`}
+              gradientFrom="from-rose-500" gradientTo="to-pink-500"
+            />
           </div>
 
-          {/* ═══ SAÚDE DA EMPRESA ═══ */}
+          {/* ═══ SAÚDE DA EMPRESA (redesenhada) ═══ */}
           {mesAtual && (() => {
             const lucro = Number(mesAtual.lucro_real) || 0;
             const resultado = lucro + homecareDados.lucro - despesasDados.total - gastosPessoais;
             const saudavel = resultado > 0;
             return (
-              <div className={`mb-8 p-5 rounded-2xl border-2 ${saudavel ? 'bg-emerald-50 border-emerald-200' : 'bg-red-50 border-red-200'}`}>
-                <div className="flex items-center justify-between">
+              <div className={`mb-8 p-5 rounded-2xl border-2 backdrop-blur-sm ${saudavel ? 'bg-emerald-50/80 border-emerald-200' : 'bg-red-50/80 border-red-200'}`}>
+                <div className="flex items-center justify-between flex-wrap gap-3">
                   <div className="flex items-center gap-3">
-                    <Heart size={20} className={saudavel ? 'text-emerald-500' : 'text-red-500'} />
+                    <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${saudavel ? 'bg-emerald-500' : 'bg-red-500'}`}>
+                      {saudavel ? <ShieldCheck size={20} className="text-white" /> : <AlertCircle size={20} className="text-white" />}
+                    </div>
                     <div>
                       <p className="text-sm font-black text-slate-800">
                         {saudavel ? '✅ Empresa Saudável' : '⚠️ Empresa no Vermelho'}
@@ -341,7 +374,9 @@ const Dashboard = ({ salaoId }) => {
           {/* ═══ ALERTAS ═══ */}
           {Number(mesAtual?.total_pendente) > 0 && (
             <div className="mb-6 bg-amber-50 border border-amber-200 rounded-xl p-4 flex items-center gap-3">
-              <AlertCircle size={18} className="text-amber-500 flex-shrink-0" />
+              <div className="w-9 h-9 rounded-lg bg-amber-500 flex items-center justify-center flex-shrink-0">
+                <AlertCircle size={16} className="text-white" />
+              </div>
               <div>
                 <p className="text-sm font-bold text-amber-800">Pendências no mês</p>
                 <p className="text-xs text-amber-600">
@@ -356,8 +391,11 @@ const Dashboard = ({ salaoId }) => {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
 
             {/* Gráfico 1: Evolução Mensal */}
-            <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm h-80">
-              <h3 className="text-[10px] font-black text-slate-800 uppercase tracking-widest mb-4">Evolução Mensal</h3>
+            <div className="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm h-80">
+              <h3 className="text-[10px] font-black text-slate-800 uppercase tracking-widest mb-4 flex items-center gap-2">
+                <div className="w-2 h-2 rounded-full bg-blue-500" />
+                Evolução Mensal
+              </h3>
               {dadosGraficoEvolucao.length > 0 ? (
                 <ResponsiveContainer width="100%" height="85%">
                   <ComposedChart data={dadosGraficoEvolucao} margin={{ top: 0, right: 0, left: -20, bottom: 0 }}>
@@ -366,8 +404,8 @@ const Dashboard = ({ salaoId }) => {
                     <YAxis axisLine={false} tickLine={false} tick={{ fill: '#94a3b8', fontSize: 11 }} tickFormatter={v => `R$${v / 1000}k`} />
                     <Tooltip content={<TooltipMoeda />} cursor={{ fill: '#f8fafc' }} />
                     <Legend iconType="circle" wrapperStyle={{ fontSize: '11px', fontWeight: 'bold' }} />
-                    <Bar dataKey="faturamento" name="Faturamento" fill="#0f172a" radius={[4, 4, 0, 0]} />
-                    <Bar dataKey="lucro" name="Lucro" fill="#10b981" radius={[4, 4, 0, 0]} />
+                    <Bar dataKey="faturamento" name="Faturamento" fill="#3b82f6" radius={[6, 6, 0, 0]} />
+                    <Bar dataKey="lucro" name="Lucro" fill="#10b981" radius={[6, 6, 0, 0]} />
                   </ComposedChart>
                 </ResponsiveContainer>
               ) : (
@@ -376,8 +414,11 @@ const Dashboard = ({ salaoId }) => {
             </div>
 
             {/* Gráfico 2: Ranking de Procedimentos */}
-            <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm h-80">
-              <h3 className="text-[10px] font-black text-slate-800 uppercase tracking-widest mb-4">Ranking de Procedimentos</h3>
+            <div className="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm h-80">
+              <h3 className="text-[10px] font-black text-slate-800 uppercase tracking-widest mb-4 flex items-center gap-2">
+                <div className="w-2 h-2 rounded-full bg-violet-500" />
+                Ranking de Procedimentos
+              </h3>
               {dadosGraficoProcs.length > 0 ? (
                 <ResponsiveContainer width="100%" height="85%">
                   <BarChart data={dadosGraficoProcs} layout="vertical" margin={{ top: 0, right: 20, left: 0, bottom: 0 }}>
@@ -386,8 +427,8 @@ const Dashboard = ({ salaoId }) => {
                     <YAxis dataKey="nome" type="category" axisLine={false} tickLine={false} tick={{ fill: '#475569', fontSize: 11, fontWeight: 'bold' }} width={110} />
                     <Tooltip content={<TooltipMoeda />} cursor={{ fill: '#f8fafc' }} />
                     <Legend iconType="circle" wrapperStyle={{ fontSize: '11px', fontWeight: 'bold' }} />
-                    <Bar dataKey="receita" name="Receita" fill="#6366f1" radius={[0, 4, 4, 0]} barSize={18} />
-                    <Bar dataKey="lucro" name="Lucro" fill="#10b981" radius={[0, 4, 4, 0]} barSize={18} />
+                    <Bar dataKey="receita" name="Receita" fill="#6366f1" radius={[0, 6, 6, 0]} barSize={18} />
+                    <Bar dataKey="lucro" name="Lucro" fill="#10b981" radius={[0, 6, 6, 0]} barSize={18} />
                   </BarChart>
                 </ResponsiveContainer>
               ) : (
@@ -396,8 +437,11 @@ const Dashboard = ({ salaoId }) => {
             </div>
 
             {/* Gráfico 3: Comissões por Profissional */}
-            <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm h-80">
-              <h3 className="text-[10px] font-black text-slate-800 uppercase tracking-widest mb-4">Comissões a Pagar</h3>
+            <div className="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm h-80">
+              <h3 className="text-[10px] font-black text-slate-800 uppercase tracking-widest mb-4 flex items-center gap-2">
+                <div className="w-2 h-2 rounded-full bg-amber-500" />
+                Comissões a Pagar
+              </h3>
               {dadosGraficoComissoes.length > 0 ? (
                 <ResponsiveContainer width="100%" height="85%">
                   <BarChart data={dadosGraficoComissoes} layout="vertical" margin={{ top: 0, right: 20, left: 0, bottom: 0 }}>
@@ -405,7 +449,7 @@ const Dashboard = ({ salaoId }) => {
                     <XAxis type="number" hide />
                     <YAxis dataKey="nome" type="category" axisLine={false} tickLine={false} tick={{ fill: '#475569', fontSize: 11, fontWeight: 'bold' }} width={80} />
                     <Tooltip content={<TooltipMoeda />} cursor={{ fill: '#f8fafc' }} />
-                    <Bar dataKey="comissao" name="Comissão" fill="#3b82f6" radius={[0, 4, 4, 0]} barSize={24} />
+                    <Bar dataKey="comissao" name="Comissão" fill="#f59e0b" radius={[0, 6, 6, 0]} barSize={24} />
                   </BarChart>
                 </ResponsiveContainer>
               ) : (
@@ -414,8 +458,11 @@ const Dashboard = ({ salaoId }) => {
             </div>
 
             {/* Gráfico 4: Distribuição de Saídas */}
-            <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm h-80 flex flex-col">
-              <h3 className="text-[10px] font-black text-slate-800 uppercase tracking-widest mb-1">Distribuição de Saídas</h3>
+            <div className="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm h-80 flex flex-col">
+              <h3 className="text-[10px] font-black text-slate-800 uppercase tracking-widest mb-1 flex items-center gap-2">
+                <div className="w-2 h-2 rounded-full bg-rose-500" />
+                Distribuição de Saídas
+              </h3>
               <p className="text-[10px] text-slate-400 font-bold mb-4">Despesas e Comissões do mês</p>
               <div className="flex-1">
                 <ResponsiveContainer width="100%" height="100%">
@@ -439,18 +486,21 @@ const Dashboard = ({ salaoId }) => {
           </div>
 
           {/* ═══ FECHAR MÊS ═══ */}
-          <div className="mt-8 bg-white rounded-2xl border border-slate-200 p-6 shadow-sm">
-            <div className="flex items-center justify-between">
-              <div>
-                <h3 className="text-sm font-black text-slate-800 flex items-center gap-2">
-                  <Bookmark size={16} className="text-indigo-500" /> Fechamento do Mês
-                </h3>
-                <p className="text-xs text-slate-500 mt-1">
-                  Salve uma foto dos resultados financeiros deste mês.
-                </p>
+          <div className="mt-8 bg-white rounded-2xl border border-slate-100 p-6 shadow-sm">
+            <div className="flex items-center justify-between flex-wrap gap-4">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-500 to-violet-600 flex items-center justify-center shadow-md">
+                  <Bookmark size={18} className="text-white" />
+                </div>
+                <div>
+                  <h3 className="text-sm font-black text-slate-800">Fechamento do Mês</h3>
+                  <p className="text-xs text-slate-500 mt-0.5">
+                    Salve uma foto dos resultados financeiros deste mês.
+                  </p>
+                </div>
               </div>
               {fechamentoExiste ? (
-                <div className="flex items-center gap-2 px-4 py-2 bg-emerald-50 border border-emerald-200 rounded-xl text-emerald-600 font-bold text-sm">
+                <div className="flex items-center gap-2 px-4 py-2.5 bg-emerald-50 border border-emerald-200 rounded-xl text-emerald-600 font-bold text-sm">
                   <CheckCircle size={16} /> Mês fechado
                 </div>
               ) : (
@@ -479,7 +529,7 @@ const Dashboard = ({ salaoId }) => {
                     else { setFechamentoExiste(true); alert('✅ Mês fechado com sucesso!'); }
                   }}
                   disabled={salvandoFechamento}
-                  className="px-6 py-3 bg-gradient-to-r from-indigo-600 to-violet-600 text-white rounded-xl font-bold hover:from-indigo-700 hover:to-violet-700 transition-all shadow-lg shadow-indigo-200 text-sm disabled:opacity-50"
+                  className="px-6 py-3 bg-gradient-to-r from-indigo-500 to-violet-600 text-white rounded-xl font-bold hover:from-indigo-600 hover:to-violet-700 transition-all shadow-lg shadow-indigo-200 text-sm disabled:opacity-50"
                 >
                   {salvandoFechamento ? 'Salvando...' : '📸 Fechar Este Mês'}
                 </button>

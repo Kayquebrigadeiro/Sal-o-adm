@@ -53,15 +53,16 @@ create type tipo_despesa_enum as enum (
 --  3. NÚCLEO DO SAAS E PERFIS
 -- ========================================================================================
 create table saloes (
-  id          uuid primary key default uuid_generate_v4(),
-  nome        text not null default 'Meu Salão',
-  telefone    text,
-  vendedor_id uuid references auth.users(id) on delete set null,
-  configurado boolean not null default false,
-  ativo       boolean not null default true,
-  deletado_em timestamptz default null,
-  criado_em   timestamptz default now(),
-  atualizado_em timestamptz default now()
+  id                uuid primary key default uuid_generate_v4(),
+  nome              text not null default 'Meu Salão',
+  nome_proprietaria text,                                        -- V5.1: Nome da proprietária (wizard)
+  telefone          text,
+  vendedor_id       uuid references auth.users(id) on delete set null,
+  configurado       boolean not null default false,
+  ativo             boolean not null default true,
+  deletado_em       timestamptz default null,
+  criado_em         timestamptz default now(),
+  atualizado_em     timestamptz default now()
 );
 create index idx_saloes_vendedor_id on saloes(vendedor_id);
 

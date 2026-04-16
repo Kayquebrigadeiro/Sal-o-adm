@@ -3,10 +3,20 @@ import { supabase } from '../supabaseClient';
 import { useToast } from '../components/Toast';
 import { FinancialEngine } from '../services/FinancialEngine';
 import { TAXA_MAQUININHA_PADRAO } from '../services/financialConstants';
-import { Clock, User, Scissors, DollarSign, X, CheckCircle2, AlertCircle, AlertTriangle, UserPlus, List, ChevronLeft, ChevronRight, Loader2 } from 'lucide-react';
+import { Clock, User, Scissors, DollarSign, X, CheckCircle2, AlertCircle, AlertTriangle, UserPlus, List, ChevronLeft, ChevronRight, Loader2, Sparkles, Search, Phone, Plus } from 'lucide-react';
 
 const fmt = (v) => Number(v || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
 const fmtPct = (v) => `${Number(v || 0).toFixed(1)}%`;
+
+// Cores por profissional (inspirado Avec/SalãoVip) — paleta profissional
+const PROF_COLORS = [
+  { bg: 'bg-indigo-500',   light: 'bg-indigo-50',   text: 'text-indigo-700',   border: 'border-indigo-200',  hover: 'hover:bg-indigo-50/60' },
+  { bg: 'bg-teal-500',     light: 'bg-teal-50',     text: 'text-teal-700',     border: 'border-teal-200',    hover: 'hover:bg-teal-50/60' },
+  { bg: 'bg-amber-500',    light: 'bg-amber-50',    text: 'text-amber-700',    border: 'border-amber-200',   hover: 'hover:bg-amber-50/60' },
+  { bg: 'bg-rose-500',     light: 'bg-rose-50',     text: 'text-rose-700',     border: 'border-rose-200',    hover: 'hover:bg-rose-50/60' },
+  { bg: 'bg-violet-500',   light: 'bg-violet-50',   text: 'text-violet-700',   border: 'border-violet-200',  hover: 'hover:bg-violet-50/60' },
+  { bg: 'bg-cyan-500',     light: 'bg-cyan-50',     text: 'text-cyan-700',     border: 'border-cyan-200',    hover: 'hover:bg-cyan-50/60' },
+];
 
 const HORARIOS = [
   '08:00', '08:30', '09:00', '09:30', '10:00', '10:30',
@@ -24,6 +34,14 @@ export default function Agenda({ salaoId, role }) {
   const [agendamentos, setAgendamentos] = useState([]);
   const [config, setConfig] = useState({ custoFixo: 0, taxaMaq: TAXA_MAQUININHA_PADRAO });
   const [loading, setLoading] = useState(true);
+
+  // ─── Clientes cadastrados ───
+  const [clientes, setClientes] = useState([]);
+  const [buscaCliente, setBuscaCliente] = useState('');
+  const [showSugestoes, setShowSugestoes] = useState(false);
+  const [novoClienteTelefone, setNovoClienteTelefone] = useState('');
+  const [salvandoCliente, setSalvandoCliente] = useState(false);
+  const [modoNovoCliente, setModoNovoCliente] = useState(false);
 
   // ─── Data selecionada ───
   const [dataSelecionada, setDataSelecionada] = useState(new Date().toISOString().split('T')[0]);
@@ -49,10 +67,11 @@ export default function Agenda({ salaoId, role }) {
     const carregar = async () => {
       setLoading(true);
       try {
-        const [cfgRes, profRes, procRes] = await Promise.all([
+        const [cfgRes, profRes, procRes, cliRes] = await Promise.all([
           supabase.from('configuracoes').select('custo_fixo_por_atendimento, taxa_maquininha_pct').eq('salao_id', salaoId).single(),
           supabase.from('profissionais').select('id, nome, cargo').eq('salao_id', salaoId).eq('ativo', true).order('nome'),
           supabase.from('procedimentos').select('id, nome, categoria, requer_comprimento, preco_p, preco_m, preco_g, custo_variavel, porcentagem_profissional').eq('salao_id', salaoId).eq('ativo', true).order('nome'),
+          supabase.from('clientes').select('id, nome, telefone').eq('salao_id', salaoId).order('nome'),
         ]);
 
         if (cfgRes.data) {
@@ -63,6 +82,7 @@ export default function Agenda({ salaoId, role }) {
         }
         setProfissionais(profRes.data || []);
         setProcedimentos(procRes.data || []);
+        setClientes(cliRes.data || []);
       } catch (err) {
         showToast('Erro ao carregar agenda', 'error');
       } finally {
@@ -87,6 +107,47 @@ export default function Agenda({ salaoId, role }) {
       .neq('status', 'CANCELADO')
       .order('horario');
     setAgendamentos(data || []);
+  };
+
+  // ─── Autocomplete de clientes ───
+  const clientesFiltrados = useMemo(() => {
+    if (!buscaCliente.trim()) return [];
+    return clientes
+      .filter(c => c.nome.toLowerCase().includes(buscaCliente.toLowerCase()))
+      .slice(0, 6);
+  }, [buscaCliente, clientes]);
+
+  const selecionarCliente = (nome) => {
+    setNovo(prev => ({ ...prev, cliente: nome }));
+    setBuscaCliente(nome);
+    setShowSugestoes(false);
+  };
+
+  const criarClienteRapido = async () => {
+    if (!buscaCliente.trim()) return;
+    setSalvandoCliente(true);
+    try {
+      const { data, error } = await supabase.from('clientes').insert([{
+        salao_id: salaoId,
+        nome: buscaCliente.trim().toUpperCase(),
+        telefone: novoClienteTelefone || null,
+      }]).select().single();
+
+      if (error) throw error;
+
+      // Atualiza a lista local
+      setClientes(prev => [...prev, data].sort((a, b) => a.nome.localeCompare(b.nome)));
+      setNovo(prev => ({ ...prev, cliente: data.nome }));
+      setBuscaCliente(data.nome);
+      setModoNovoCliente(false);
+      setNovoClienteTelefone('');
+      setShowSugestoes(false);
+      showToast(`✅ ${data.nome} cadastrada!`, 'success');
+    } catch (err) {
+      showToast(`Erro: ${err.message}`, 'error');
+    } finally {
+      setSalvandoCliente(false);
+    }
   };
 
   // ─── Navegação de data ───
@@ -125,6 +186,9 @@ export default function Agenda({ salaoId, role }) {
     const prof = profissionais.find(p => p.id === profId);
     setSelecao({ hora, profId, profNome: prof?.nome || '' });
     setNovo({ cliente: '', procId: '', tamanho: 'P', valor: '', obs: '' });
+    setBuscaCliente('');
+    setModoNovoCliente(false);
+    setNovoClienteTelefone('');
     setIgnorarPrejuizo(false);
     setModalAberto(true);
   };
@@ -147,7 +211,8 @@ export default function Agenda({ salaoId, role }) {
 
   // ─── Salvar atendimento ───
   const salvar = async () => {
-    if (!novo.cliente.trim()) return showToast('Digite o nome da cliente!', 'error');
+    const nomeCliente = novo.cliente.trim() || buscaCliente.trim();
+    if (!nomeCliente) return showToast('Digite o nome da cliente!', 'error');
     if (!novo.procId) return showToast('Selecione o procedimento!', 'error');
 
     setSalvando(true);
@@ -161,7 +226,7 @@ export default function Agenda({ salaoId, role }) {
         profissional_id: selecao.profId,
         procedimento_id: novo.procId,
         comprimento: proc?.requer_comprimento ? novo.tamanho : null,
-        cliente: novo.cliente.toUpperCase(),
+        cliente: nomeCliente.toUpperCase(),
         valor_cobrado: Number(novo.valor) || 0,
         valor_pago: 0,
         status: 'AGENDADO',
@@ -189,88 +254,102 @@ export default function Agenda({ salaoId, role }) {
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <Loader2 className="animate-spin text-slate-400" size={32} />
+        <div className="flex items-center gap-3">
+          <div className="w-5 h-5 border-2 border-indigo-400 border-t-transparent rounded-full animate-spin" />
+          <span className="text-slate-400 font-medium text-sm">Carregando agenda...</span>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="p-4 bg-slate-50 min-h-screen font-sans">
+    <div className="p-5 bg-gradient-to-br from-slate-50 via-white to-indigo-50/30 min-h-screen font-sans">
       {/* ═══ HEADER COM NAVEGAÇÃO DE DATA ═══ */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-6 gap-3">
         <div>
-          <h1 className="text-2xl font-black text-slate-800">Agenda de Controle</h1>
-          <p className="text-slate-500 text-sm">Clique no horário para lançar o faturamento.</p>
+          <div className="flex items-center gap-2 mb-0.5">
+            <Sparkles size={16} className="text-indigo-400" />
+            <h1 className="text-2xl font-black bg-gradient-to-r from-slate-800 to-slate-600 bg-clip-text text-transparent">Agenda</h1>
+          </div>
+          <p className="text-slate-400 text-sm">Clique no horário para lançar o faturamento.</p>
         </div>
 
         <div className="flex items-center gap-2">
-          <button onClick={() => mudarDia(-1)} className="p-2 hover:bg-slate-200 rounded-lg transition-colors">
-            <ChevronLeft size={18} className="text-slate-600" />
+          <button onClick={() => mudarDia(-1)} className="p-2 hover:bg-white rounded-lg transition-all shadow-sm border border-slate-200 bg-white">
+            <ChevronLeft size={16} className="text-slate-500" />
           </button>
           <button onClick={hoje}
-            className={`px-4 py-2 rounded-xl text-sm font-bold transition-all ${ehHoje ? 'bg-slate-900 text-white' : 'bg-white border border-slate-200 text-slate-700 hover:bg-slate-50'}`}>
+            className={`px-4 py-2.5 rounded-xl text-sm font-bold transition-all shadow-sm ${ehHoje ? 'bg-gradient-to-r from-indigo-500 to-teal-500 text-white shadow-indigo-200' : 'bg-white border border-slate-200 text-slate-700 hover:bg-slate-50'}`}>
             {ehHoje ? '📅 Hoje' : fmtDataCompleta(dataSelecionada)}
           </button>
           <input type="date" value={dataSelecionada} onChange={e => setDataSelecionada(e.target.value)}
-            className="border border-slate-200 rounded-xl px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-emerald-500 bg-white" />
-          <button onClick={() => mudarDia(1)} className="p-2 hover:bg-slate-200 rounded-lg transition-colors">
-            <ChevronRight size={18} className="text-slate-600" />
+            className="border border-slate-200 rounded-xl px-3 py-2.5 text-sm outline-none focus:ring-2 focus:ring-indigo-400/50 bg-white shadow-sm" />
+          <button onClick={() => mudarDia(1)} className="p-2 hover:bg-white rounded-lg transition-all shadow-sm border border-slate-200 bg-white">
+            <ChevronRight size={16} className="text-slate-500" />
           </button>
         </div>
       </div>
 
       {/* ═══ GRADE DE AGENDA ═══ */}
       {profissionais.length === 0 ? (
-        <div className="bg-white rounded-xl border border-slate-200 p-12 text-center">
+        <div className="bg-white rounded-2xl border border-slate-200 p-12 text-center">
           <User size={40} className="text-slate-300 mx-auto mb-3" />
           <p className="text-slate-500 font-bold">Nenhum profissional cadastrado</p>
           <p className="text-xs text-slate-400 mt-1">Adicione profissionais nas Configurações</p>
         </div>
       ) : (
-        <div className="bg-white border border-slate-200 rounded-xl overflow-hidden shadow-sm overflow-x-auto">
+        <div className="bg-white border border-slate-100 rounded-2xl overflow-hidden shadow-sm overflow-x-auto">
           <table className="w-full border-collapse min-w-[600px]">
             <thead>
-              <tr className="bg-slate-900 text-white">
-                <th className="p-3 border-r border-slate-700 text-xs w-16 text-center">HORA</th>
-                {profissionais.map(p => (
-                  <th key={p.id} className="p-3 border-r border-slate-700 text-xs uppercase tracking-widest text-center">
-                    {p.nome}
-                    <span className="block text-[9px] font-normal text-slate-400 mt-0.5 normal-case">
-                      {p.cargo === 'PROPRIETARIO' ? '👑 Proprietária' : '👤 Funcionário(a)'}
-                    </span>
-                  </th>
-                ))}
+              <tr>
+                <th className="p-3 bg-slate-50 border-b border-slate-100 text-[10px] font-bold text-slate-400 uppercase tracking-widest w-16 text-center">Hora</th>
+                {profissionais.map((p, idx) => {
+                  const cor = PROF_COLORS[idx % PROF_COLORS.length];
+                  return (
+                    <th key={p.id} className={`p-0 border-b border-slate-100`}>
+                      <div className={`${cor.bg} px-4 py-3 text-white text-center`}>
+                        <span className="text-xs font-bold uppercase tracking-wide">{p.nome}</span>
+                        <span className="block text-[9px] font-normal text-white/70 mt-0.5">
+                          {p.cargo === 'PROPRIETARIO' ? '👑 Proprietária' : '👤 Funcionário(a)'}
+                        </span>
+                      </div>
+                    </th>
+                  );
+                })}
               </tr>
             </thead>
             <tbody>
               {HORARIOS.map(hora => (
                 <tr key={hora} className="group">
-                  <td className="p-1.5 border border-slate-100 bg-slate-50 text-center font-bold text-slate-400 text-[10px]">{hora}</td>
-                  {profissionais.map(prof => {
+                  <td className="p-1.5 border-b border-slate-50 bg-slate-50/50 text-center font-bold text-slate-400 text-[10px]">{hora}</td>
+                  {profissionais.map((prof, idx) => {
                     const agend = getAgendamento(hora, prof.id);
+                    const cor = PROF_COLORS[idx % PROF_COLORS.length];
                     return (
                       <td
                         key={prof.id}
                         onClick={() => !agend && abrirAgendamento(hora, prof.id)}
-                        className={`p-1 border border-slate-100 h-14 cursor-pointer transition-all ${!agend ? 'hover:bg-emerald-50/60' : ''}`}
+                        className={`p-1 border-b border-slate-50 h-14 cursor-pointer transition-all ${!agend ? cor.hover : ''}`}
                       >
                         {agend ? (
-                          <div className={`h-full w-full rounded-lg p-1.5 text-[10px] relative overflow-hidden ${
+                          <div className={`h-full w-full rounded-lg p-1.5 text-[10px] relative overflow-hidden shadow-sm ${
                             agend.status === 'EXECUTADO'
-                              ? 'bg-emerald-800 text-white'
-                              : 'bg-slate-800 text-white'
+                              ? 'bg-emerald-500 text-white'
+                              : `${cor.light} ${cor.text} border ${cor.border}`
                           }`}>
                             <div className="font-bold truncate">{agend.cliente}</div>
-                            <div className="text-slate-300 truncate">
+                            <div className={`truncate text-[9px] ${agend.status === 'EXECUTADO' ? 'text-emerald-100' : 'opacity-70'}`}>
                               {agend.procedimentos?.nome} {agend.comprimento ? `(${agend.comprimento})` : ''}
                             </div>
-                            <div className={`absolute bottom-0.5 right-1 px-1 rounded text-[9px] font-black ${
-                              Number(agend.lucro_liquido) >= 0 ? 'bg-emerald-500/80' : 'bg-red-500/80'
+                            <div className={`absolute bottom-0.5 right-1 px-1.5 py-0.5 rounded-full text-[8px] font-black ${
+                              agend.status === 'EXECUTADO'
+                                ? 'bg-white/20 text-white'
+                                : Number(agend.lucro_liquido) >= 0 ? 'bg-emerald-100 text-emerald-700' : 'bg-red-100 text-red-600'
                             }`}>
                               {fmt(agend.lucro_liquido)}
                             </div>
                             {agend.status === 'EXECUTADO' && (
-                              <CheckCircle2 size={10} className="absolute top-1 right-1 text-emerald-300" />
+                              <CheckCircle2 size={10} className="absolute top-1 right-1 text-white/70" />
                             )}
                           </div>
                         ) : (
@@ -306,23 +385,100 @@ export default function Agenda({ salaoId, role }) {
 
             <div className="space-y-5">
 
-              {/* CLIENTE */}
+              {/* ═══ CLIENTE COM AUTOCOMPLETE + CADASTRO RÁPIDO ═══ */}
               <div>
                 <label className="text-[10px] font-black uppercase text-slate-400 mb-1 block">Cliente</label>
-                <input
-                  type="text"
-                  placeholder="NOME DA CLIENTE"
-                  className="w-full border-2 border-slate-200 rounded-xl p-3 outline-none focus:border-emerald-500 font-bold text-sm uppercase transition-colors"
-                  value={novo.cliente}
-                  onChange={e => setNovo({...novo, cliente: e.target.value.toUpperCase()})}
-                />
+                <div className="relative">
+                  <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-300" />
+                  <input
+                    type="text"
+                    placeholder="Buscar ou digitar nome..."
+                    className="w-full border-2 border-slate-200 rounded-xl p-3 pl-9 outline-none focus:border-indigo-400 font-bold text-sm uppercase transition-colors"
+                    value={buscaCliente}
+                    onChange={e => {
+                      const val = e.target.value.toUpperCase();
+                      setBuscaCliente(val);
+                      setNovo(prev => ({ ...prev, cliente: val }));
+                      setShowSugestoes(true);
+                      setModoNovoCliente(false);
+                    }}
+                    onFocus={() => buscaCliente.trim() && setShowSugestoes(true)}
+                  />
+
+                  {/* Sugestões de clientes existentes */}
+                  {showSugestoes && buscaCliente.trim() && (
+                    <div className="absolute left-0 right-0 top-full mt-1 bg-white border border-slate-200 rounded-xl shadow-xl z-20 max-h-48 overflow-y-auto">
+                      {clientesFiltrados.length > 0 ? (
+                        <>
+                          {clientesFiltrados.map(c => (
+                            <button
+                              key={c.id}
+                              onClick={() => selecionarCliente(c.nome)}
+                              className="w-full text-left px-4 py-3 hover:bg-indigo-50 flex items-center justify-between transition-colors border-b border-slate-50 last:border-0"
+                            >
+                              <div>
+                                <span className="font-bold text-sm text-slate-800">{c.nome}</span>
+                                {c.telefone && <span className="text-[10px] text-slate-400 ml-2">{c.telefone}</span>}
+                              </div>
+                              <User size={12} className="text-slate-300" />
+                            </button>
+                          ))}
+                          <button
+                            onClick={() => { setModoNovoCliente(true); setShowSugestoes(false); }}
+                            className="w-full text-left px-4 py-3 hover:bg-teal-50 flex items-center gap-2 text-teal-600 font-bold text-sm border-t border-slate-100"
+                          >
+                            <UserPlus size={14} />
+                            Cadastrar "{buscaCliente.trim()}" como nova cliente
+                          </button>
+                        </>
+                      ) : (
+                        <button
+                          onClick={() => { setModoNovoCliente(true); setShowSugestoes(false); }}
+                          className="w-full text-left px-4 py-3 hover:bg-teal-50 flex items-center gap-2 text-teal-600 font-bold text-sm"
+                        >
+                          <UserPlus size={14} />
+                          Cadastrar "{buscaCliente.trim()}" como nova cliente
+                        </button>
+                      )}
+                    </div>
+                  )}
+                </div>
+
+                {/* Mini-formulário de nova cliente */}
+                {modoNovoCliente && (
+                  <div className="mt-2 bg-teal-50 border border-teal-200 rounded-xl p-3 animate-fadeIn">
+                    <p className="text-[10px] font-black uppercase text-teal-600 mb-2 flex items-center gap-1">
+                      <UserPlus size={12} /> Nova cliente: {buscaCliente.trim()}
+                    </p>
+                    <div className="flex gap-2">
+                      <div className="flex-1 relative">
+                        <Phone size={12} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-teal-400" />
+                        <input
+                          type="text"
+                          placeholder="WhatsApp (opcional)"
+                          className="w-full bg-white border border-teal-200 rounded-lg px-3 py-2 pl-8 text-xs outline-none focus:border-teal-400"
+                          value={novoClienteTelefone}
+                          onChange={e => setNovoClienteTelefone(e.target.value)}
+                        />
+                      </div>
+                      <button
+                        onClick={criarClienteRapido}
+                        disabled={salvandoCliente}
+                        className="bg-teal-500 text-white px-4 py-2 rounded-lg text-xs font-bold hover:bg-teal-600 transition-colors disabled:opacity-50 flex items-center gap-1"
+                      >
+                        {salvandoCliente ? <Loader2 size={12} className="animate-spin" /> : <Plus size={12} />}
+                        Salvar
+                      </button>
+                    </div>
+                  </div>
+                )}
               </div>
 
               {/* PROCEDIMENTO */}
               <div>
                 <label className="text-[10px] font-black uppercase text-slate-400 mb-1 block">Procedimento</label>
                 <select
-                  className="w-full border-2 border-slate-200 rounded-xl p-3 outline-none focus:border-emerald-500 font-bold text-sm bg-white transition-colors"
+                  className="w-full border-2 border-slate-200 rounded-xl p-3 outline-none focus:border-indigo-400 font-bold text-sm bg-white transition-colors"
                   value={novo.procId}
                   onChange={e => selecionarProcedimento(e.target.value)}
                 >
@@ -344,7 +500,7 @@ export default function Agenda({ salaoId, role }) {
                           onClick={() => selecionarTamanho(t)}
                           className={`flex-1 py-3 rounded-xl font-black border-2 transition-all ${
                             novo.tamanho === t
-                              ? 'bg-slate-900 border-slate-900 text-white shadow-lg'
+                              ? 'bg-indigo-600 border-indigo-600 text-white shadow-lg shadow-indigo-200'
                               : 'border-slate-200 text-slate-400 hover:border-slate-300'
                           }`}
                         >
@@ -372,8 +528,8 @@ export default function Agenda({ salaoId, role }) {
                     if (!sugerido) return null;
                     return (
                       <button onClick={() => setNovo(prev => ({ ...prev, valor: Number(sugerido) }))}
-                        className="text-[9px] font-black bg-slate-200 text-slate-600 px-2 py-1 rounded hover:bg-slate-300 transition-colors">
-                        SUGERIDO: {fmt(sugerido)}
+                        className="text-[9px] font-black bg-indigo-100 text-indigo-600 px-2 py-1 rounded-lg hover:bg-indigo-200 transition-colors">
+                        Tabela: {fmt(sugerido)}
                       </button>
                     );
                   })()}
@@ -387,6 +543,7 @@ export default function Agenda({ salaoId, role }) {
                   onChange={e => setNovo({...novo, valor: e.target.value})}
                   placeholder="0,00"
                 />
+                <p className="text-[9px] text-slate-400 mt-1">Você define o preço — o sistema calcula o lucro automaticamente.</p>
 
                 {/* Desmembramento do Motor Financeiro */}
                 {previewFinanceiro && (
@@ -437,7 +594,7 @@ export default function Agenda({ salaoId, role }) {
               <div>
                 <label className="text-[10px] font-black uppercase text-slate-400 mb-1 block">Observação</label>
                 <input type="text" placeholder="Opcional..."
-                  className="w-full border-2 border-slate-200 rounded-xl p-3 outline-none focus:border-emerald-500 text-sm transition-colors"
+                  className="w-full border-2 border-slate-200 rounded-xl p-3 outline-none focus:border-indigo-400 text-sm transition-colors"
                   value={novo.obs} onChange={e => setNovo({...novo, obs: e.target.value})} />
               </div>
 
@@ -449,7 +606,7 @@ export default function Agenda({ salaoId, role }) {
                   salvando ? 'bg-slate-300 text-slate-500 cursor-not-allowed' :
                   previewFinanceiro?.prejuizo
                     ? 'bg-red-600 text-white shadow-red-200 hover:bg-red-700'
-                    : 'bg-emerald-600 text-white shadow-emerald-100 hover:bg-emerald-700'
+                    : 'bg-gradient-to-r from-indigo-600 to-teal-500 text-white shadow-indigo-200 hover:from-indigo-700 hover:to-teal-600'
                 }`}
               >
                 {salvando ? (
@@ -469,7 +626,7 @@ export default function Agenda({ salaoId, role }) {
 }
 
 const PlusIcon = () => (
-  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" className="text-emerald-200">
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" className="text-indigo-200">
     <line x1="12" y1="5" x2="12" y2="19"></line>
     <line x1="5" y1="12" x2="19" y2="12"></line>
   </svg>

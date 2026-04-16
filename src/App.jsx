@@ -71,16 +71,19 @@ export default function App() {
     init();
   }, []);
 
-  // Ecrã de Erro Crítico (Fim do ecrã branco!)
+  // Ecrã de Erro Crítico
   if (erroCritico) {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center bg-red-50 p-6">
-        <div className="bg-white p-8 rounded-xl shadow-lg max-w-lg w-full border border-red-200">
-          <h1 className="text-xl font-bold text-red-600 mb-2">Erro de Acesso Detetado</h1>
-          <p className="text-sm text-slate-700 mb-4">{erroCritico}</p>
+      <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 p-6">
+        <div className="bg-white/[0.07] backdrop-blur-xl p-8 rounded-2xl shadow-2xl max-w-lg w-full border border-red-500/20">
+          <div className="w-14 h-14 bg-red-500/20 rounded-xl flex items-center justify-center mx-auto mb-4">
+            <span className="text-red-400 text-2xl">⚠️</span>
+          </div>
+          <h1 className="text-xl font-bold text-red-400 mb-2 text-center">Erro de Acesso Detectado</h1>
+          <p className="text-sm text-slate-400 mb-6 text-center">{erroCritico}</p>
           <button 
             onClick={async () => { await supabase.auth.signOut(); window.location.reload(); }}
-            className="bg-slate-800 text-white px-4 py-2 rounded text-sm hover:bg-slate-900"
+            className="w-full bg-gradient-to-r from-rose-500 to-amber-500 text-white px-4 py-3 rounded-xl text-sm font-bold hover:from-rose-600 hover:to-amber-600 transition-all shadow-lg"
           >
             Sair e Voltar ao Login
           </button>
@@ -90,7 +93,14 @@ export default function App() {
   }
 
   if (carregando) {
-    return <div className="min-h-screen flex items-center justify-center bg-gray-50 text-gray-500">A carregar o sistema...</div>;
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
+        <div className="flex flex-col items-center gap-4">
+          <div className="w-10 h-10 border-3 border-rose-500 border-t-transparent rounded-full animate-spin" />
+          <p className="text-slate-400 text-sm font-medium">Carregando o sistema...</p>
+        </div>
+      </div>
+    );
   }
 
   if (!sessao || !perfil) {
@@ -127,7 +137,7 @@ export default function App() {
   return (
     <BrowserRouter>
       <ToastProvider>
-        <div className="flex min-h-screen bg-slate-50">
+        <div className="flex min-h-screen bg-gradient-to-br from-slate-50 to-rose-50/20">
           <Sidebar role={role} email={email} salaoNome={salaoNome} />
           <main className="flex-1 overflow-auto">
             <div className="animate-fadeIn">

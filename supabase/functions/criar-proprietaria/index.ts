@@ -59,6 +59,15 @@ serve(async (req) => {
 
     console.log('SALAO ERROR:', salaoError)
     if (salaoError) throw salaoError
+    if (!salao) throw new Error('Falha ao criar salão')
+
+    // 1.5 Cria as configurações iniciais do salão
+    const { error: configError } = await supabaseAdmin
+      .from('configuracoes')
+      .insert([{ salao_id: salao.id, custo_fixo_por_atendimento: 10.65, taxa_maquininha_pct: 5 }])
+
+    console.log('CONFIG ERROR:', configError)
+    if (configError) throw configError
 
     // 2. Cria a proprietária com e-mail real (email_confirm: false para enviar e-mail de ativação)
     const { data: authData, error: authError } = await supabaseAdmin.auth.admin.createUser({
@@ -76,6 +85,7 @@ serve(async (req) => {
 
     console.log('AUTH ERROR:', authError)
     if (authError) throw authError
+    if (!authData.user) throw new Error('Falha ao criar usuário de auth')
 
     const authUserId = authData.user.id // Salva para rollback se necessário
     const rollback = () => supabaseAdmin.auth.admin.deleteUser(authUserId)

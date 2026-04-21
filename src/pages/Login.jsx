@@ -44,9 +44,6 @@ export default function Login() {
       window.location.reload();
 
     } catch (err) {
-      // ESTA É A LINHA MÁGICA:
-      alert("ERRO SECRETO DO SUPABASE: " + err.message);
-      
       console.error('Erro no login:', err);
       setErro('Credenciais inválidas. Verifique o usuário e senha.');
     } finally {

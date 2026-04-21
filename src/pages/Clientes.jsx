@@ -39,7 +39,7 @@ export default function Clientes({ salaoId }) {
 
     let erro;
     if (form.id) {
-      const { error } = await supabase.from('clientes').update({ nome: form.nome, telefone: form.telefone }).eq('id', form.id);
+      const { error } = await supabase.from('clientes').update({ nome: form.nome, telefone: form.telefone }).eq('id', form.id).eq('salao_id', salaoId);
       erro = error;
     } else {
       const { error } = await supabase.from('clientes').insert([{ salao_id: salaoId, nome: form.nome, telefone: form.telefone }]);
@@ -173,7 +173,7 @@ export default function Clientes({ salaoId }) {
               type="text"
               className="w-full border-2 border-slate-100 p-3 rounded-2xl focus:border-slate-900 outline-none"
               value={form.nome}
-              onChange={e => setForm({...form, nome: e.target.value})}
+              onChange={e => setForm({...form, nome: e.target.value.toUpperCase()})}
             />
           </div>
           <div>

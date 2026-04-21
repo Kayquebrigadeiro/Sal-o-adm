@@ -46,7 +46,7 @@ export default function Configuracoes({ salaoId }) {
 
     let error;
     if (editando) {
-      const { error: err } = await supabase.from('profissionais').update(dadosSalvar).eq('id', editando.id);
+      const { error: err } = await supabase.from('profissionais').update(dadosSalvar).eq('id', editando.id).eq('salao_id', salaoId);
       error = err;
     } else {
       const { error: err } = await supabase.from('profissionais').insert([dadosSalvar]);
@@ -113,7 +113,7 @@ export default function Configuracoes({ salaoId }) {
             <label className="text-sm font-bold text-slate-700 mb-1 block">Nome Completo</label>
             <input 
               type="text" className="w-full border-2 border-slate-100 p-3 rounded-2xl focus:border-slate-900 outline-none transition-all"
-              value={form.nome} onChange={e => setForm({...form, nome: e.target.value})}
+              value={form.nome} onChange={e => setForm({...form, nome: e.target.value.toUpperCase()})}
               placeholder="Ex: Maria Silva"
             />
           </div>

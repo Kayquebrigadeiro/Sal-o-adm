@@ -137,7 +137,7 @@ export default function GerenciarAdmins() {
                 <label className="text-xs text-slate-600 block mb-1">Nome</label>
                 <input
                   type="text" required value={form.nome}
-                  onChange={e => setForm({...form, nome: e.target.value})}
+                  onChange={e => setForm({...form, nome: e.target.value.toUpperCase()})}
                   className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm"
                   placeholder="Nome do novo admin"
                 />

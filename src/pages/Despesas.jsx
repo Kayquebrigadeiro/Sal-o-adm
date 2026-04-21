@@ -112,7 +112,7 @@ export default function Despesas({ salaoId }) {
           tipo: form.tipo,
           valor: Number(form.valor),
           valor_pago: Number(form.valor_pago)
-        }).eq('id', despesaEditando.id);
+        }).eq('id', despesaEditando.id).eq('salao_id', salaoId);
         showToast('Despesa atualizada', 'success');
       } else {
         await supabase.from('despesas').insert({
@@ -135,7 +135,7 @@ export default function Despesas({ salaoId }) {
   const deletar = async (id) => {
     if (!confirm('Deletar esta despesa?')) return;
     try {
-      await supabase.from('despesas').delete().eq('id', id);
+      await supabase.from('despesas').delete().eq('id', id).eq('salao_id', salaoId);
       showToast('Despesa deletada', 'success');
       carregarDespesas();
     } catch (error) {
@@ -260,7 +260,7 @@ export default function Despesas({ salaoId }) {
             <input
               type="text"
               value={form.descricao}
-              onChange={e => setForm({ ...form, descricao: e.target.value })}
+              onChange={e => setForm({ ...form, descricao: e.target.value.toUpperCase() })}
               placeholder="Ex: Aluguel do salão"
               className="w-full border border-slate-300 rounded-lg px-3 py-2 outline-none focus:ring-2 focus:ring-emerald-500"
             />

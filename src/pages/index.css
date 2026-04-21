@@ -1,0 +1,45 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+    body {
+        /* Fundo premium levemente texturizado / off-white para a área principal */
+        @apply bg-[#FAFAFA] text-zinc-800 antialiased selection:bg-rose-200;
+    }
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(8px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.animate-fadeIn {
+    animation: fadeIn 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* Estilização sutil de scrollbar para manter o aspecto premium */
+::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+}
+
+::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+    @apply bg-zinc-300 rounded-full hover:bg-zinc-400;
+}
+
+* {
+    scrollbar-width: thin;
+    scrollbar-color: #d4d4d8 transparent;
+}

@@ -111,7 +111,7 @@ export default function Paralelos({ salaoId }) {
       };
 
       if (paraleloEditando) {
-        await supabase.from('procedimentos_paralelos').update(dados).eq('id', paraleloEditando.id);
+        await supabase.from('procedimentos_paralelos').update(dados).eq('id', paraleloEditando.id).eq('salao_id', salaoId);
         showToast('Atualizado', 'success');
       } else {
         await supabase.from('procedimentos_paralelos').insert(dados);
@@ -127,7 +127,7 @@ export default function Paralelos({ salaoId }) {
   const deletar = async (id) => {
     if (!confirm('Deletar este registro?')) return;
     try {
-      await supabase.from('procedimentos_paralelos').delete().eq('id', id);
+      await supabase.from('procedimentos_paralelos').delete().eq('id', id).eq('salao_id', salaoId);
       showToast('Deletado', 'success');
       carregarDados();
     } catch (error) {
@@ -257,7 +257,7 @@ export default function Paralelos({ salaoId }) {
             <input
               type="text"
               value={form.cliente}
-              onChange={e => setForm({ ...form, cliente: e.target.value })}
+              onChange={e => setForm({ ...form, cliente: e.target.value.toUpperCase() })}
               placeholder="Nome do cliente"
               className="w-full border border-slate-300 rounded-lg px-3 py-2 outline-none focus:ring-2 focus:ring-emerald-500"
             />
@@ -268,7 +268,7 @@ export default function Paralelos({ salaoId }) {
             <input
               type="text"
               value={form.descricao}
-              onChange={e => setForm({ ...form, descricao: e.target.value })}
+              onChange={e => setForm({ ...form, descricao: e.target.value.toUpperCase() })}
               placeholder="Ex: Unhas em gel"
               className="w-full border border-slate-300 rounded-lg px-3 py-2 outline-none focus:ring-2 focus:ring-emerald-500"
             />

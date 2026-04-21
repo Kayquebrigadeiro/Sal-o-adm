@@ -95,7 +95,7 @@ export default function NovoSalao({ userId }) {
             <input
               type="text"
               value={form.nome_salao}
-              onChange={e => set('nome_salao', e.target.value)}
+              onChange={e => set('nome_salao', e.target.value.toUpperCase())}
               className="w-full p-3 border rounded-xl focus:ring-2 focus:ring-emerald-500"
               placeholder="Ex: Studio Bella"
             />
@@ -142,7 +142,7 @@ export default function NovoSalao({ userId }) {
             <input
               type="text"
               value={form.nome_proprietaria}
-              onChange={e => set('nome_proprietaria', e.target.value)}
+              onChange={e => set('nome_proprietaria', e.target.value.toUpperCase())}
               className="w-full p-3 border rounded-xl focus:ring-2 focus:ring-emerald-500"
               placeholder="Ex: Maria Silva"
             />

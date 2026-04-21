@@ -3,19 +3,19 @@ import { supabase } from '../supabaseClient';
 import { useToast } from '../components/Toast';
 import { FinancialEngine } from '../services/FinancialEngine';
 import { TAXA_MAQUININHA_PADRAO } from '../services/financialConstants';
-import { Clock, User, Scissors, DollarSign, X, CheckCircle2, AlertCircle, AlertTriangle, UserPlus, List, ChevronLeft, ChevronRight, Loader2, Sparkles, Search, Phone, Plus } from 'lucide-react';
+import { Clock, User, Scissors, DollarSign, X, CheckCircle2, AlertCircle, AlertTriangle, UserPlus, List, ChevronLeft, ChevronRight, Loader2, Sparkles, Search, Phone, Plus, Eye, EyeOff, Trash2 } from 'lucide-react';
 
 const fmt = (v) => Number(v || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
 const fmtPct = (v) => `${Number(v || 0).toFixed(1)}%`;
 
 // Cores por profissional (inspirado Avec/SalãoVip) — paleta profissional
 const PROF_COLORS = [
-  { bg: 'bg-indigo-500',   light: 'bg-indigo-50',   text: 'text-indigo-700',   border: 'border-indigo-200',  hover: 'hover:bg-indigo-50/60' },
-  { bg: 'bg-teal-500',     light: 'bg-teal-50',     text: 'text-teal-700',     border: 'border-teal-200',    hover: 'hover:bg-teal-50/60' },
-  { bg: 'bg-amber-500',    light: 'bg-amber-50',    text: 'text-amber-700',    border: 'border-amber-200',   hover: 'hover:bg-amber-50/60' },
-  { bg: 'bg-rose-500',     light: 'bg-rose-50',     text: 'text-rose-700',     border: 'border-rose-200',    hover: 'hover:bg-rose-50/60' },
-  { bg: 'bg-violet-500',   light: 'bg-violet-50',   text: 'text-violet-700',   border: 'border-violet-200',  hover: 'hover:bg-violet-50/60' },
+  { bg: 'bg-blue-500',     light: 'bg-blue-50',     text: 'text-blue-700',     border: 'border-blue-200',    hover: 'hover:bg-blue-50/60' },
+  { bg: 'bg-sky-500',      light: 'bg-sky-50',      text: 'text-sky-700',      border: 'border-sky-200',     hover: 'hover:bg-sky-50/60' },
   { bg: 'bg-cyan-500',     light: 'bg-cyan-50',     text: 'text-cyan-700',     border: 'border-cyan-200',    hover: 'hover:bg-cyan-50/60' },
+  { bg: 'bg-indigo-500',   light: 'bg-indigo-50',   text: 'text-indigo-700',   border: 'border-indigo-200',  hover: 'hover:bg-indigo-50/60' },
+  { bg: 'bg-slate-500',    light: 'bg-slate-50',    text: 'text-slate-700',    border: 'border-slate-200',   hover: 'hover:bg-slate-50/60' },
+  { bg: 'bg-teal-500',     light: 'bg-teal-50',     text: 'text-teal-700',     border: 'border-teal-200',    hover: 'hover:bg-teal-50/60' },
 ];
 
 const HORARIOS = [
@@ -52,8 +52,9 @@ export default function Agenda({ salaoId, role }) {
   const [salvando, setSalvando] = useState(false);
 
   // ─── Formulário ───
-  const [novo, setNovo] = useState({ cliente: '', procId: '', tamanho: 'P', valor: '', obs: '' });
+  const [novo, setNovo] = useState({ cliente: '', procId: '', tamanho: 'P', valor: '', obs: '', pago: false });
   const [ignorarPrejuizo, setIgnorarPrejuizo] = useState(false);
+  const [mostrarSugerido, setMostrarSugerido] = useState(false);
 
   // ─── Engine ───
   const engine = useMemo(() => new FinancialEngine({
@@ -185,11 +186,12 @@ export default function Agenda({ salaoId, role }) {
   const abrirAgendamento = (hora, profId) => {
     const prof = profissionais.find(p => p.id === profId);
     setSelecao({ hora, profId, profNome: prof?.nome || '' });
-    setNovo({ cliente: '', procId: '', tamanho: 'P', valor: '', obs: '' });
+    setNovo({ cliente: '', procId: '', tamanho: 'P', valor: '', obs: '', pago: false });
     setBuscaCliente('');
     setModoNovoCliente(false);
     setNovoClienteTelefone('');
     setIgnorarPrejuizo(false);
+    setMostrarSugerido(false);
     setModalAberto(true);
   };
 
@@ -235,7 +237,7 @@ export default function Agenda({ salaoId, role }) {
         comprimento: proc?.requer_comprimento ? novo.tamanho : null,
         cliente: nomeCliente.toUpperCase(),
         valor_cobrado: Number(novo.valor) || 0,
-        valor_pago: 0,
+        valor_pago: novo.pago ? (Number(novo.valor) || 0) : 0,
         status: 'AGENDADO',
         obs: novo.obs || null,
       };
@@ -253,6 +255,65 @@ export default function Agenda({ salaoId, role }) {
     }
   };
 
+  // ─── Modal Detalhes/Cancelamento ───
+  const [modalDetalhesAberto, setModalDetalhesAberto] = useState(false);
+  const [agendamentoSelecionado, setAgendamentoSelecionado] = useState(null);
+  const [cancelando, setCancelando] = useState(false);
+  const [alterandoPagamento, setAlterandoPagamento] = useState(false);
+
+  const abrirDetalhes = (agend) => {
+    setAgendamentoSelecionado(agend);
+    setModalDetalhesAberto(true);
+  };
+
+  const togglePagamento = async () => {
+    if (!agendamentoSelecionado) return;
+    setAlterandoPagamento(true);
+    
+    const novoValorPago = Number(agendamentoSelecionado.valor_pago) > 0 ? 0 : Number(agendamentoSelecionado.valor_cobrado);
+    
+    try {
+      const { error } = await supabase
+        .from('atendimentos')
+        .update({ valor_pago: novoValorPago })
+        .eq('id', agendamentoSelecionado.id);
+
+      if (error) throw error;
+
+      // Atualiza o estado local para refletir na UI imediatamente
+      setAgendamentoSelecionado(prev => ({ ...prev, valor_pago: novoValorPago }));
+      showToast(novoValorPago > 0 ? 'Atendimento marcado como PAGO!' : 'Atendimento marcado como NÃO PAGO.', 'success');
+      carregarAtendimentos(); // Recarrega a grade
+    } catch (err) {
+      showToast(`Erro ao alterar pagamento: ${err.message}`, 'error');
+    } finally {
+      setAlterandoPagamento(false);
+    }
+  };
+
+  const cancelarAgendamento = async () => {
+    if (!agendamentoSelecionado) return;
+    if (!window.confirm('Tem certeza que deseja cancelar este atendimento?')) return;
+
+    setCancelando(true);
+    try {
+      const { error } = await supabase
+        .from('atendimentos')
+        .update({ status: 'CANCELADO' })
+        .eq('id', agendamentoSelecionado.id);
+
+      if (error) throw error;
+
+      showToast('Atendimento cancelado com sucesso!', 'success');
+      setModalDetalhesAberto(false);
+      carregarAtendimentos();
+    } catch (err) {
+      showToast(`Erro: ${err.message}`, 'error');
+    } finally {
+      setCancelando(false);
+    }
+  };
+
   // ─── Encontrar agendamento na grade ───
   const getAgendamento = (hora, profId) => {
     return agendamentos.find(a => a.horario?.substring(0, 5) === hora && a.profissional_id === profId);
@@ -262,7 +323,7 @@ export default function Agenda({ salaoId, role }) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="flex items-center gap-3">
-          <div className="w-5 h-5 border-2 border-indigo-400 border-t-transparent rounded-full animate-spin" />
+          <div className="w-5 h-5 border-2 border-blue-500 border-t-transparent rounded-full animate-spin" />
           <span className="text-slate-400 font-medium text-sm">Carregando agenda...</span>
         </div>
       </div>
@@ -270,13 +331,13 @@ export default function Agenda({ salaoId, role }) {
   }
 
   return (
-    <div className="p-5 bg-gradient-to-br from-slate-50 via-white to-indigo-50/30 min-h-screen font-sans">
+    <div className="p-5 bg-gradient-to-br from-slate-50 via-blue-50/10 to-blue-100/30 min-h-screen font-sans">
       {/* ═══ HEADER COM NAVEGAÇÃO DE DATA ═══ */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-6 gap-3">
         <div>
           <div className="flex items-center gap-2 mb-0.5">
-            <Sparkles size={16} className="text-indigo-400" />
-            <h1 className="text-2xl font-black bg-gradient-to-r from-slate-800 to-slate-600 bg-clip-text text-transparent">Agenda</h1>
+            <Sparkles size={16} className="text-blue-500" />
+            <h1 className="text-2xl font-black bg-gradient-to-r from-blue-950 to-slate-600 bg-clip-text text-transparent">Agenda</h1>
           </div>
           <p className="text-slate-400 text-sm">Clique no horário para lançar o faturamento.</p>
         </div>
@@ -286,11 +347,11 @@ export default function Agenda({ salaoId, role }) {
             <ChevronLeft size={16} className="text-slate-500" />
           </button>
           <button onClick={hoje}
-            className={`px-4 py-2.5 rounded-xl text-sm font-bold transition-all shadow-sm ${ehHoje ? 'bg-gradient-to-r from-indigo-500 to-teal-500 text-white shadow-indigo-200' : 'bg-white border border-slate-200 text-slate-700 hover:bg-slate-50'}`}>
+            className={`px-4 py-2.5 rounded-xl text-sm font-bold transition-all shadow-sm ${ehHoje ? 'bg-gradient-to-r from-blue-600 to-sky-500 text-white shadow-blue-200/50' : 'bg-white border border-slate-200 text-slate-700 hover:bg-slate-50'}`}>
             {ehHoje ? '📅 Hoje' : fmtDataCompleta(dataSelecionada)}
           </button>
           <input type="date" value={dataSelecionada} onChange={e => setDataSelecionada(e.target.value)}
-            className="border border-slate-200 rounded-xl px-3 py-2.5 text-sm outline-none focus:ring-2 focus:ring-indigo-400/50 bg-white shadow-sm" />
+            className="border border-slate-200 rounded-xl px-3 py-2.5 text-sm outline-none focus:ring-2 focus:ring-blue-400/50 bg-white shadow-sm" />
           <button onClick={() => mudarDia(1)} className="p-2 hover:bg-white rounded-lg transition-all shadow-sm border border-slate-200 bg-white">
             <ChevronRight size={16} className="text-slate-500" />
           </button>
@@ -305,7 +366,7 @@ export default function Agenda({ salaoId, role }) {
           <p className="text-xs text-slate-400 mt-1">Adicione profissionais nas Configurações</p>
         </div>
       ) : (
-        <div className="bg-white border border-slate-100 rounded-2xl overflow-hidden shadow-sm overflow-x-auto">
+        <div className="bg-white border border-slate-100 rounded-3xl overflow-hidden shadow-2xl shadow-blue-900/5 overflow-x-auto ring-1 ring-slate-200">
           <table className="w-full border-collapse min-w-[600px]">
             <thead>
               <tr>
@@ -335,7 +396,7 @@ export default function Agenda({ salaoId, role }) {
                     return (
                       <td
                         key={prof.id}
-                        onClick={() => !agend && abrirAgendamento(hora, prof.id)}
+                        onClick={() => !agend ? abrirAgendamento(hora, prof.id) : abrirDetalhes(agend)}
                         className={`p-1 border-b border-slate-50 h-14 cursor-pointer transition-all ${!agend ? cor.hover : ''}`}
                       >
                         {agend ? (
@@ -376,10 +437,71 @@ export default function Agenda({ salaoId, role }) {
         </div>
       )}
 
+      {/* ═══ MODAL DETALHES DO ATENDIMENTO ═══ */}
+      {modalDetalhesAberto && agendamentoSelecionado && (
+        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex justify-center items-center z-50" onClick={() => setModalDetalhesAberto(false)}>
+          <div className="w-full max-w-sm bg-white rounded-2xl shadow-2xl p-6 animate-fadeIn" onClick={e => e.stopPropagation()}>
+            <div className="flex justify-between items-center mb-6">
+              <h2 className="text-xl font-black text-slate-900">Detalhes</h2>
+              <button onClick={() => setModalDetalhesAberto(false)} className="p-2 hover:bg-slate-100 rounded-full transition-colors"><X size={20} /></button>
+            </div>
+            
+            <div className="space-y-4 mb-8">
+              <div>
+                <p className="text-[10px] font-black uppercase text-slate-400">Cliente</p>
+                <p className="text-lg font-bold text-slate-800">{agendamentoSelecionado.cliente}</p>
+              </div>
+              <div>
+                <p className="text-[10px] font-black uppercase text-slate-400">Procedimento</p>
+                <p className="font-medium text-slate-700">{agendamentoSelecionado.procedimentos?.nome} {agendamentoSelecionado.comprimento ? `(${agendamentoSelecionado.comprimento})` : ''}</p>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <p className="text-[10px] font-black uppercase text-slate-400">Horário</p>
+                  <p className="font-medium text-slate-700">{agendamentoSelecionado.horario?.substring(0, 5)}</p>
+                </div>
+                <div>
+                  <p className="text-[10px] font-black uppercase text-slate-400">Profissional</p>
+                  <p className="font-medium text-slate-700">{agendamentoSelecionado.profissionais?.nome}</p>
+                </div>
+              </div>
+              <div>
+                <p className="text-[10px] font-black uppercase text-slate-400">Valor</p>
+                <p className="font-medium text-slate-700">{fmt(agendamentoSelecionado.valor_cobrado)}</p>
+              </div>
+
+              {/* PAGO OU NÃO */}
+              <div className={`flex items-center gap-3 p-3 border-2 rounded-xl cursor-pointer transition-colors ${Number(agendamentoSelecionado.valor_pago) > 0 ? 'border-emerald-200 bg-emerald-50 hover:border-emerald-300' : 'border-slate-200 bg-white hover:border-slate-300'}`} onClick={togglePagamento}>
+                <div className={`w-5 h-5 rounded flex items-center justify-center transition-colors ${Number(agendamentoSelecionado.valor_pago) > 0 ? 'bg-emerald-500 text-white' : 'bg-slate-200 text-transparent'}`}>
+                  {alterandoPagamento ? <Loader2 size={12} className="animate-spin text-emerald-500" /> : <CheckCircle2 size={14} />}
+                </div>
+                <div className="flex flex-col flex-1">
+                  <span className={`text-sm font-bold leading-none ${Number(agendamentoSelecionado.valor_pago) > 0 ? 'text-emerald-700' : 'text-slate-700'}`}>
+                    {Number(agendamentoSelecionado.valor_pago) > 0 ? 'Atendimento Pago' : 'Pagamento Pendente'}
+                  </span>
+                  <span className="text-[10px] mt-1 opacity-70">
+                    Clique para alterar o status de pagamento.
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            <button
+              onClick={cancelarAgendamento}
+              disabled={cancelando}
+              className="w-full py-3 rounded-xl font-bold text-red-600 bg-red-50 hover:bg-red-100 transition-colors flex items-center justify-center gap-2"
+            >
+              {cancelando ? <Loader2 size={18} className="animate-spin" /> : <Trash2 size={18} />}
+              Cancelar Atendimento
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* ═══ PAINEL LATERAL (MODAL) ═══ */}
       {modalAberto && (
         <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex justify-end z-50" onClick={() => setModalAberto(false)}>
-          <div className="w-full max-w-md bg-white h-full shadow-2xl p-6 overflow-y-auto animate-slideInRight"
+          <div className="w-full max-w-md bg-white/95 backdrop-blur-xl h-full shadow-2xl border-l border-slate-100 p-6 overflow-y-auto animate-slideInRight"
             onClick={e => e.stopPropagation()}>
             <div className="flex justify-between items-center mb-8">
               <div>
@@ -402,7 +524,7 @@ export default function Agenda({ salaoId, role }) {
                   <input
                     type="text"
                     placeholder="Buscar ou digitar nome..."
-                    className="w-full border-2 border-slate-200 rounded-xl p-3 pl-9 outline-none focus:border-indigo-400 font-bold text-sm uppercase transition-colors"
+                    className="w-full border-2 border-slate-200 rounded-xl p-3 pl-9 outline-none focus:border-blue-400 font-bold text-sm uppercase transition-colors"
                     value={buscaCliente}
                     onChange={e => {
                       const val = e.target.value.toUpperCase();
@@ -423,7 +545,7 @@ export default function Agenda({ salaoId, role }) {
                             <button
                               key={c.id}
                               onClick={() => selecionarCliente(c.nome)}
-                              className="w-full text-left px-4 py-3 hover:bg-indigo-50 flex items-center justify-between transition-colors border-b border-slate-50 last:border-0"
+                              className="w-full text-left px-4 py-3 hover:bg-blue-50 flex items-center justify-between transition-colors border-b border-slate-50 last:border-0"
                             >
                               <div>
                                 <span className="font-bold text-sm text-slate-800">{c.nome}</span>
@@ -434,7 +556,7 @@ export default function Agenda({ salaoId, role }) {
                           ))}
                           <button
                             onClick={() => { setModoNovoCliente(true); setShowSugestoes(false); }}
-                            className="w-full text-left px-4 py-3 hover:bg-teal-50 flex items-center gap-2 text-teal-600 font-bold text-sm border-t border-slate-100"
+                            className="w-full text-left px-4 py-3 hover:bg-sky-50 flex items-center gap-2 text-sky-600 font-bold text-sm border-t border-slate-100"
                           >
                             <UserPlus size={14} />
                             Cadastrar "{buscaCliente.trim()}" como nova cliente
@@ -443,7 +565,7 @@ export default function Agenda({ salaoId, role }) {
                       ) : (
                         <button
                           onClick={() => { setModoNovoCliente(true); setShowSugestoes(false); }}
-                          className="w-full text-left px-4 py-3 hover:bg-teal-50 flex items-center gap-2 text-teal-600 font-bold text-sm"
+                          className="w-full text-left px-4 py-3 hover:bg-sky-50 flex items-center gap-2 text-sky-600 font-bold text-sm"
                         >
                           <UserPlus size={14} />
                           Cadastrar "{buscaCliente.trim()}" como nova cliente
@@ -455,17 +577,17 @@ export default function Agenda({ salaoId, role }) {
 
                 {/* Mini-formulário de nova cliente */}
                 {modoNovoCliente && (
-                  <div className="mt-2 bg-teal-50 border border-teal-200 rounded-xl p-3 animate-fadeIn">
-                    <p className="text-[10px] font-black uppercase text-teal-600 mb-2 flex items-center gap-1">
+                  <div className="mt-2 bg-sky-50 border border-sky-200 rounded-xl p-3 animate-fadeIn">
+                    <p className="text-[10px] font-black uppercase text-sky-600 mb-2 flex items-center gap-1">
                       <UserPlus size={12} /> Nova cliente: {buscaCliente.trim()}
                     </p>
                     <div className="flex gap-2">
                       <div className="flex-1 relative">
-                        <Phone size={12} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-teal-400" />
+                        <Phone size={12} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-sky-400" />
                         <input
                           type="text"
                           placeholder="WhatsApp (opcional)"
-                          className="w-full bg-white border border-teal-200 rounded-lg px-3 py-2 pl-8 text-xs outline-none focus:border-teal-400"
+                          className="w-full bg-white border border-sky-200 rounded-lg px-3 py-2 pl-8 text-xs outline-none focus:border-sky-400"
                           value={novoClienteTelefone}
                           onChange={e => setNovoClienteTelefone(e.target.value)}
                         />
@@ -473,7 +595,7 @@ export default function Agenda({ salaoId, role }) {
                       <button
                         onClick={criarClienteRapido}
                         disabled={salvandoCliente}
-                        className="bg-teal-500 text-white px-4 py-2 rounded-lg text-xs font-bold hover:bg-teal-600 transition-colors disabled:opacity-50 flex items-center gap-1"
+                        className="bg-sky-500 text-white px-4 py-2 rounded-lg text-xs font-bold hover:bg-sky-600 transition-colors disabled:opacity-50 flex items-center gap-1"
                       >
                         {salvandoCliente ? <Loader2 size={12} className="animate-spin" /> : <Plus size={12} />}
                         Salvar
@@ -487,7 +609,7 @@ export default function Agenda({ salaoId, role }) {
               <div>
                 <label className="text-[10px] font-black uppercase text-slate-400 mb-1 block">Procedimento</label>
                 <select
-                  className="w-full border-2 border-slate-200 rounded-xl p-3 outline-none focus:border-indigo-400 font-bold text-sm bg-white transition-colors"
+                  className="w-full border-2 border-slate-200 rounded-xl p-3 outline-none focus:border-blue-400 font-bold text-sm bg-white transition-colors"
                   value={novo.procId}
                   onChange={e => selecionarProcedimento(e.target.value)}
                 >
@@ -509,7 +631,7 @@ export default function Agenda({ salaoId, role }) {
                           onClick={() => selecionarTamanho(t)}
                           className={`flex-1 py-3 rounded-xl font-black border-2 transition-all ${
                             novo.tamanho === t
-                              ? 'bg-indigo-600 border-indigo-600 text-white shadow-lg shadow-indigo-200'
+                              ? 'bg-blue-600 border-blue-600 text-white shadow-lg shadow-blue-200/50'
                               : 'border-slate-200 text-slate-400 hover:border-slate-300'
                           }`}
                         >
@@ -540,10 +662,15 @@ export default function Agenda({ salaoId, role }) {
                     
                     if (!sugerido) return null;
                     return (
-                      <button onClick={() => setNovo(prev => ({ ...prev, valor: sugerido }))}
-                        className="text-[9px] font-black bg-indigo-100 text-indigo-600 px-2 py-1 rounded-lg hover:bg-indigo-200 transition-colors">
-                        Tabela: {fmt(sugerido)}
-                      </button>
+                      <div className="flex items-center gap-1">
+                        <button onClick={() => setNovo(prev => ({ ...prev, valor: sugerido }))}
+                          className="text-[9px] font-black bg-blue-100 text-blue-600 px-2 py-1 rounded-lg hover:bg-blue-200 transition-colors">
+                          Tabela: {mostrarSugerido ? fmt(sugerido) : '***'}
+                        </button>
+                        <button onClick={() => setMostrarSugerido(!mostrarSugerido)} className="p-1 text-slate-400 hover:text-blue-600 transition-colors" title={mostrarSugerido ? "Ocultar" : "Mostrar"}>
+                          {mostrarSugerido ? <EyeOff size={12} /> : <Eye size={12} />}
+                        </button>
+                      </div>
                     );
                   })()}
                 </div>
@@ -607,8 +734,19 @@ export default function Agenda({ salaoId, role }) {
               <div>
                 <label className="text-[10px] font-black uppercase text-slate-400 mb-1 block">Observação</label>
                 <input type="text" placeholder="Opcional..."
-                  className="w-full border-2 border-slate-200 rounded-xl p-3 outline-none focus:border-indigo-400 text-sm transition-colors"
+                  className="w-full border-2 border-slate-200 rounded-xl p-3 outline-none focus:border-blue-400 text-sm transition-colors"
                   value={novo.obs} onChange={e => setNovo({...novo, obs: e.target.value.toUpperCase()})} />
+              </div>
+
+              {/* PAGO OU NÃO */}
+              <div className="flex items-center gap-2 p-3 border-2 border-slate-200 rounded-xl bg-white cursor-pointer transition-colors hover:border-blue-200" onClick={() => setNovo({...novo, pago: !novo.pago})}>
+                <div className={`w-5 h-5 rounded flex items-center justify-center transition-colors ${novo.pago ? 'bg-emerald-500 text-white' : 'bg-slate-200 text-transparent'}`}>
+                  <CheckCircle2 size={14} />
+                </div>
+                <div className="flex flex-col">
+                  <span className="text-sm font-bold text-slate-700 leading-none">Atendimento já foi pago?</span>
+                  <span className="text-[10px] text-slate-400 mt-1">Marque se a cliente já realizou o pagamento.</span>
+                </div>
               </div>
 
               {/* BOTÃO SALVAR */}
@@ -619,7 +757,7 @@ export default function Agenda({ salaoId, role }) {
                   salvando ? 'bg-slate-300 text-slate-500 cursor-not-allowed' :
                   role === 'PROPRIETARIO' && previewFinanceiro?.prejuizo
                     ? 'bg-red-600 text-white shadow-red-200 hover:bg-red-700'
-                    : 'bg-gradient-to-r from-indigo-600 to-teal-500 text-white shadow-indigo-200 hover:from-indigo-700 hover:to-teal-600'
+                    : 'bg-gradient-to-r from-blue-600 to-sky-500 text-white shadow-blue-200/50 hover:from-blue-700 hover:to-sky-600'
                 }`}
               >
                 {salvando ? (
@@ -639,7 +777,7 @@ export default function Agenda({ salaoId, role }) {
 }
 
 const PlusIcon = () => (
-  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" className="text-indigo-200">
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" className="text-blue-200">
     <line x1="12" y1="5" x2="12" y2="19"></line>
     <line x1="5" y1="12" x2="19" y2="12"></line>
   </svg>

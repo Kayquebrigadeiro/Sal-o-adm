@@ -127,6 +127,23 @@ export default function Precificacao({ salaoId }) {
     return { resultado, sugerido };
   };
 
+  const aplicarPrecoSugerido = async (proc, sugeridoP, sugeridoM, sugeridoG) => {
+    try {
+      const updates = { preco_p: sugeridoP };
+      if (proc.requer_comprimento) {
+        updates.preco_m = sugeridoM || (sugeridoP * 1.2);
+        updates.preco_g = sugeridoG || (sugeridoP * 1.3);
+      }
+      const { error } = await supabase.from('procedimentos').update(updates).eq('id', proc.id);
+      if (error) throw error;
+      
+      setProcedimentos(prev => prev.map(pr => pr.id === proc.id ? { ...pr, ...updates } : pr));
+      showToast('Preço sugerido aplicado com sucesso!', 'success');
+    } catch (err) {
+      showToast('Erro ao aplicar preço', 'error');
+    }
+  };
+
   // ─── Calcular Simulação ───
   const resultadoSim = useMemo(() => {
     if (!sim.valorCobrado) return null;
@@ -368,9 +385,27 @@ export default function Precificacao({ salaoId }) {
                     {isExpanded && (
                       <div className="mt-2 text-[10px] text-slate-400 space-y-1">
                         <p>Maquininha: {fmtPct(config.taxa_maquininha_pct)} • Custo Fixo: {fmt(config.custo_fixo_por_atendimento)}</p>
-                        <p className="text-violet-500 font-bold">
-                          Preço Sugerido (margem 20%): {p.sugerido.erro ? '⚠️ Impossível' : fmt(p.sugerido.precoSugerido)}
-                        </p>
+                        <div className="flex items-center gap-2">
+                          <p className="text-violet-500 font-bold">
+                            Preço Sugerido (margem 20%): {p.sugerido.erro ? '⚠️ Impossível' : fmt(p.sugerido.precoSugerido)}
+                          </p>
+                          {!p.sugerido.erro && (
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                aplicarPrecoSugerido(
+                                  proc, 
+                                  p.sugerido.precoSugerido, 
+                                  m?.sugerido?.precoSugerido, 
+                                  g?.sugerido?.precoSugerido
+                                );
+                              }}
+                              className="px-2 py-1 bg-violet-100 text-violet-700 rounded hover:bg-violet-200 text-[10px] font-bold transition-colors"
+                            >
+                              Aplicar Sugestão
+                            </button>
+                          )}
+                        </div>
                       </div>
                     )}
                   </td>

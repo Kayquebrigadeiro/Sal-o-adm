@@ -9,6 +9,9 @@ export default {
   theme: {
     extend: {
       colors: {
+        slate: colors.blue,
+        gray: colors.blue,
+        zinc: colors.blue,
         rose: colors.blue,
         pink: colors.sky,
         emerald: colors.blue,

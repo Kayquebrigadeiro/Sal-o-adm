@@ -205,8 +205,15 @@ export default function Agenda({ salaoId, role }) {
   const selecionarTamanho = (tamanho) => {
     const proc = procedimentos.find(p => p.id === novo.procId);
     if (!proc) { setNovo(prev => ({ ...prev, tamanho })); return; }
-    const precoMap = { P: proc.preco_p, M: proc.preco_m, G: proc.preco_g };
-    setNovo(prev => ({ ...prev, tamanho, valor: Number(precoMap[tamanho]) || prev.valor }));
+    
+    let precoSugerido = 0;
+    const precoP = Number(proc.preco_p) || 0;
+    
+    if (tamanho === 'P') precoSugerido = precoP;
+    else if (tamanho === 'M') precoSugerido = Number(proc.preco_m) || (precoP * 1.20);
+    else if (tamanho === 'G') precoSugerido = Number(proc.preco_g) || (precoP * 1.30);
+
+    setNovo(prev => ({ ...prev, tamanho, valor: precoSugerido || prev.valor }));
   };
 
   // ─── Salvar atendimento ───
@@ -338,16 +345,18 @@ export default function Agenda({ salaoId, role }) {
                               : `${cor.light} ${cor.text} border ${cor.border}`
                           }`}>
                             <div className="font-bold truncate">{agend.cliente}</div>
-                            <div className={`truncate text-[9px] ${agend.status === 'EXECUTADO' ? 'text-emerald-100' : 'opacity-70'}`}>
+                            <div className="truncate text-[9px] opacity-70">
                               {agend.procedimentos?.nome} {agend.comprimento ? `(${agend.comprimento})` : ''}
                             </div>
-                            <div className={`absolute bottom-0.5 right-1 px-1.5 py-0.5 rounded-full text-[8px] font-black ${
-                              agend.status === 'EXECUTADO'
-                                ? 'bg-white/20 text-white'
-                                : Number(agend.lucro_liquido) >= 0 ? 'bg-emerald-100 text-emerald-700' : 'bg-red-100 text-red-600'
-                            }`}>
-                              {fmt(agend.lucro_liquido)}
-                            </div>
+                            {role === 'PROPRIETARIO' && (
+                              <div className={`absolute bottom-0.5 right-1 px-1.5 py-0.5 rounded-full text-[8px] font-black ${
+                                agend.status === 'EXECUTADO'
+                                  ? 'bg-white/20 text-white'
+                                  : Number(agend.lucro_liquido) >= 0 ? 'bg-emerald-100 text-emerald-700' : 'bg-red-100 text-red-600'
+                              }`}>
+                                {fmt(agend.lucro_liquido)}
+                              </div>
+                            )}
                             {agend.status === 'EXECUTADO' && (
                               <CheckCircle2 size={10} className="absolute top-1 right-1 text-white/70" />
                             )}
@@ -514,7 +523,7 @@ export default function Agenda({ salaoId, role }) {
 
               {/* VALOR + PREVIEW FINANCEIRO */}
               <div className={`p-4 rounded-2xl border-2 transition-all duration-300 ${
-                previewFinanceiro?.prejuizo && !ignorarPrejuizo
+                role === 'PROPRIETARIO' && previewFinanceiro?.prejuizo && !ignorarPrejuizo
                   ? 'bg-red-50 border-red-400'
                   : 'bg-slate-50 border-transparent'
               }`}>
@@ -523,11 +532,15 @@ export default function Agenda({ salaoId, role }) {
                   {(() => {
                     const proc = procedimentos.find(p => p.id === novo.procId);
                     if (!proc) return null;
-                    const precoMap = { P: proc.preco_p, M: proc.preco_m, G: proc.preco_g };
-                    const sugerido = precoMap[novo.tamanho];
+                    const precoP = Number(proc.preco_p) || 0;
+                    let sugerido = 0;
+                    if (novo.tamanho === 'P') sugerido = precoP;
+                    else if (novo.tamanho === 'M') sugerido = Number(proc.preco_m) || (precoP * 1.20);
+                    else if (novo.tamanho === 'G') sugerido = Number(proc.preco_g) || (precoP * 1.30);
+                    
                     if (!sugerido) return null;
                     return (
-                      <button onClick={() => setNovo(prev => ({ ...prev, valor: Number(sugerido) }))}
+                      <button onClick={() => setNovo(prev => ({ ...prev, valor: sugerido }))}
                         className="text-[9px] font-black bg-indigo-100 text-indigo-600 px-2 py-1 rounded-lg hover:bg-indigo-200 transition-colors">
                         Tabela: {fmt(sugerido)}
                       </button>
@@ -537,7 +550,7 @@ export default function Agenda({ salaoId, role }) {
                 <input
                   type="number" step="0.01"
                   className={`w-full bg-transparent text-3xl font-black outline-none ${
-                    previewFinanceiro?.prejuizo ? 'text-red-600' : 'text-slate-900'
+                    role === 'PROPRIETARIO' && previewFinanceiro?.prejuizo ? 'text-red-600' : 'text-slate-900'
                   }`}
                   value={novo.valor}
                   onChange={e => setNovo({...novo, valor: e.target.value})}
@@ -546,7 +559,7 @@ export default function Agenda({ salaoId, role }) {
                 <p className="text-[9px] text-slate-400 mt-1">Você define o preço — o sistema calcula o lucro automaticamente.</p>
 
                 {/* Desmembramento do Motor Financeiro */}
-                {previewFinanceiro && (
+                {role === 'PROPRIETARIO' && previewFinanceiro && (
                   <div className={`mt-4 pt-4 border-t ${previewFinanceiro.prejuizo ? 'border-red-200' : 'border-slate-200'}`}>
                     <div className="grid grid-cols-2 gap-3 mb-3">
                       <div>
@@ -595,7 +608,7 @@ export default function Agenda({ salaoId, role }) {
                 <label className="text-[10px] font-black uppercase text-slate-400 mb-1 block">Observação</label>
                 <input type="text" placeholder="Opcional..."
                   className="w-full border-2 border-slate-200 rounded-xl p-3 outline-none focus:border-indigo-400 text-sm transition-colors"
-                  value={novo.obs} onChange={e => setNovo({...novo, obs: e.target.value})} />
+                  value={novo.obs} onChange={e => setNovo({...novo, obs: e.target.value.toUpperCase()})} />
               </div>
 
               {/* BOTÃO SALVAR */}
@@ -604,14 +617,14 @@ export default function Agenda({ salaoId, role }) {
                 disabled={salvando}
                 className={`w-full py-4 rounded-2xl font-black text-lg transition-all shadow-xl flex items-center justify-center gap-2 ${
                   salvando ? 'bg-slate-300 text-slate-500 cursor-not-allowed' :
-                  previewFinanceiro?.prejuizo
+                  role === 'PROPRIETARIO' && previewFinanceiro?.prejuizo
                     ? 'bg-red-600 text-white shadow-red-200 hover:bg-red-700'
                     : 'bg-gradient-to-r from-indigo-600 to-teal-500 text-white shadow-indigo-200 hover:from-indigo-700 hover:to-teal-600'
                 }`}
               >
                 {salvando ? (
                   <><Loader2 size={20} className="animate-spin" /> Salvando...</>
-                ) : previewFinanceiro?.prejuizo ? (
+                ) : role === 'PROPRIETARIO' && previewFinanceiro?.prejuizo ? (
                   'CONFIRMAR MESMO COM PREJUÍZO'
                 ) : (
                   'CONFIRMAR ATENDIMENTO'

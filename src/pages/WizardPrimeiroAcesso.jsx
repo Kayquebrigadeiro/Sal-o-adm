@@ -318,7 +318,7 @@ export default function WizardPrimeiroAcesso({ salaoId }) {
                   <input
                     type="text"
                     value={nomeProprietaria}
-                    onChange={e => setNomeProprietaria(e.target.value)}
+                    onChange={e => setNomeProprietaria(e.target.value.toUpperCase())}
                     placeholder="Ex: Maria, Jéssica, Teta..."
                     className="w-full border-2 border-rose-200 rounded-xl px-4 py-3 text-base text-center font-medium text-slate-800 placeholder:text-slate-300 outline-none focus:border-rose-400 focus:ring-4 focus:ring-rose-100 transition-all"
                     autoFocus
@@ -381,7 +381,7 @@ export default function WizardPrimeiroAcesso({ salaoId }) {
                           )}
                         </div>
                         <input
-                          type="text" value={f.nome} onChange={e => updateFunc(f.id, 'nome', e.target.value)}
+                          type="text" value={f.nome} onChange={e => updateFunc(f.id, 'nome', e.target.value.toUpperCase())}
                           placeholder="Nome do funcionário"
                           className="w-full border border-slate-200 rounded-lg px-3 py-2.5 text-sm outline-none focus:ring-2 focus:ring-rose-300 focus:border-rose-300 transition-all"
                         />
@@ -499,7 +499,7 @@ export default function WizardPrimeiroAcesso({ salaoId }) {
                             <div className="flex items-center justify-between">
                               <input
                                 type="text" value={proc.nome}
-                                onChange={e => updateProc(cat.key, proc.id, 'nome', e.target.value)}
+                                onChange={e => updateProc(cat.key, proc.id, 'nome', e.target.value.toUpperCase())}
                                 placeholder="Nome do procedimento"
                                 className="flex-1 border-0 bg-transparent text-sm font-semibold text-slate-800 outline-none placeholder:text-slate-300"
                               />
@@ -629,7 +629,7 @@ export default function WizardPrimeiroAcesso({ salaoId }) {
                     <span className="text-xs font-semibold text-slate-500">Outras despesas</span>
                     {despesasExtras.map(d => (
                       <div key={d.id} className="flex items-center gap-2 animate-fadeIn">
-                        <input type="text" value={d.nome} onChange={e => updateDespesa(d.id, 'nome', e.target.value)}
+                        <input type="text" value={d.nome} onChange={e => updateDespesa(d.id, 'nome', e.target.value.toUpperCase())}
                           placeholder="Descrição"
                           className="flex-1 border border-slate-200 rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-rose-300" />
                         <select value={d.tipo} onChange={e => updateDespesa(d.id, 'tipo', e.target.value)}

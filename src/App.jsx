@@ -143,7 +143,7 @@ export default function App() {
             <div className="animate-fadeIn">
               <Routes>
                 <Route path="/agenda" element={<Agenda {...ctx} />} />
-                <Route path="/clientes" element={<Clientes {...ctx} />} />
+                <Route path="/clientes" element={role === 'PROPRIETARIO' ? <Clientes {...ctx} /> : <Navigate to="/agenda" />} />
                 <Route path="/dashboard" element={role === 'PROPRIETARIO' ? <Dashboard {...ctx} /> : <Navigate to="/agenda" />} />
                 <Route path="/precificacao" element={role === 'PROPRIETARIO' ? <Precificacao {...ctx} /> : <Navigate to="/agenda" />} />
                 <Route path="/homecar" element={role === 'PROPRIETARIO' ? <HomeCar {...ctx} /> : <Navigate to="/agenda" />} />

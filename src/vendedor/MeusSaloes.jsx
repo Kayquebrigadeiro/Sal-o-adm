@@ -36,7 +36,8 @@ export default function MeusSaloes({ userId }) {
     const { error } = await supabase
       .from('saloes')
       .update({ deletado_em: new Date().toISOString(), ativo: false })
-      .eq('id', id);
+      .eq('id', id)
+      .eq('vendedor_id', userId);
 
     if (error) {
       alert('Erro ao deletar: ' + error.message);

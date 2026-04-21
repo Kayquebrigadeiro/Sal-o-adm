@@ -108,7 +108,7 @@ export default function HomeCar({ salaoId }) {
       };
 
       if (vendaEditando) {
-        await supabase.from('homecare').update(dados).eq('id', vendaEditando.id);
+        await supabase.from('homecare').update(dados).eq('id', vendaEditando.id).eq('salao_id', salaoId);
         showToast('Atualizado', 'success');
       } else {
         await supabase.from('homecare').insert(dados);
@@ -124,7 +124,7 @@ export default function HomeCar({ salaoId }) {
   const deletar = async (id) => {
     if (!confirm('Deletar esta venda?')) return;
     try {
-      await supabase.from('homecare').delete().eq('id', id);
+      await supabase.from('homecare').delete().eq('id', id).eq('salao_id', salaoId);
       showToast('Deletado', 'success');
       carregarVendas();
     } catch (error) {
@@ -254,7 +254,7 @@ export default function HomeCar({ salaoId }) {
             <input
               type="text"
               value={form.cliente}
-              onChange={e => setForm({ ...form, cliente: e.target.value })}
+              onChange={e => setForm({ ...form, cliente: e.target.value.toUpperCase() })}
               placeholder="Nome do cliente"
               className="w-full border border-slate-300 rounded-lg px-3 py-2 outline-none focus:ring-2 focus:ring-emerald-500"
             />
@@ -265,7 +265,7 @@ export default function HomeCar({ salaoId }) {
             <input
               type="text"
               value={form.produto}
-              onChange={e => setForm({ ...form, produto: e.target.value })}
+              onChange={e => setForm({ ...form, produto: e.target.value.toUpperCase() })}
               placeholder="Ex: Shampoo Kerastase"
               className="w-full border border-slate-300 rounded-lg px-3 py-2 outline-none focus:ring-2 focus:ring-emerald-500"
             />
@@ -351,7 +351,7 @@ export default function HomeCar({ salaoId }) {
             <label className="block text-sm font-medium text-slate-700 mb-1">Observação</label>
             <textarea
               value={form.obs}
-              onChange={e => setForm({ ...form, obs: e.target.value })}
+              onChange={e => setForm({ ...form, obs: e.target.value.toUpperCase() })}
               placeholder="Observações adicionais..."
               rows="3"
               className="w-full border border-slate-300 rounded-lg px-3 py-2 outline-none focus:ring-2 focus:ring-emerald-500"

@@ -37,7 +37,20 @@ const Dashboard = ({ salaoId }) => {
   // ─── Estado de segurança ───
   const [unlocked, setUnlocked] = useState(false);
   const [pin, setPin] = useState('');
-  const PIN_CORRETO = '1234';
+  const [pinCorreto, setPinCorreto] = useState('');
+
+  useEffect(() => {
+    if (!salaoId) return;
+    const fetchPin = async () => {
+      const { data } = await supabase.from('saloes').select('pin_financeiro').eq('id', salaoId).single();
+      if (data && data.pin_financeiro) {
+        setPinCorreto(data.pin_financeiro);
+      } else {
+        setPinCorreto('1234'); // Fallback caso não esteja configurado
+      }
+    };
+    fetchPin();
+  }, [salaoId]);
 
   // ─── Dados reais ───
   const [loading, setLoading] = useState(true);
@@ -51,6 +64,7 @@ const Dashboard = ({ salaoId }) => {
   const [homecareDados, setHomecareDados] = useState({ lucro: 0, pendencia: 0, vendas: 0 });
   const [despesasDados, setDespesasDados] = useState({ total: 0, items: [] });
   const [gastosPessoais, setGastosPessoais] = useState(0);
+  const [salariosFixos, setSalariosFixos] = useState(0);
   const [fechamentoExiste, setFechamentoExiste] = useState(false);
   const [salvandoFechamento, setSalvandoFechamento] = useState(false);
 
@@ -147,8 +161,18 @@ const Dashboard = ({ salaoId }) => {
       const { data: gpData } = await supabase
         .from('gastos_pessoais')
         .select('valor')
-        .eq('salao_id', salaoId);
+        .eq('salao_id', salaoId)
+        .gte('criado_em', `${inicioMes}T00:00:00Z`)
+        .lte('criado_em', `${fimMes}T23:59:59Z`);
       setGastosPessoais(gpData ? gpData.reduce((a, v) => a + Number(v.valor || 0), 0) : 0);
+
+      // 6.1 Salários Fixos (para abater na saúde da empresa)
+      const { data: profData } = await supabase
+        .from('profissionais')
+        .select('salario_fixo')
+        .eq('salao_id', salaoId)
+        .eq('ativo', true);
+      setSalariosFixos(profData ? profData.reduce((a, v) => a + Number(v.salario_fixo || 0), 0) : 0);
 
       // 7. Verificar se já tem fechamento
       const { data: fData } = await supabase
@@ -208,16 +232,17 @@ const Dashboard = ({ salaoId }) => {
   const dadosPie = useMemo(() => {
     const items = [];
     if (despesasDados.total > 0) items.push({ nome: 'Despesas Fixas', valor: despesasDados.total });
+    if (salariosFixos > 0) items.push({ nome: 'Salários Fixos', valor: salariosFixos });
     const totalComissao = rendimento.reduce((a, r) => a + Number(r.rendimento_bruto || 0), 0);
     if (totalComissao > 0) items.push({ nome: 'Comissões', valor: totalComissao });
     if (homecareDados.pendencia > 0) items.push({ nome: 'Pendências HC', valor: homecareDados.pendencia });
     if (items.length === 0) items.push({ nome: 'Sem dados', valor: 1 });
     return items;
-  }, [despesasDados, rendimento, homecareDados]);
+  }, [despesasDados, rendimento, homecareDados, salariosFixos]);
 
   const verificarPin = (e) => {
     e.preventDefault();
-    if (pin === PIN_CORRETO) setUnlocked(true);
+    if (pin === pinCorreto) setUnlocked(true);
     else { alert('PIN Incorreto!'); setPin(''); }
   };
 
@@ -345,7 +370,7 @@ const Dashboard = ({ salaoId }) => {
           {/* ═══ SAÚDE DA EMPRESA (redesenhada) ═══ */}
           {mesAtual && (() => {
             const lucro = Number(mesAtual.lucro_real) || 0;
-            const resultado = lucro + homecareDados.lucro - despesasDados.total - gastosPessoais;
+            const resultado = lucro + homecareDados.lucro - despesasDados.total - gastosPessoais - salariosFixos;
             const saudavel = resultado > 0;
             return (
               <div className={`mb-8 p-5 rounded-2xl border-2 backdrop-blur-sm ${saudavel ? 'bg-emerald-50/80 border-emerald-200' : 'bg-red-50/80 border-red-200'}`}>
@@ -359,7 +384,7 @@ const Dashboard = ({ salaoId }) => {
                         {saudavel ? '✅ Empresa Saudável' : '⚠️ Empresa no Vermelho'}
                       </p>
                       <p className="text-[10px] text-slate-500">
-                        Lucro ({fmt(lucro)}) + HomeCare ({fmt(homecareDados.lucro)}) − Despesas ({fmt(despesasDados.total)}) − Gastos Pessoais ({fmt(gastosPessoais)})
+                        Lucro ({fmt(lucro)}) + HomeCare ({fmt(homecareDados.lucro)}) − Despesas ({fmt(despesasDados.total)}) − Salários ({fmt(salariosFixos)}) − Pessoais ({fmt(gastosPessoais)})
                       </p>
                     </div>
                   </div>
@@ -509,7 +534,7 @@ const Dashboard = ({ salaoId }) => {
                     if (!mesAtual) return;
                     setSalvandoFechamento(true);
                     const lucro = Number(mesAtual.lucro_real) || 0;
-                    const resultado = lucro + homecareDados.lucro - despesasDados.total - gastosPessoais;
+                    const resultado = lucro + homecareDados.lucro - despesasDados.total - gastosPessoais - salariosFixos;
                     const [ano, mes] = mesSelecionado.split('-');
                     const { error } = await supabase.from('fechamentos').upsert({
                       salao_id: salaoId,

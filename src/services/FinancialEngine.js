@@ -136,6 +136,72 @@ export class FinancialEngine {
   }
 
   // -------------------------------------------------------------------------
+  //  2B. CALCULADORA P/M/G — Fórmula da Planilha (bottom-up)
+  // -------------------------------------------------------------------------
+
+  /**
+   * Calcula os preços P, M e G a partir do ganho líquido desejado.
+   *
+   * Fórmula (replica a planilha "NOVA PLANILHA DE SALAO"):
+   *   BASE    = custoFixo + custoMaterial + ganhoLiquido
+   *   PREÇO P = BASE ÷ (1 - taxaMaquininha / 100)
+   *   PREÇO M = PREÇO P × 1.20
+   *   PREÇO G = PREÇO P × 1.30
+   *
+   * A divisão por (1 - taxa) garante que após o desconto da maquininha,
+   * o valor líquido restante seja exatamente o subtotal BASE.
+   * Os multiplicadores M e G já incluem a taxa proporcionalmente.
+   *
+   * @param {Object} params
+   * @param {number} params.custoFixo          - Custo fixo rateado por atendimento (R$)
+   * @param {number} params.custoMaterial      - Custo do material por aplicação (R$)
+   * @param {number} params.ganhoLiquido       - Ganho líquido desejado pela dona (R$)
+   * @param {number} [params.taxaMaquininhaPct] - Taxa da maquininha em % (ex: 5). Se null, usa this.taxaMaq
+   * @returns {{ base: number, precoP: number, precoM: number, precoG: number, erro?: string }}
+   */
+  calcularPrecoPMG({
+    custoFixo,
+    custoMaterial,
+    ganhoLiquido,
+    taxaMaquininhaPct,
+  }) {
+    const cFixo   = toCents(custoFixo != null ? custoFixo : this.custoFixo);
+    const cMat    = toCents(custoMaterial);
+    const cGanho  = toCents(ganhoLiquido);
+    const tMaq    = Number(taxaMaquininhaPct != null ? taxaMaquininhaPct : this.taxaMaq);
+
+    // BASE = custo fixo + custo material + ganho líquido desejado
+    const base = cFixo + cMat + cGanho;
+
+    // Divisor da maquininha: (1 - taxa/100) → ex: 0.95 para 5%
+    const divisor = 1 - tMaq / 100;
+    if (divisor <= 0) {
+      return {
+        base: toReais(base),
+        precoP: Infinity,
+        precoM: Infinity,
+        precoG: Infinity,
+        erro: 'TAXA_MAQUININHA_INVALIDA',
+      };
+    }
+
+    // PREÇO P = BASE ÷ (1 - taxa) → garante que o líquido seja exatamente BASE
+    const precoP = Math.round(base / divisor);
+
+    // PREÇO M e G são derivados de P × multiplicador
+    // A taxa da maquininha já está embutida em P, então escala automaticamente
+    const precoM = Math.round(precoP * 1.20);
+    const precoG = Math.round(precoP * 1.30);
+
+    return {
+      base: toReais(base),
+      precoP: toReais(precoP),
+      precoM: toReais(precoM),
+      precoG: toReais(precoG),
+    };
+  }
+
+  // -------------------------------------------------------------------------
   //  3. PREÇO SUGERIDO GENÉRICO (Fórmula de Engenharia Reversa do prompt)
   // -------------------------------------------------------------------------
 

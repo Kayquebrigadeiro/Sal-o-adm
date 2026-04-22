@@ -83,6 +83,7 @@ create table configuracoes (
   taxa_maquininha_pct         numeric(5,2)  not null default 5.00,
   prolabore_mensal            numeric(10,2) default 0,
   qtd_atendimentos_mes        integer not null default 100,  -- V5: para rateio de custos fixos
+  margem_lucro_desejada_pct   numeric(5,2) not null default 20.00, -- V5.1: meta de margem de lucro (%)
   criado_em                   timestamptz default now(),
   atualizado_em               timestamptz default now()
 );
@@ -110,6 +111,7 @@ create table procedimentos (
   preco_p                  numeric(10,2),
   preco_m                  numeric(10,2),
   preco_g                  numeric(10,2),
+  ganho_liquido_desejado   numeric(10,2) default 0,            -- V5.1: ganho líquido desejado pela dona (calculadora P/M/G)
   custo_variavel           numeric(10,2) not null default 0,
   porcentagem_profissional numeric(5,2)  not null default 40,
   ativo                    boolean not null default true,
@@ -349,12 +351,15 @@ begin
   select * into v_cfg  from configuracoes   where salao_id = new.salao_id;
   select cargo into v_cargo_prof from profissionais where id = new.profissional_id;
 
+  -- Determinar o preço correto com base no comprimento
+  -- Se preco_m/preco_g estão cadastrados manualmente, usa-os (ex: Coloração, Luzes)
+  -- Se são NULL, deriva automaticamente de preco_p × multiplicador
   if not v_proc.requer_comprimento or new.comprimento = 'P' then
     v_preco := v_proc.preco_p;
   elsif new.comprimento = 'M' then
-    v_preco := coalesce(v_proc.preco_m, v_proc.preco_p);
+    v_preco := coalesce(v_proc.preco_m, round(v_proc.preco_p * 1.20, 2));
   elsif new.comprimento = 'G' then
-    v_preco := coalesce(v_proc.preco_g, v_proc.preco_p);
+    v_preco := coalesce(v_proc.preco_g, round(v_proc.preco_p * 1.30, 2));
   else
     v_preco := coalesce(v_proc.preco_p, 0);
   end if;

@@ -170,26 +170,13 @@ export class FinancialEngine {
     const cGanho  = toCents(ganhoLiquido);
     const tMaq    = Number(taxaMaquininhaPct != null ? taxaMaquininhaPct : this.taxaMaq);
 
-    // BASE = custo fixo + custo material + ganho líquido desejado
     const base = cFixo + cMat + cGanho;
-
-    // Divisor da maquininha: (1 - taxa/100) → ex: 0.95 para 5%
     const divisor = 1 - tMaq / 100;
     if (divisor <= 0) {
-      return {
-        base: toReais(base),
-        precoP: Infinity,
-        precoM: Infinity,
-        precoG: Infinity,
-        erro: 'TAXA_MAQUININHA_INVALIDA',
-      };
+      return { base: toReais(base), precoP: Infinity, precoM: Infinity, precoG: Infinity, erro: 'TAXA_MAQUININHA_INVALIDA' };
     }
 
-    // PREÇO P = BASE ÷ (1 - taxa) → garante que o líquido seja exatamente BASE
     const precoP = Math.round(base / divisor);
-
-    // PREÇO M e G são derivados de P × multiplicador
-    // A taxa da maquininha já está embutida em P, então escala automaticamente
     const precoM = Math.round(precoP * 1.20);
     const precoG = Math.round(precoP * 1.30);
 
@@ -198,6 +185,93 @@ export class FinancialEngine {
       precoP: toReais(precoP),
       precoM: toReais(precoM),
       precoG: toReais(precoG),
+    };
+  }
+
+  // -------------------------------------------------------------------------
+  //  2C. CALCULADORA POR TAMANHO INDIVIDUAL (Modelo Markup v2 — Investidores)
+  // -------------------------------------------------------------------------
+
+  /**
+   * Calcula o preço de venda para UM tamanho específico (P, M ou G).
+   *
+   * Fórmula Markup "de baixo para cima":
+   *   CUSTO CHÃO = custoFixoRateado + custoProduto(tamanho) + lucroDesejado(tamanho)
+   *   PREÇO FINAL = CUSTO CHÃO ÷ (1 - taxaMaquininha / 100)
+   *
+   * Cada tamanho recebe seus próprios custos e lucros independentes.
+   *
+   * @param {Object} params
+   * @param {number} params.custoFixoRateado   - Custo fixo rateado por atendimento (R$)
+   * @param {number} params.custoProduto       - Custo do produto para ESTE tamanho (R$)
+   * @param {number} params.lucroDesejado      - Lucro líquido desejado para ESTE tamanho (R$)
+   * @param {number} [params.taxaMaquininhaPct] - Taxa da maquininha (%). Se null, usa this.taxaMaq
+   * @returns {{ custoChao: number, precoSugerido: number, erro?: string }}
+   */
+  calcularPrecoPorTamanho({
+    custoFixoRateado,
+    custoProduto,
+    lucroDesejado,
+    taxaMaquininhaPct,
+  }) {
+    const cFixo  = toCents(custoFixoRateado != null ? custoFixoRateado : this.custoFixo);
+    const cProd  = toCents(custoProduto);
+    const cLucro = toCents(lucroDesejado);
+    const tMaq   = Number(taxaMaquininhaPct != null ? taxaMaquininhaPct : this.taxaMaq);
+
+    // Custo Chão = fixo + produto + lucro desejado
+    const custoChao = cFixo + cProd + cLucro;
+
+    // Divisor da maquininha: (1 - taxa/100)
+    const divisor = 1 - tMaq / 100;
+    if (divisor <= 0) {
+      return {
+        custoChao: toReais(custoChao),
+        precoSugerido: Infinity,
+        erro: 'TAXA_MAQUININHA_INVALIDA',
+      };
+    }
+
+    // Preço Sugerido = Custo Chão ÷ (1 - taxa)
+    const preco = Math.round(custoChao / divisor);
+
+    return {
+      custoChao: toReais(custoChao),
+      precoSugerido: toReais(preco),
+    };
+  }
+
+  /**
+   * Calcula preços P, M e G independentes (cada um com seu custo/lucro).
+   *
+   * @param {Object} params
+   * @param {number} params.custoFixoRateado - Custo fixo rateado (R$)
+   * @param {number} params.custoProdutoP    - Custo produto para P (R$)
+   * @param {number} params.custoProdutoM    - Custo produto para M (R$)
+   * @param {number} params.custoProdutoG    - Custo produto para G (R$)
+   * @param {number} params.lucroDesejadoP   - Lucro desejado P (R$)
+   * @param {number} params.lucroDesejadoM   - Lucro desejado M (R$)
+   * @param {number} params.lucroDesejadoG   - Lucro desejado G (R$)
+   * @param {number} [params.taxaMaquininhaPct] - Taxa da maquininha (%)
+   * @returns {{ p: { custoChao, precoSugerido }, m: { custoChao, precoSugerido }, g: { custoChao, precoSugerido } }}
+   */
+  calcularPrecosPMGIndependente({
+    custoFixoRateado,
+    custoProdutoP, custoProdutoM, custoProdutoG,
+    lucroDesejadoP, lucroDesejadoM, lucroDesejadoG,
+    taxaMaquininhaPct,
+  }) {
+    const calc = (custoProd, lucro) => this.calcularPrecoPorTamanho({
+      custoFixoRateado,
+      custoProduto: custoProd,
+      lucroDesejado: lucro,
+      taxaMaquininhaPct,
+    });
+
+    return {
+      p: calc(custoProdutoP, lucroDesejadoP),
+      m: calc(custoProdutoM, lucroDesejadoM),
+      g: calc(custoProdutoG, lucroDesejadoG),
     };
   }
 

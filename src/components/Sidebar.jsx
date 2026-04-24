@@ -13,7 +13,7 @@ const itens = [
   { path: '/dashboard',     label: 'Dashboard',     icon: LayoutDashboard,  roles: ['PROPRIETARIO'] },
   { path: '/precificacao',  label: 'Precificação',  icon: Calculator,       roles: ['PROPRIETARIO'] },
   { path: '/homecar',       label: 'HomeCare',      icon: PackageOpen,      roles: ['PROPRIETARIO'] },
-  { path: '/catalogo',      label: 'Catálogo',      icon: Package,          roles: ['PROPRIETARIO'] },
+
   { path: '/configuracoes', label: 'Equipe',        icon: Settings,         roles: ['PROPRIETARIO'] },
 ];
 

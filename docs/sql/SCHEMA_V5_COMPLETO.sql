@@ -19,6 +19,7 @@ drop table if exists custos_fixos_itens cascade;
 drop table if exists logins_gerados cascade;
 drop table if exists gastos_pessoais cascade;
 drop table if exists despesas cascade;
+drop table if exists clientes cascade;
 drop table if exists procedimentos_paralelos cascade;
 drop table if exists homecare cascade;
 drop table if exists atendimentos cascade;
@@ -46,7 +47,7 @@ create type status_enum       as enum ('AGENDADO', 'EXECUTADO', 'CANCELADO');
 create type categoria_enum    as enum ('CABELO', 'UNHAS', 'SOBRANCELHAS', 'CILIOS', 'OUTRO');
 create type tipo_despesa_enum as enum (
   'ALUGUEL', 'ENERGIA', 'AGUA', 'INTERNET', 'MATERIAL',
-  'EQUIPAMENTO', 'FORNECEDOR', 'FUNCIONARIO', 'OUTRO'
+  'EQUIPAMENTO', 'FORNECEDOR', 'FUNCIONARIO', 'OUTRO', 'PRODUTO'
 );
 
 -- ========================================================================================
@@ -111,8 +112,13 @@ create table procedimentos (
   preco_p                  numeric(10,2),
   preco_m                  numeric(10,2),
   preco_g                  numeric(10,2),
-  ganho_liquido_desejado   numeric(10,2) default 0,            -- V5.1: ganho líquido desejado pela dona (calculadora P/M/G)
-  custo_variavel           numeric(10,2) not null default 0,
+  ganho_liquido_desejado   numeric(10,2) default 0,            -- V5.1: legado (mantido para retrocompat)
+  custo_variavel           numeric(10,2) not null default 0,   -- Custo produto tamanho P
+  custo_variavel_m         numeric(10,2) default 0,            -- V6: Custo produto tamanho M
+  custo_variavel_g         numeric(10,2) default 0,            -- V6: Custo produto tamanho G
+  lucro_desejado_p         numeric(10,2) default 0,            -- V6: Lucro desejado P
+  lucro_desejado_m         numeric(10,2) default 0,            -- V6: Lucro desejado M
+  lucro_desejado_g         numeric(10,2) default 0,            -- V6: Lucro desejado G
   porcentagem_profissional numeric(5,2)  not null default 40,
   ativo                    boolean not null default true,
   criado_em                timestamptz default now(),
@@ -193,6 +199,16 @@ create table despesas (
   atualizado_em   timestamptz default now()
 );
 
+-- V6: Tabela de Clientes
+create table clientes (
+  id        uuid primary key default uuid_generate_v4(),
+  salao_id  uuid not null references saloes(id) on delete cascade,
+  nome      text not null,
+  telefone  text,
+  criado_em timestamptz default now()
+);
+create index idx_clientes_salao on clientes(salao_id);
+
 create table gastos_pessoais (
   id            uuid primary key default uuid_generate_v4(),
   salao_id      uuid not null references saloes(id) on delete cascade,
@@ -248,12 +264,14 @@ create table procedimento_produtos (
 );
 create index idx_proc_prod_proc on procedimento_produtos(procedimento_id);
 
--- Custos Fixos Detalhados
+-- Custos Fixos Detalhados (Base de Custos operacionais — aluguel, energia, etc.)
 create table custos_fixos_itens (
   id              uuid primary key default uuid_generate_v4(),
   salao_id        uuid not null references saloes(id) on delete cascade,
   descricao       text not null,
-  valor_mensal    numeric(10,2) not null default 0,
+  tipo            text default 'OUTRO',                        -- V6: ALUGUEL, ENERGIA, AGUA, etc.
+  valor           numeric(10,2) not null default 0,            -- V6: valor mensal (campo principal)
+  valor_mensal    numeric(10,2) not null default 0,            -- Legado (mantido para retrocompat)
   ativo           boolean not null default true,
   criado_em       timestamptz default now(),
   atualizado_em   timestamptz default now()
@@ -655,6 +673,7 @@ alter table logins_gerados          enable row level security;
 alter table produtos_catalogo       enable row level security;
 alter table procedimento_produtos   enable row level security;
 alter table custos_fixos_itens      enable row level security;
+alter table clientes                enable row level security;
 alter table fechamentos             enable row level security;
 
 create policy "Salao: acesso por perfil" on saloes for select to authenticated using (id in (select salao_id from perfis_acesso where auth_user_id = auth.uid()));
@@ -676,6 +695,7 @@ create policy "Vendedor ve seus logins" on logins_gerados for all to authenticat
 create policy "Isolar produtos" on produtos_catalogo for all to authenticated using (salao_id in (select salao_id from perfis_acesso where auth_user_id = auth.uid()));
 create policy "Isolar proc_prod" on procedimento_produtos for all to authenticated using (salao_id in (select salao_id from perfis_acesso where auth_user_id = auth.uid()));
 create policy "Isolar custos fixos" on custos_fixos_itens for all to authenticated using (salao_id in (select salao_id from perfis_acesso where auth_user_id = auth.uid()));
+create policy "Isolar clientes por salao" on clientes for all to authenticated using (salao_id in (select salao_id from perfis_acesso where auth_user_id = auth.uid())) with check (salao_id in (select salao_id from perfis_acesso where auth_user_id = auth.uid()));
 create policy "Isolar fechamentos" on fechamentos for all to authenticated using (salao_id in (select salao_id from perfis_acesso where auth_user_id = auth.uid()));
 
 -- ========================================================================================

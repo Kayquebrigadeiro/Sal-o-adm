@@ -2,9 +2,9 @@ import { NavLink } from 'react-router-dom';
 import { useState } from 'react';
 import { supabase } from '../supabaseClient';
 import {
-  CalendarDays, LayoutDashboard, Calculator, PackageOpen, Receipt,
-  Settings, LogOut, Users, Package, Landmark, Scissors, ChevronLeft,
-  ChevronRight, Sparkles
+  CalendarDays, LayoutDashboard, Calculator, PackageOpen,
+  Settings, LogOut, Users, Package, Scissors, ChevronLeft,
+  ChevronRight
 } from 'lucide-react';
 
 const itens = [
@@ -14,8 +14,6 @@ const itens = [
   { path: '/precificacao',  label: 'Precificação',  icon: Calculator,       roles: ['PROPRIETARIO'] },
   { path: '/homecar',       label: 'HomeCare',      icon: PackageOpen,      roles: ['PROPRIETARIO'] },
   { path: '/catalogo',      label: 'Catálogo',      icon: Package,          roles: ['PROPRIETARIO'] },
-  { path: '/custos-fixos',  label: 'Custos Fixos',  icon: Landmark,         roles: ['PROPRIETARIO'] },
-  { path: '/despesas',      label: 'Despesas',      icon: Receipt,          roles: ['PROPRIETARIO'] },
   { path: '/configuracoes', label: 'Equipe',        icon: Settings,         roles: ['PROPRIETARIO'] },
 ];
 

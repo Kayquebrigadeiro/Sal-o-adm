@@ -42,7 +42,7 @@ export default function Clientes({ salaoId }) {
       const { error } = await supabase.from('clientes').update({ nome: form.nome, telefone: form.telefone }).eq('id', form.id).eq('salao_id', salaoId);
       erro = error;
     } else {
-      const { error } = await supabase.from('clientes').insert([{ salao_id: salaoId, nome: form.nome, telefone: form.telefone }]);
+      const { error } = await supabase.from('clientes').insert({ salao_id: salaoId, nome: form.nome, telefone: form.telefone || null });
       erro = error;
     }
 

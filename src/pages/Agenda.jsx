@@ -81,7 +81,13 @@ export default function Agenda({ salaoId, role }) {
             taxaMaq: Number(cfgRes.data.taxa_maquininha_pct) || TAXA_MAQUININHA_PADRAO,
           });
         }
-        setProfissionais(profRes.data || []);
+        // Ordena: proprietária primeiro, depois funcionários
+        const sorted = (profRes.data || []).sort((a, b) => {
+          if (a.cargo === 'PROPRIETARIO' && b.cargo !== 'PROPRIETARIO') return -1;
+          if (b.cargo === 'PROPRIETARIO' && a.cargo !== 'PROPRIETARIO') return 1;
+          return a.nome.localeCompare(b.nome);
+        });
+        setProfissionais(sorted);
         setProcedimentos(procRes.data || []);
         setClientes(cliRes.data || []);
       } catch (err) {
@@ -218,11 +224,23 @@ export default function Agenda({ salaoId, role }) {
     setNovo(prev => ({ ...prev, tamanho, valor: precoSugerido || prev.valor }));
   };
 
+  // ─── Validar valor monetário ───
+  const validarValorMonetario = (val) => {
+    const num = Number(val);
+    return !isNaN(num) && num > 0 && num <= 999999 && Number.isFinite(num);
+  };
+
   // ─── Salvar atendimento ───
   const salvar = async () => {
     const nomeCliente = novo.cliente.trim() || buscaCliente.trim();
     if (!nomeCliente) return showToast('Digite o nome da cliente!', 'error');
     if (!novo.procId) return showToast('Selecione o procedimento!', 'error');
+    
+    // 🛡️ Validar valor monetário
+    if (!novo.valor || !validarValorMonetario(novo.valor)) {
+      showToast('Valor deve estar entre R$ 0,01 e R$ 9.999,99', 'error');
+      return;
+    }
 
     setSalvando(true);
     try {
@@ -245,7 +263,12 @@ export default function Agenda({ salaoId, role }) {
       const { error } = await supabase.from('atendimentos').insert(dados);
       if (error) throw error;
 
-      showToast('Atendimento agendado!', 'success');
+      // Toast informativo com detalhes do atendimento (viciante!)
+      const lucroEstimado = previewFinanceiro?.lucroLiquido || 0;
+      showToast(
+        `✅ ${nomeCliente} às ${selecao.hora} | ${proc.nome} | Lucro: ${fmt(lucroEstimado)}`,
+        'success'
+      );
       setModalAberto(false);
       carregarAtendimentos();
     } catch (err) {
@@ -359,11 +382,78 @@ export default function Agenda({ salaoId, role }) {
       </div>
 
       {/* ═══ GRADE DE AGENDA ═══ */}
+      {/* Aviso se a proprietária não está na planilha */}
+      {role === 'PROPRIETARIO' && profissionais.length > 0 && !profissionais.some(p => p.cargo === 'PROPRIETARIO') && (
+        <div className="mb-4 bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-200 rounded-2xl p-4 flex items-center justify-between gap-3">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 bg-amber-100 rounded-xl flex items-center justify-center flex-shrink-0">
+              <span className="text-lg">👑</span>
+            </div>
+            <div>
+              <p className="text-sm font-bold text-amber-800">Você também atende? Adicione-se à agenda!</p>
+              <p className="text-xs text-amber-600">Como proprietária, você precisa de uma coluna própria para seus agendamentos.</p>
+            </div>
+          </div>
+          <button
+            onClick={async () => {
+              try {
+                // Busca nome da proprietária do salão
+                const { data: salaoData } = await supabase.from('saloes').select('nome_proprietaria, nome').eq('id', salaoId).single();
+                const nome = salaoData?.nome_proprietaria || 'PROPRIETÁRIA';
+                const { error } = await supabase.from('profissionais').insert({
+                  salao_id: salaoId,
+                  nome,
+                  cargo: 'PROPRIETARIO',
+                  salario_fixo: 0,
+                  ativo: true,
+                });
+                if (error) throw error;
+                showToast(`${nome} adicionada à agenda! 👑`, 'success');
+                // Recarrega profissionais
+                const { data: profData } = await supabase.from('profissionais').select('id, nome, cargo').eq('salao_id', salaoId).eq('ativo', true).order('nome');
+                setProfissionais(profData || []);
+              } catch (err) {
+                showToast('Erro: ' + err.message, 'error');
+              }
+            }}
+            className="flex-shrink-0 px-4 py-2.5 bg-gradient-to-r from-amber-500 to-orange-500 text-white rounded-xl font-bold text-sm hover:from-amber-600 hover:to-orange-600 transition-all shadow-lg shadow-amber-200"
+          >
+            Adicionar-me 👑
+          </button>
+        </div>
+      )}
+
       {profissionais.length === 0 ? (
         <div className="bg-white rounded-2xl border border-slate-200 p-12 text-center">
           <User size={40} className="text-slate-300 mx-auto mb-3" />
           <p className="text-slate-500 font-bold">Nenhum profissional cadastrado</p>
           <p className="text-xs text-slate-400 mt-1">Adicione profissionais nas Configurações</p>
+          {role === 'PROPRIETARIO' && (
+            <button
+              onClick={async () => {
+                try {
+                  const { data: salaoData } = await supabase.from('saloes').select('nome_proprietaria, nome').eq('id', salaoId).single();
+                  const nome = salaoData?.nome_proprietaria || 'PROPRIETÁRIA';
+                  const { error } = await supabase.from('profissionais').insert({
+                    salao_id: salaoId,
+                    nome,
+                    cargo: 'PROPRIETARIO',
+                    salario_fixo: 0,
+                    ativo: true,
+                  });
+                  if (error) throw error;
+                  showToast(`${nome} adicionada à agenda! 👑`, 'success');
+                  const { data: profData } = await supabase.from('profissionais').select('id, nome, cargo').eq('salao_id', salaoId).eq('ativo', true).order('nome');
+                  setProfissionais(profData || []);
+                } catch (err) {
+                  showToast('Erro: ' + err.message, 'error');
+                }
+              }}
+              className="mt-4 px-6 py-3 bg-gradient-to-r from-blue-600 to-sky-500 text-white rounded-xl font-bold text-sm hover:from-blue-700 hover:to-sky-600 transition-all shadow-lg shadow-blue-200"
+            >
+              👑 Começar — Adicionar-me como profissional
+            </button>
+          )}
         </div>
       ) : (
         <div className="bg-white border border-slate-100 rounded-3xl overflow-hidden shadow-2xl shadow-blue-900/5 overflow-x-auto ring-1 ring-slate-200">
@@ -683,7 +773,7 @@ export default function Agenda({ salaoId, role }) {
                   onChange={e => setNovo({...novo, valor: e.target.value})}
                   placeholder="0,00"
                 />
-                <p className="text-[9px] text-slate-400 mt-1">Você define o preço — o sistema calcula o lucro automaticamente.</p>
+                <p className="text-[9px] text-slate-400 mt-1">Valor entre R$ 0,01 e R$ 9.999,99 — sistema calcula lucro automaticamente.</p>
 
                 {/* Desmembramento do Motor Financeiro */}
                 {role === 'PROPRIETARIO' && previewFinanceiro && (

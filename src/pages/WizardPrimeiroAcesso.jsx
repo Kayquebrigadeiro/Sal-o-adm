@@ -203,7 +203,19 @@ export default function WizardPrimeiroAcesso({ salaoId }) {
         .eq('id', salaoId);
       if (salaoErr) throw salaoErr;
 
-      // 2. Profissionais
+      // 2. Proprietária como profissional (ela também atende!)
+      if (nomeProprietaria.trim()) {
+        const { error: propError } = await supabase.from('profissionais').insert({
+          salao_id:     salaoId,
+          nome:         nomeProprietaria.trim(),
+          cargo:        'PROPRIETARIO',
+          salario_fixo: 0,
+          ativo:        true,
+        });
+        if (propError) throw propError;
+      }
+
+      // 3. Funcionários
       if (temFuncionarios) {
         const validos = funcionarios.filter(f => f.nome.trim());
         if (validos.length > 0) {

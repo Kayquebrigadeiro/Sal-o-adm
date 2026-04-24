@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '../supabaseClient';
-import { Trash2, Plus, Users, Building2 } from 'lucide-react';
+import { Trash2, Plus, Users, Building2, Eye, EyeOff, Copy, Check } from 'lucide-react';
+import { useToast } from '../components/Toast';
 
 export default function AdminVendedor({ email, userId }) {
   const [tab, setTab] = useState('saloes'); // 'saloes' | 'proprietarios'
@@ -256,12 +257,14 @@ export default function AdminVendedor({ email, userId }) {
 // ═══════════════════════════════════════════════════════════════════════════
 
 function CadastroPropietaria({ salao, vendedorId, onSuccess }) {
+  const { showToast } = useToast();
   const [mostrando, setMostrando] = useState(false);
   const [email, setEmail] = useState('');
   const [nomeProprietaria, setNomeProprietaria] = useState('');
   const [salvando, setSalvando] = useState(false);
   const [logins, setLogins] = useState([]);
   const [carregandoLogins, setCarregandoLogins] = useState(false);
+  const [senhaVisivel, setSenhaVisivel] = useState(null);
 
   useEffect(() => {
     if (mostrando) carregarLogins();
@@ -272,7 +275,7 @@ function CadastroPropietaria({ salao, vendedorId, onSuccess }) {
     try {
       const { data, error } = await supabase
         .from('logins_gerados')
-        .select('*')
+        .select('id, email_proprietaria, gerado_em, ativo')
         .eq('salao_id', salao.id)
         .order('gerado_em', { ascending: false });
 
@@ -285,45 +288,58 @@ function CadastroPropietaria({ salao, vendedorId, onSuccess }) {
     }
   };
 
+  // Validar email com regex
+  const validarEmail = (emailStr) => {
+    const regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return regex.test(emailStr.trim());
+  };
+
   const criarLogin = async (e) => {
     e.preventDefault();
     if (!email.trim() || !nomeProprietaria.trim()) {
-      alert('Email e nome são obrigatórios');
+      showToast('Email e nome são obrigatórios', 'error');
+      return;
+    }
+
+    if (!validarEmail(email)) {
+      showToast('Email inválido. Use: exemplo@dominio.com.br', 'error');
       return;
     }
 
     setSalvando(true);
     try {
-      // 1. Criar usuário no Auth
-      const senhaTemporaria = Math.random().toString(36).slice(-12) + 'A1!';
+      // Chamar RPC segura que gera senha com hash
+      // Função Supabase: cria hash de senha, retorna plain text UMA VEZ
+      const { data: resultado, error: rpcError } = await supabase
+        .rpc('criar_login_proprietaria', {
+          p_vendedor_id: vendedorId,
+          p_salao_id: salao.id,
+          p_email: email.trim().toLowerCase(),
+          p_nome: nomeProprietaria.trim(),
+        });
+
+      if (rpcError) throw rpcError;
+
+      console.log('[CadastroPropietaria] ✅ Login gerado');
       
-      // Aqui você precisará de uma função RPC no Supabase para criar usuário
-      // Por enquanto, vamos registrar apenas o login_gerado
-      const { data: loginData, error: loginError } = await supabase
-        .from('logins_gerados')
-        .insert([
-          {
-            vendedor_id: vendedorId,
-            salao_id: salao.id,
-            email_proprietaria: email.trim(),
-            senha_temporaria: senhaTemporaria,
-            ativo: true,
-          },
-        ])
-        .select()
-        .single();
+      // Mostrar senha apenas uma vez (não em alert, evita captura por malware/extensões)
+      setSenhaVisivel({
+        email: email.trim(),
+        senha: resultado.senha_temporaria,
+      });
 
-      if (loginError) throw loginError;
-
-      console.log('[CadastroPropietaria] ✅ Login gerado:', loginData);
-      alert(`✅ Login criado!\n\nEmail: ${email}\nSenha temporária: ${senhaTemporaria}\n\n⚠️ Guarde essas credenciais!`);
+      showToast(`✅ Login criado! Copie a senha (expira em 60s)`, 'success');
 
       setEmail('');
       setNomeProprietaria('');
+      
+      // Auto-limpar senha visível após 60 segundos
+      setTimeout(() => setSenhaVisivel(null), 60000);
+      
       carregarLogins();
     } catch (err) {
       console.error('[CadastroPropietaria] Erro:', err);
-      alert('❌ Erro: ' + err.message);
+      showToast(`❌ Erro: ${err.message}`, 'error');
     } finally {
       setSalvando(false);
     }
@@ -364,6 +380,35 @@ function CadastroPropietaria({ salao, vendedorId, onSuccess }) {
               {salvando ? 'Criando...' : 'Gerar Login'}
             </button>
           </form>
+
+          {/* 🔑 MOSTRAR SENHA UMA VEZ (sem alert) */}
+          {senhaVisivel && (
+            <div className="bg-amber-50 border border-amber-300 rounded-lg p-3 space-y-2">
+              <p className="text-xs font-bold text-amber-900">⚠️ COPIE ESSAS CREDENCIAIS AGORA!</p>
+              <div className="bg-white rounded p-2">
+                <p className="text-[10px] text-gray-600 font-semibold mb-1">EMAIL:</p>
+                <p className="font-mono text-sm text-gray-900 break-all">{senhaVisivel.email}</p>
+              </div>
+              <div className="bg-white rounded p-2">
+                <p className="text-[10px] text-gray-600 font-semibold mb-1">SENHA TEMPORÁRIA:</p>
+                <div className="flex gap-1">
+                  <p className="font-mono text-sm text-gray-900 flex-1 break-all">{senhaVisivel.senha}</p>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      navigator.clipboard.writeText(senhaVisivel.senha);
+                      showToast('Senha copiada!', 'success');
+                    }}
+                    className="text-blue-600 hover:bg-blue-50 p-1 rounded"
+                    title="Copiar"
+                  >
+                    <Copy size={14} />
+                  </button>
+                </div>
+              </div>
+              <p className="text-[10px] text-amber-700">Desaparece em 60 segundos</p>
+            </div>
+          )}
 
           {/* Lista de logins criados */}
           {carregandoLogins ? (

@@ -559,11 +559,35 @@ export default function Precificacao({ salaoId }) {
                     })()}
                   </td>
 
-                  {/* Comissão */}
-                  <td className="p-2 text-center">
-                    <span className="bg-slate-100 text-slate-600 px-2 py-0.5 rounded-full text-[10px] font-bold">
-                      {proc.porcentagem_profissional}%
-                    </span>
+                  {/* Comissão (editável) */}
+                  <td className="p-2 text-center" onClick={e => e.stopPropagation()}>
+                    <div className="inline-flex items-center gap-0.5 bg-slate-100 rounded-full px-1 py-0.5">
+                      <input
+                        type="number"
+                        step="1"
+                        min="0"
+                        max="100"
+                        className="w-10 bg-transparent text-center text-[10px] font-bold text-slate-600 outline-none focus:text-emerald-700 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                        value={proc.porcentagem_profissional ?? 0}
+                        onChange={e => {
+                          const val = Number(e.target.value);
+                          setProcedimentos(prev => prev.map(pr => pr.id === proc.id ? { ...pr, porcentagem_profissional: val } : pr));
+                        }}
+                        onBlur={async (e) => {
+                          const val = Number(e.target.value);
+                          try {
+                            const { error } = await supabase.from('procedimentos').update({ porcentagem_profissional: val }).eq('id', proc.id).eq('salao_id', salaoId);
+                            if (error) throw error;
+                            showToast(`Comissão de ${proc.nome} → ${val}%`, 'success');
+                          } catch (err) {
+                            showToast('Erro ao salvar comissão: ' + err.message, 'error');
+                          }
+                        }}
+                        title="Clique para editar a comissão"
+                      />
+                      <span className="text-[9px] text-slate-400 font-bold">%</span>
+                      <Pencil size={9} className="text-slate-300 ml-0.5" />
+                    </div>
                   </td>
 
                   {/* Custo Material */}

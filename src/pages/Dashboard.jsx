@@ -40,22 +40,20 @@ const Dashboard = ({ salaoId }) => {
   const [pinCorreto, setPinCorreto] = useState('');
 
   useEffect(() => {
-    if (!salaoId) return;
-    const fetchPin = async () => {
-      const { data } = await supabase.from('saloes').select('pin_financeiro').eq('id', salaoId).single();
-      if (data && data.pin_financeiro) {
-        setPinCorreto(data.pin_financeiro);
-      } else {
-        setPinCorreto('1234'); // Fallback caso não esteja configurado
-      }
-    };
-    fetchPin();
+    // PIN padrão — coluna pin_financeiro ainda não existe no schema
+    setPinCorreto('1234');
   }, [salaoId]);
 
   // ─── Dados reais ───
   const [loading, setLoading] = useState(true);
+  const [loadingHoje, setLoadingHoje] = useState(false);
   const [mesSelecionado, setMesSelecionado] = useState('');
   const [meses, setMeses] = useState([]);
+
+  // KPI públicos (sem PIN)
+  const [lucroHoje, setLucroHoje] = useState(0);
+  const [atendimentosHoje, setAtendimentosHoje] = useState(0);
+  const [ticketMedio, setTicketMedio] = useState(0);
 
   // Dados brutos do Supabase
   const [fechamento, setFechamento] = useState([]);

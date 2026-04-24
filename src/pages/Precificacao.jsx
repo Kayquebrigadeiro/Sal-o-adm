@@ -3,8 +3,10 @@ import { supabase } from '../supabaseClient';
 import { useToast } from '../components/Toast';
 import Modal from '../components/Modal';
 import { FinancialEngine } from '../services/FinancialEngine';
-import { TAXA_MAQUININHA_PADRAO, MULTIPLICADOR_COMPRIMENTO } from '../services/financialConstants';
-import { Plus, Trash2, Calculator, TrendingUp, AlertTriangle, ChevronDown, ChevronUp, Zap, Save, RefreshCw, DollarSign, ArrowRight, Sparkles, Pencil, Settings, Receipt, Info } from 'lucide-react';
+import { TAXA_MAQUININHA_PADRAO } from '../services/financialConstants';
+import CatalogoProdutos from './CatalogoProdutos';
+import BaseCustos from '../components/BaseCustos';
+import { Plus, Trash2, Calculator, AlertTriangle, ChevronDown, ChevronUp, Save, Pencil, Settings, Receipt, Package, Landmark, Info } from 'lucide-react';
 
 const fmt = (v) => Number(v || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
 const fmtPct = (v) => `${Number(v || 0).toFixed(1)}%`;
@@ -110,7 +112,7 @@ export default function Precificacao({ salaoId }) {
       const [ano, mes] = mesSel.split('-');
       const inicio = `${ano}-${mes}-01`;
       const fim = new Date(ano, mes, 0).toISOString().split('T')[0];
-      const { data } = await supabase.from('despesas').select('*').eq('salao_id', salaoId).gte('data', inicio).lte('data', fim).order('data', { ascending: false });
+      const { data } = await supabase.from('despesas').select('*').eq('salao_id', salaoId).gte('data', inicio).lte('data', fim).in('tipo', ['PRODUTO','MATERIAL','EQUIPAMENTO','FORNECEDOR']).order('data', { ascending: false });
       setDespesas(data || []);
     } catch { showToast('Erro ao carregar despesas', 'error'); }
     finally { setLoadingDesp(false); }
@@ -120,7 +122,7 @@ export default function Precificacao({ salaoId }) {
   // ─── CRUD Despesas ───
   const abrirModalDesp = (d = null) => {
     setDespEdit(d);
-    setFormDesp(d ? { data: d.data, descricao: d.descricao, tipo: d.tipo, valor: d.valor, valor_pago: d.valor_pago } : { data: new Date().toISOString().split('T')[0], descricao: '', tipo: 'OUTRO', valor: '', valor_pago: '0' });
+    setFormDesp(d ? { data: d.data, descricao: d.descricao, tipo: d.tipo, valor: d.valor, valor_pago: d.valor_pago } : { data: new Date().toISOString().split('T')[0], descricao: '', tipo: 'PRODUTO', valor: '', valor_pago: '0' });
     setModalDesp(true);
   };
   const salvarDesp = async () => {
@@ -237,17 +239,17 @@ export default function Precificacao({ salaoId }) {
   }
 
   const TIPOS_DESPESA = [
-    { value: 'ALUGUEL', label: 'Aluguel' }, { value: 'ENERGIA', label: 'Energia' }, { value: 'AGUA', label: 'Água' },
-    { value: 'INTERNET', label: 'Internet' }, { value: 'MATERIAL', label: 'Material' }, { value: 'EQUIPAMENTO', label: 'Equipamento' },
-    { value: 'FORNECEDOR', label: 'Fornecedor' }, { value: 'FUNCIONARIO', label: 'Funcionário' }, { value: 'OUTRO', label: 'Outro' },
+    { value: 'PRODUTO', label: 'Produto' }, { value: 'MATERIAL', label: 'Material' },
+    { value: 'EQUIPAMENTO', label: 'Equipamento' }, { value: 'FORNECEDOR', label: 'Fornecedor' },
   ];
   const totalDesp = despesas.reduce((a, d) => a + Number(d.valor || 0), 0);
   const totalDespPago = despesas.reduce((a, d) => a + Number(d.valor_pago || 0), 0);
 
   const ABAS = [
     { key: 'precificacao', label: 'Precificação', icon: Calculator },
-    { key: 'despesas', label: 'Despesas', icon: Receipt },
-    { key: 'custos_fixos', label: 'Custos Fixos', icon: Settings },
+    { key: 'base_custos', label: 'Base de Custos', icon: Landmark },
+    { key: 'despesas', label: 'Despesas/Produtos', icon: Receipt },
+    { key: 'catalogo', label: 'Catálogo', icon: Package },
   ];
 
   return (
@@ -382,45 +384,43 @@ export default function Precificacao({ salaoId }) {
         </div>
       )}
 
-      {/* ═══ CONFIGURAÇÕES GLOBAIS ═══ */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
-        <div className="bg-slate-900 text-white p-5 rounded-2xl shadow-lg relative overflow-hidden">
-          <div className="absolute top-0 right-0 w-20 h-20 bg-emerald-500/10 rounded-full -mr-6 -mt-6" />
-          <label className="block text-[10px] uppercase opacity-60 mb-2 tracking-wider font-bold">Custo Fixo / Atendimento</label>
-          <div className="flex items-center gap-2">
-            <span className="text-slate-400 text-sm">R$</span>
+      {/* ═══ 4 KPIs COMPACTOS (não-clicáveis, auto-save) ═══ */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
+        <div className="bg-white border border-slate-200 rounded-xl p-3 shadow-sm">
+          <p className="text-[9px] font-bold text-slate-400 uppercase tracking-wider mb-1">Custo Fixo / Atend.</p>
+          <div className="flex items-center gap-1">
+            <span className="text-slate-400 text-xs">R$</span>
             <input type="number" step="0.01"
-              className="bg-transparent border-b border-slate-700 w-full outline-none focus:border-emerald-400 text-2xl font-black"
+              className="w-full bg-transparent outline-none text-lg font-black text-slate-800 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
               value={config.custo_fixo_por_atendimento}
               onChange={e => updateConfig('custo_fixo_por_atendimento', e.target.value)}
+              onBlur={async () => { try { await supabase.from('configuracoes').update({ custo_fixo_por_atendimento: Number(config.custo_fixo_por_atendimento) }).eq('salao_id', salaoId); showToast('✓', 'success'); } catch {} }}
             />
           </div>
         </div>
-
-        <div className="bg-slate-900 text-white p-5 rounded-2xl shadow-lg relative overflow-hidden">
-          <div className="absolute top-0 right-0 w-20 h-20 bg-blue-500/10 rounded-full -mr-6 -mt-6" />
-          <label className="block text-[10px] uppercase opacity-60 mb-2 tracking-wider font-bold">Taxa Maquininha</label>
-          <div className="flex items-center gap-2">
+        <div className="bg-white border border-slate-200 rounded-xl p-3 shadow-sm">
+          <p className="text-[9px] font-bold text-slate-400 uppercase tracking-wider mb-1">Taxa Maquininha</p>
+          <div className="flex items-center gap-1">
             <input type="number" step="0.1" min="0" max="20"
-              className="bg-transparent border-b border-slate-700 w-full outline-none focus:border-blue-400 text-2xl font-black"
+              className="w-full bg-transparent outline-none text-lg font-black text-slate-800 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
               value={config.taxa_maquininha_pct}
               onChange={e => updateConfig('taxa_maquininha_pct', e.target.value)}
+              onBlur={async () => { try { await supabase.from('configuracoes').update({ taxa_maquininha_pct: Number(config.taxa_maquininha_pct) }).eq('salao_id', salaoId); showToast('✓', 'success'); } catch {} }}
             />
-            <span className="text-slate-400 text-sm">%</span>
+            <span className="text-slate-400 text-xs">%</span>
           </div>
         </div>
-
-        <div className="flex items-end">
-          {configAlterada ? (
-            <button onClick={salvarConfig}
-              className="w-full flex items-center justify-center gap-2 bg-emerald-500 text-white py-4 rounded-2xl font-bold hover:bg-emerald-600 transition-all shadow-lg shadow-emerald-200 text-sm">
-              <Save size={16} /> Salvar Configurações
-            </button>
-          ) : (
-            <div className="w-full bg-slate-100 text-slate-400 py-4 rounded-2xl font-bold text-center text-sm flex items-center justify-center gap-2">
-              <RefreshCw size={14} /> Configurações atualizadas
-            </div>
-          )}
+        <div className="bg-white border border-slate-200 rounded-xl p-3 shadow-sm">
+          <p className="text-[9px] font-bold text-slate-400 uppercase tracking-wider mb-1">Atendimentos / Mês</p>
+          <input type="number" step="1"
+            className="w-full bg-transparent outline-none text-lg font-black text-slate-800 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+            value={config.qtd_atendimentos_mes}
+            onChange={e => updateConfig('qtd_atendimentos_mes', e.target.value)}
+            onBlur={async () => { try { await supabase.from('configuracoes').update({ qtd_atendimentos_mes: Number(config.qtd_atendimentos_mes) }).eq('salao_id', salaoId); showToast('✓', 'success'); } catch {} }}
+          />
+        </div>
+        <div className="bg-slate-50 border border-dashed border-slate-200 rounded-xl p-3 flex items-center justify-center">
+          <p className="text-[10px] font-bold text-slate-300 uppercase">KPI Futuro</p>
         </div>
       </div>
 
@@ -433,8 +433,8 @@ export default function Precificacao({ salaoId }) {
               <th className="p-3 text-center" rowSpan={2}>Comissão</th>
               <th className="p-3 text-center" rowSpan={2}>Custo Mat.</th>
               <th className="p-3 text-center border-l border-slate-700" colSpan={3}>Cabelo P</th>
-              <th className="p-3 text-center border-l border-slate-700" colSpan={3}>Cabelo M (+{MULTIPLICADOR_COMPRIMENTO.M}%)</th>
-              <th className="p-3 text-center border-l border-slate-700" colSpan={3}>Cabelo G (+{MULTIPLICADOR_COMPRIMENTO.G}%)</th>
+              <th className="p-3 text-center border-l border-slate-700" colSpan={3}>Cabelo M</th>
+              <th className="p-3 text-center border-l border-slate-700" colSpan={3}>Cabelo G</th>
               <th className="p-3 text-center" rowSpan={2}></th>
             </tr>
             <tr className="bg-slate-800 text-slate-300 text-[10px] uppercase font-bold tracking-wider">
@@ -490,70 +490,91 @@ export default function Precificacao({ salaoId }) {
                       {isExpanded ? <ChevronUp size={12} className="text-slate-400" /> : <ChevronDown size={12} className="text-slate-300" />}
                     </div>
                     {isExpanded && (() => {
-                      const pmg = calcularPMG(proc);
-                      return (
-                      <div className="mt-3 bg-gradient-to-r from-violet-50 to-indigo-50 rounded-xl p-3 border border-violet-200 space-y-3" onClick={e => e.stopPropagation()}>
-                        <p className="text-[10px] font-black text-violet-700 uppercase tracking-wider flex items-center gap-1">
-                          <Sparkles size={12} /> Calculadora de Preço (Fórmula da Planilha)
-                        </p>
-                        {/* Linha de inputs */}
-                        <div className="flex flex-wrap items-end gap-2">
+                      const custoP = Number(proc.custo_variavel) || 0;
+                      const custoM = Number(proc.custo_variavel_m) || custoP;
+                      const custoG = Number(proc.custo_variavel_g) || custoP;
+                      const lucroP = Number(proc.lucro_desejado_p) || 0;
+                      const lucroM = Number(proc.lucro_desejado_m) || 0;
+                      const lucroG = Number(proc.lucro_desejado_g) || 0;
+                      const cFixo = Number(config.custo_fixo_por_atendimento);
+                      const calcT = (cp, ld) => engine.calcularPrecoPorTamanho({ custoFixoRateado: cFixo, custoProduto: cp, lucroDesejado: ld });
+                      const resP = calcT(custoP, lucroP);
+                      const resM = proc.requer_comprimento ? calcT(custoM, lucroM) : null;
+                      const resG = proc.requer_comprimento ? calcT(custoG, lucroG) : null;
+                      const temDados = lucroP > 0 || lucroM > 0 || lucroG > 0;
+
+                      const TamanhoRow = ({ label, cor, custo, custoField, lucro, lucroField, res }) => (
+                        <div className={`flex flex-wrap items-center gap-2 p-2 rounded-lg bg-${cor}-50/50 border border-${cor}-100`}>
+                          <span className={`text-[10px] font-black text-${cor}-600 w-6`}>{label}</span>
                           <div className="flex-shrink-0">
-                            <span className="text-[9px] font-bold text-slate-400 block">Custo Fixo</span>
-                            <span className="text-xs font-black text-slate-600 bg-white px-2 py-1 rounded-lg border border-slate-200">{fmt(config.custo_fixo_por_atendimento)}</span>
-                          </div>
-                          <span className="text-slate-300 font-bold pb-1">+</span>
-                          <div className="flex-shrink-0">
-                            <span className="text-[9px] font-bold text-slate-400 block">Material</span>
-                            <span className="text-xs font-black text-slate-600 bg-white px-2 py-1 rounded-lg border border-slate-200">{fmt(proc.custo_variavel)}</span>
-                          </div>
-                          <span className="text-slate-300 font-bold pb-1">+</span>
-                          <div className="flex-1 min-w-[100px]">
-                            <span className="text-[9px] font-bold text-violet-600 block">Ganho Líquido Desejado</span>
+                            <span className="text-[8px] text-slate-400 block">Produto</span>
                             <div className="relative">
-                              <span className="absolute left-2 top-1/2 -translate-y-1/2 text-[10px] text-violet-400">R$</span>
+                              <span className="absolute left-1 top-1/2 -translate-y-1/2 text-[8px] text-slate-300">R$</span>
                               <input type="number" step="0.01"
-                                className="w-full bg-white border-2 border-violet-300 rounded-lg pl-7 pr-2 py-1 text-xs font-black text-violet-700 outline-none focus:border-violet-500 focus:ring-2 focus:ring-violet-200"
-                                value={ganhoMap[proc.id] || ''}
-                                onChange={e => setGanhoMap(prev => ({ ...prev, [proc.id]: Number(e.target.value) || 0 }))}
-                                placeholder="95,00"
+                                className="w-20 bg-white border border-slate-200 rounded px-1 pl-5 py-0.5 text-[11px] font-bold text-slate-700 outline-none focus:border-blue-400"
+                                value={custo || ''} onChange={e => setProcedimentos(prev => prev.map(pr => pr.id === proc.id ? { ...pr, [custoField]: Number(e.target.value) } : pr))}
+                                onBlur={async e => { try { await supabase.from('procedimentos').update({ [custoField]: Number(e.target.value) || 0 }).eq('id', proc.id); showToast('✓', 'success'); } catch {} }}
                               />
                             </div>
                           </div>
-                        </div>
-                        {/* Resultado */}
-                        {pmg && !pmg.erro && (
-                          <div className="flex flex-wrap items-center gap-2">
-                            <div className="bg-white rounded-lg px-3 py-1.5 border border-emerald-200 shadow-sm">
-                              <span className="text-[9px] font-bold text-slate-400 block">Subtotal</span>
-                              <span className="text-xs font-black text-slate-600">{fmt(pmg.base)}</span>
-                            </div>
-                            <ArrowRight size={14} className="text-slate-300" />
-                            <div className="bg-emerald-50 rounded-lg px-3 py-1.5 border border-emerald-300 shadow-sm">
-                              <span className="text-[9px] font-bold text-emerald-600 block">Preço P</span>
-                              <span className="text-sm font-black text-emerald-700">{fmt(pmg.precoP)}</span>
-                            </div>
-                            {proc.requer_comprimento && (
-                              <>
-                                <div className="bg-blue-50 rounded-lg px-3 py-1.5 border border-blue-200 shadow-sm">
-                                  <span className="text-[9px] font-bold text-blue-500 block">M (×1.20)</span>
-                                  <span className="text-sm font-black text-blue-700">{fmt(pmg.precoM)}</span>
-                                </div>
-                                <div className="bg-amber-50 rounded-lg px-3 py-1.5 border border-amber-200 shadow-sm">
-                                  <span className="text-[9px] font-bold text-amber-600 block">G (×1.30)</span>
-                                  <span className="text-sm font-black text-amber-700">{fmt(pmg.precoG)}</span>
-                                </div>
-                              </>
-                            )}
-                            <button
-                              onClick={() => aplicarPrecoCalculado(proc)}
-                              className="ml-auto px-3 py-1.5 bg-gradient-to-r from-emerald-500 to-teal-500 text-white rounded-lg text-[10px] font-black hover:from-emerald-600 hover:to-teal-600 transition-all shadow-md shadow-emerald-200 flex items-center gap-1"
-                            >
-                              <Save size={12} /> Aplicar Preços
-                            </button>
+                          <span className="text-slate-300 font-bold text-xs">+</span>
+                          <div className="flex-shrink-0">
+                            <span className="text-[8px] text-slate-400 block">Fixo</span>
+                            <span className="text-[11px] font-bold text-slate-500 bg-white border border-slate-100 px-2 py-0.5 rounded">{fmt(cFixo)}</span>
                           </div>
+                          <span className="text-slate-300 font-bold text-xs">+</span>
+                          <div className="flex-1 min-w-[80px]">
+                            <span className={`text-[8px] font-bold text-${cor}-600 block`}>Lucro Desejado</span>
+                            <div className="relative">
+                              <span className="absolute left-1 top-1/2 -translate-y-1/2 text-[8px] text-violet-300">R$</span>
+                              <input type="number" step="0.01"
+                                className={`w-full bg-white border-2 border-${cor}-200 rounded px-1 pl-5 py-0.5 text-[11px] font-black text-${cor}-700 outline-none focus:border-${cor}-400`}
+                                value={lucro || ''} onChange={e => setProcedimentos(prev => prev.map(pr => pr.id === proc.id ? { ...pr, [lucroField]: Number(e.target.value) } : pr))}
+                                onBlur={async e => { try { await supabase.from('procedimentos').update({ [lucroField]: Number(e.target.value) || 0 }).eq('id', proc.id); showToast('✓', 'success'); } catch {} }}
+                                placeholder="0,00"
+                              />
+                            </div>
+                          </div>
+                          <span className="text-slate-300 font-bold text-xs">=</span>
+                          <div className="flex-shrink-0">
+                            <span className="text-[8px] text-emerald-500 block">Preço Sugerido</span>
+                            <span className="text-sm font-black text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded">{res && lucro > 0 ? fmt(res.precoSugerido) : '—'}</span>
+                          </div>
+                        </div>
+                      );
+
+                      return (
+                      <div className="mt-3 bg-gradient-to-r from-violet-50 to-indigo-50 rounded-xl p-3 border border-violet-200 space-y-2" onClick={e => e.stopPropagation()}>
+                        <p className="text-[10px] font-black text-violet-700 uppercase tracking-wider flex items-center gap-1">
+                          <Calculator size={12} /> Markup por Tamanho (Custo + Fixo + Lucro) ÷ {(1 - Number(config.taxa_maquininha_pct)/100).toFixed(2)}
+                        </p>
+                        <TamanhoRow label="P" cor="emerald" custo={custoP} custoField="custo_variavel" lucro={lucroP} lucroField="lucro_desejado_p" res={resP} />
+                        {proc.requer_comprimento && (
+                          <>
+                            <TamanhoRow label="M" cor="blue" custo={custoM} custoField="custo_variavel_m" lucro={lucroM} lucroField="lucro_desejado_m" res={resM} />
+                            <TamanhoRow label="G" cor="amber" custo={custoG} custoField="custo_variavel_g" lucro={lucroG} lucroField="lucro_desejado_g" res={resG} />
+                          </>
                         )}
-                        <p className="text-[9px] text-slate-400">Fórmula: ({fmt(config.custo_fixo_por_atendimento)} + {fmt(proc.custo_variavel)} + ganho) ÷ {(1 - Number(config.taxa_maquininha_pct)/100).toFixed(2)} = Preço P</p>
+                        {temDados && (
+                          <button
+                            onClick={async () => {
+                              const update = { preco_p: resP?.precoSugerido || proc.preco_p };
+                              if (proc.requer_comprimento) {
+                                update.preco_m = resM?.precoSugerido || proc.preco_m;
+                                update.preco_g = resG?.precoSugerido || proc.preco_g;
+                              }
+                              const { error } = await supabase.from('procedimentos').update(update).eq('id', proc.id).eq('salao_id', salaoId);
+                              if (error) showToast('Erro: ' + error.message, 'error');
+                              else {
+                                setProcedimentos(prev => prev.map(pr => pr.id === proc.id ? { ...pr, ...update } : pr));
+                                showToast(`Preços de ${proc.nome} atualizados!`, 'success');
+                              }
+                            }}
+                            className="w-full py-1.5 bg-gradient-to-r from-emerald-500 to-teal-500 text-white rounded-lg text-[10px] font-black hover:from-emerald-600 hover:to-teal-600 transition-all shadow-md shadow-emerald-200 flex items-center justify-center gap-1"
+                          >
+                            <Save size={12} /> Aplicar Preços Calculados
+                          </button>
+                        )}
                       </div>
                       );
                     })()}
@@ -645,7 +666,7 @@ export default function Precificacao({ salaoId }) {
               {Array.from({ length: 12 }, (_, i) => { const d = new Date(); d.setMonth(d.getMonth() - i); const v = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`; return <option key={v} value={v}>{d.toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' })}</option>; })}
             </select>
             <button onClick={() => abrirModalDesp()} className="flex items-center gap-2 px-4 py-2.5 bg-emerald-600 text-white rounded-xl hover:bg-emerald-700 transition-all shadow-lg shadow-emerald-200 text-sm font-bold">
-              <Plus size={16} /> Nova Despesa
+              <Plus size={16} /> Nova Despesa de Produto
             </button>
           </div>
 
@@ -690,7 +711,7 @@ export default function Precificacao({ salaoId }) {
               <div><label className="text-sm font-bold text-slate-700 mb-1 block">Data</label>
                 <input type="date" value={formDesp.data} onChange={e => setFormDesp({...formDesp, data: e.target.value})} className="w-full border-2 border-slate-100 p-3 rounded-2xl focus:border-emerald-500 outline-none" /></div>
               <div><label className="text-sm font-bold text-slate-700 mb-1 block">Descrição</label>
-                <input type="text" value={formDesp.descricao} onChange={e => setFormDesp({...formDesp, descricao: e.target.value.toUpperCase()})} placeholder="Ex: ALUGUEL" className="w-full border-2 border-slate-100 p-3 rounded-2xl focus:border-emerald-500 outline-none" /></div>
+                <input type="text" value={formDesp.descricao} onChange={e => setFormDesp({...formDesp, descricao: e.target.value.toUpperCase()})} placeholder="Ex: PROGRESSIVA 500ML" className="w-full border-2 border-slate-100 p-3 rounded-2xl focus:border-emerald-500 outline-none" /></div>
               <div><label className="text-sm font-bold text-slate-700 mb-1 block">Tipo</label>
                 <select value={formDesp.tipo} onChange={e => setFormDesp({...formDesp, tipo: e.target.value})} className="w-full border-2 border-slate-100 p-3 rounded-2xl focus:border-emerald-500 outline-none bg-white">
                   {TIPOS_DESPESA.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}
@@ -709,48 +730,21 @@ export default function Precificacao({ salaoId }) {
         </div>
       )}
 
-      {/* ═══ ABA: CUSTOS FIXOS ═══ */}
-      {abaAtiva === 'custos_fixos' && (
-        <div className="space-y-6 max-w-2xl">
-          <div className="bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-200 rounded-2xl p-4 flex items-start gap-3">
-            <Info size={18} className="text-amber-500 flex-shrink-0 mt-0.5" />
-            <p className="text-sm text-amber-800"><strong>Importante:</strong> Alterar esses valores recalcula automaticamente os preços sugeridos na aba Precificação.</p>
-          </div>
+      {/* ═══ ABA: BASE DE CUSTOS ═══ */}
+      {abaAtiva === 'base_custos' && (
+        <BaseCustos
+          salaoId={salaoId}
+          qtdAtendimentos={config.qtd_atendimentos_mes}
+          onCustoFixoChange={(rateado) => {
+            setConfig(prev => ({ ...prev, custo_fixo_por_atendimento: rateado }));
+            supabase.from('configuracoes').update({ custo_fixo_por_atendimento: rateado }).eq('salao_id', salaoId);
+          }}
+        />
+      )}
 
-          {[{
-            campo: 'custo_fixo_por_atendimento', label: 'Custo fixo por atendimento (R$)', prefixo: 'R$', step: '0.01',
-            desc: 'Representa aluguel + contas fixas dividido pela média de atendimentos mensais'
-          }, {
-            campo: 'taxa_maquininha_pct', label: 'Taxa da maquininha (%)', sufixo: '%', step: '0.1',
-            desc: 'Percentual descontado em pagamentos por cartão. Padrão: 5%'
-          }, {
-            campo: 'margem_lucro_desejada_pct', label: 'Margem de lucro desejada (%)', sufixo: '%', step: '0.1',
-            desc: 'Meta percentual de lucro sobre o faturamento bruto'
-          }, {
-            campo: 'qtd_atendimentos_mes', label: 'Qtd. atendimentos / mês', step: '1',
-            desc: 'Média de atendimentos mensais para rateio dos custos fixos'
-          }].map(item => (
-            <div key={item.campo} className="bg-white rounded-2xl border border-slate-200 p-5 shadow-sm">
-              <label className="text-sm font-bold text-slate-700 block mb-1">{item.label}</label>
-              <p className="text-xs text-slate-400 mb-3">{item.desc}</p>
-              <div className="flex items-center gap-2">
-                {item.prefixo && <span className="text-slate-400 text-sm font-bold">{item.prefixo}</span>}
-                <input type="number" step={item.step}
-                  className="border-2 border-slate-200 rounded-xl px-4 py-3 text-lg font-black text-slate-800 outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200 w-40 transition-all"
-                  value={config[item.campo]}
-                  onChange={e => { setConfig(prev => ({ ...prev, [item.campo]: e.target.value })); setConfigAlterada(true); }}
-                  onBlur={async () => {
-                    try {
-                      await supabase.from('configuracoes').update({ [item.campo]: Number(config[item.campo]) }).eq('salao_id', salaoId);
-                      showToast('✓ Salvo', 'success');
-                    } catch { showToast('Erro ao salvar', 'error'); }
-                  }}
-                />
-                {item.sufixo && <span className="text-slate-400 text-sm font-bold">{item.sufixo}</span>}
-              </div>
-            </div>
-          ))}
-        </div>
+      {/* ═══ ABA: CATÁLOGO ═══ */}
+      {abaAtiva === 'catalogo' && (
+        <CatalogoProdutos salaoId={salaoId} />
       )}
     </div>
   );

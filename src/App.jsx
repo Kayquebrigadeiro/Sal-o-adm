@@ -11,7 +11,7 @@ import Precificacao from './pages/Precificacao';
 import HomeCar from './pages/HomeCar';
 import Paralelos from './pages/Paralelos';
 import Configuracoes from './pages/Configuracoes';
-import CatalogoProdutos from './pages/CatalogoProdutos';
+
 import VendedorApp from './vendedor/VendedorApp';
 import WizardPrimeiroAcesso from './pages/WizardPrimeiroAcesso';
 
@@ -145,7 +145,7 @@ export default function App() {
                 <Route path="/dashboard" element={role === 'PROPRIETARIO' ? <Dashboard {...ctx} /> : <Navigate to="/agenda" />} />
                 <Route path="/precificacao" element={role === 'PROPRIETARIO' ? <Precificacao {...ctx} /> : <Navigate to="/agenda" />} />
                 <Route path="/homecar" element={role === 'PROPRIETARIO' ? <HomeCar {...ctx} /> : <Navigate to="/agenda" />} />
-                <Route path="/catalogo" element={role === 'PROPRIETARIO' ? <CatalogoProdutos {...ctx} /> : <Navigate to="/agenda" />} />
+
                 <Route path="/paralelos" element={role === 'PROPRIETARIO' ? <Paralelos {...ctx} /> : <Navigate to="/agenda" />} />
                 <Route path="/configuracoes" element={role === 'PROPRIETARIO' ? <Configuracoes {...ctx} /> : <Navigate to="/agenda" />} />
                 <Route path="*" element={<Navigate to="/agenda" />} />

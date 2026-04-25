@@ -3,7 +3,7 @@ import { supabase } from '../supabaseClient';
 import { useToast } from '../components/Toast';
 import { FinancialEngine } from '../services/FinancialEngine';
 import { TAXA_MAQUININHA_PADRAO } from '../services/financialConstants';
-import { Clock, User, Scissors, DollarSign, X, CheckCircle2, AlertCircle, AlertTriangle, UserPlus, List, ChevronLeft, ChevronRight, Loader2, Sparkles, Search, Phone, Plus, Eye, EyeOff, Trash2 } from 'lucide-react';
+import { Clock, User, Scissors, DollarSign, X, CheckCircle2, AlertCircle, AlertTriangle, UserPlus, List, ChevronLeft, ChevronRight, Loader2, Sparkles, Search, Phone, Plus, Eye, EyeOff, Trash2, Package } from 'lucide-react';
 
 const fmt = (v) => Number(v || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
 const fmtPct = (v) => `${Number(v || 0).toFixed(1)}%`;
@@ -707,6 +707,23 @@ export default function Agenda({ salaoId, role }) {
                   {procedimentos.map(p => <option key={p.id} value={p.id}>{p.nome}</option>)}
                 </select>
               </div>
+
+              {/* INFO CARD PRODUTO APLICADO */}
+              {(() => {
+                const proc = procedimentos.find(p => p.id === novo.procId);
+                if (!proc || proc.categoria !== 'PRODUTO_APLICADO') return null;
+                return (
+                  <div className="mt-2 bg-violet-50 border border-violet-200 rounded-xl p-3">
+                    <p className="text-[10px] font-black uppercase text-violet-600 mb-1 flex items-center gap-1">
+                      <Package size={12} /> Detalhes do Produto
+                    </p>
+                    <div className="flex items-center justify-between text-xs text-violet-800">
+                      <span>Rende: <b>{proc.aplicacoes_por_frasco} aplicações</b></span>
+                      <span>Custo/Dose: <b>{fmt(proc.custo_variavel)}</b></span>
+                    </div>
+                  </div>
+                );
+              })()}
 
               {/* TAMANHO */}
               {(() => {

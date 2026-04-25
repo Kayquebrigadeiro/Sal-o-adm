@@ -278,7 +278,5 @@ Projeto privado - Todos os direitos reservados
 
 ---
 
-**Desenvolvido com ❤️ para salões de beleza**
+**Desenvolvido para salões de beleza**
 
-**Versão:** 2.0.0  
-**Última atualização:** Janeiro 2025

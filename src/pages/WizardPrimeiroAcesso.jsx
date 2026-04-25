@@ -1,55 +1,55 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '../supabaseClient';
 import {
-  Sparkles, UserPlus, Trash2, Scissors, HandMetal, Eye, EyeOff,
-  Gem, ChevronRight, ChevronLeft, Check, Home, Zap, Droplets,
-  Wifi, ShoppingBag, Plus, PartyPopper, Star, Heart, Crown,
+  Sparkles, UserPlus, Trash2, Scissors, FlaskConical,
+  ChevronRight, ChevronLeft, Check, Home, Zap, Droplets,
+  Wifi, ShoppingBag, Plus, Lightbulb,
   Briefcase, CheckCircle2, User, Building, Settings
 } from 'lucide-react';
+import { SUGESTOES as SUGESTOES_CONST, ORDEM_CATEGORIAS, CATEGORIAS as CAT_CONFIG } from '../constants/categorias';
 
-/* ───────── Enums alinhados ao schema V5 ───────────────────────────────────── */
-const CATEGORIAS = [
-  { key: 'CABELO',       label: 'Cabelo & Barba', emoji: '✂️', comTamanho: true  },
-  { key: 'UNHAS',        label: 'Unhas',          emoji: '💅', comTamanho: false },
-  { key: 'SOBRANCELHAS', label: 'Sobrancelhas',   emoji: '✨', comTamanho: false },
-  { key: 'CILIOS',       label: 'Cílios',         emoji: '👁️', comTamanho: false },
-  { key: 'OUTRO',        label: 'Outros',         emoji: '🌟', comTamanho: false },
+/* ───────── Categorias V6 ──────────────────────────────────────────────────── */
+const CATEGORIAS = ORDEM_CATEGORIAS.map(key => ({
+  key,
+  label: CAT_CONFIG[key].label,
+  emoji: CAT_CONFIG[key].emoji,
+  comTamanho: CAT_CONFIG[key].temComprimento,
+  descricao: CAT_CONFIG[key].descricao,
+}));
+
+const CUSTOS_PADRAO = [
+  { nome: 'Aluguel',  tipo: 'ALUGUEL',  icon: Home,     cor: 'indigo' },
+  { nome: 'Energia',  tipo: 'ENERGIA',  icon: Zap,      cor: 'amber'  },
+  { nome: 'Água',     tipo: 'AGUA',     icon: Droplets, cor: 'sky'    },
+  { nome: 'Internet', tipo: 'INTERNET', icon: Wifi,     cor: 'violet' },
 ];
 
-const SUGESTOES = {
-  CABELO: ['Corte Masculino', 'Corte Feminino', 'Barba', 'Coloração', 'Luzes', 'Escova', 'Progressiva', 'Hidratação', 'Selagem'],
-  UNHAS: ['Manicure', 'Pedicure', 'Alongamento em Gel', 'Alongamento em Fibra', 'Manutenção'],
-  SOBRANCELHAS: ['Design', 'Design com Henna', 'Micropigmentação', 'Laminação'],
-  CILIOS: ['Volume Russo', 'Fio a Fio', 'Lifting de Cílios', 'Manutenção'],
-  OUTRO: ['Depilação', 'Limpeza de Pele', 'Maquiagem', 'Massagem'],
-};
-
-const DESPESAS_PADRAO = [
-  { nome: 'Aluguel',  tipo: 'ALUGUEL',  icon: Home,        cor: 'indigo' },
-  { nome: 'Energia',  tipo: 'ENERGIA',  icon: Zap,         cor: 'amber'  },
-  { nome: 'Água',     tipo: 'AGUA',     icon: Droplets,    cor: 'sky'    },
-  { nome: 'Internet', tipo: 'INTERNET', icon: Wifi,        cor: 'violet' },
-  { nome: 'Produtos', tipo: 'MATERIAL', icon: ShoppingBag, cor: 'emerald'},
-];
-
-const TIPOS_DESPESA = [
+const TIPOS_CUSTO = [
   { value: 'ALUGUEL',     label: 'Aluguel'     },
   { value: 'ENERGIA',     label: 'Energia/Luz' },
   { value: 'AGUA',        label: 'Água'        },
   { value: 'INTERNET',    label: 'Internet'    },
   { value: 'MATERIAL',    label: 'Material'    },
   { value: 'EQUIPAMENTO', label: 'Equipamento' },
-  { value: 'FORNECEDOR',  label: 'Fornecedor'  },
   { value: 'FUNCIONARIO', label: 'Funcionário' },
   { value: 'OUTRO',       label: 'Outro'       },
 ];
 
 const uid = () => Math.random().toString(36).substr(2, 9);
 
-const procVazio = (comTamanho) =>
-  comTamanho
-    ? { id: uid(), nome: '', preco_p: '', preco_m: '', preco_g: '', porcentagem_profissional: '40', custo_variavel: '0' }
-    : { id: uid(), nome: '', preco_p: '', porcentagem_profissional: '40', custo_variavel: '0' };
+const novoProcCabelo = (nome = '', comissao = 40) => ({
+  id: uid(), nome, preco_p: '', preco_m: '', preco_g: '',
+  porcentagem_profissional: String(comissao), custo_variavel: '0',
+});
+
+const novoProdutoAplicado = (nome = '', marca = '') => ({
+  id: uid(), nome, marca, preco_frasco: '', aplicacoes_por_frasco: '',
+  preco_p: '',
+});
+
+const novoProcEstetica = (nome = '', comissao = 45) => ({
+  id: uid(), nome, preco_p: '', porcentagem_profissional: String(comissao),
+});
 
 /* ───────── Componentes Auxiliares ──────────────────────────────────────────── */
 const Toggle = ({ value, onChange, label }) => (
@@ -145,40 +145,47 @@ export default function WizardPrimeiroAcesso({ salaoId }) {
   const removeFunc = (id) => setFuncionarios(f => f.filter(x => x.id !== id));
   const updateFunc = (id, k, v) => setFuncionarios(f => f.map(x => x.id === id ? { ...x, [k]: v } : x));
 
-  // ─── Etapa 2: Procedimentos ────────────────────────────────────────────
-  const [catAtiva, setCatAtiva] = useState('CABELO');
-  const [procedimentos, setProcedimentos] = useState(
-    Object.fromEntries(CATEGORIAS.map(c => [c.key, []]))
+  // ─── Etapa 2: Serviços e Produtos (3 categorias V6) ──────────────────────
+  const [servicosCabelo, setServicosCabelo]     = useState([]);
+  const [produtosAplicados, setProdutosAplicados] = useState([]);
+  const [servicosEstetica, setServicosEstetica] = useState([]);
+
+  const addCabelo = (nome = '', comissao = 40) => setServicosCabelo(prev => [...prev, novoProcCabelo(nome, comissao)]);
+  const addProduto = (nome = '', marca = '') => setProdutosAplicados(prev => [...prev, novoProdutoAplicado(nome, marca)]);
+  const addEstetica = (nome = '', comissao = 45) => setServicosEstetica(prev => [...prev, novoProcEstetica(nome, comissao)]);
+
+  const removeCabelo = (id) => setServicosCabelo(prev => prev.filter(x => x.id !== id));
+  const removeProduto = (id) => setProdutosAplicados(prev => prev.filter(x => x.id !== id));
+  const removeEstetica = (id) => setServicosEstetica(prev => prev.filter(x => x.id !== id));
+
+  const updateCabelo = (id, k, v) => setServicosCabelo(prev => prev.map(x => x.id === id ? { ...x, [k]: v } : x));
+  const updateProduto = (id, k, v) => setProdutosAplicados(prev => prev.map(x => x.id === id ? { ...x, [k]: v } : x));
+  const updateEstetica = (id, k, v) => setServicosEstetica(prev => prev.map(x => x.id === id ? { ...x, [k]: v } : x));
+
+  const isCabeloAdded = (nome) => servicosCabelo.some(p => p.nome === nome);
+  const isProdutoAdded = (nome) => produtosAplicados.some(p => p.nome === nome);
+  const isEsteticaAdded = (nome) => servicosEstetica.some(p => p.nome === nome);
+
+  // ─── Etapa 3: Custos Fixos (salva em custos_fixos_itens) ────────────────
+  const [atendimentosMes, setAtendimentosMes] = useState(100);
+  const [catAtiva, setCatAtiva] = useState('SERVICO_CABELO');
+  const [custos, setCustos] = useState(
+    CUSTOS_PADRAO.map(d => ({ id: uid(), nome: d.nome, tipo: d.tipo, valor: '' }))
   );
+  const [custosExtras, setCustosExtras] = useState([]);
 
-  const addProc = (cat, nome = '') => {
-    const comTamanho = CATEGORIAS.find(c => c.key === cat).comTamanho;
-    const novo = procVazio(comTamanho);
-    novo.nome = nome;
-    setProcedimentos(p => ({ ...p, [cat]: [...p[cat], novo] }));
-  };
-  const removeProc = (cat, id) => setProcedimentos(p => ({ ...p, [cat]: p[cat].filter(x => x.id !== id) }));
-  const updateProc = (cat, id, k, v) => setProcedimentos(p => ({
-    ...p, [cat]: p[cat].map(x => x.id === id ? { ...x, [k]: v } : x)
-  }));
-
-  const isSugestaoAdded = (cat, nome) => procedimentos[cat].some(p => p.nome === nome);
-
-  // ─── Etapa 3: Despesas ─────────────────────────────────────────────────
-  const [despesas, setDespesas] = useState(
-    DESPESAS_PADRAO.map(d => ({ id: uid(), nome: d.nome, tipo: d.tipo, valor: '' }))
-  );
-  const [despesasExtras, setDespesasExtras] = useState([]);
-
-  const addDespesaExtra    = () => setDespesasExtras(d => [...d, { id: uid(), nome: '', tipo: 'OUTRO', valor: '' }]);
-  const removeDespesaExtra = (id) => setDespesasExtras(d => d.filter(x => x.id !== id));
-  const updateDespesa = (id, k, v) => {
-    setDespesas(d => d.map(x => x.id === id ? { ...x, [k]: v } : x));
-    setDespesasExtras(d => d.map(x => x.id === id ? { ...x, [k]: v } : x));
+  const addCustoExtra    = () => setCustosExtras(d => [...d, { id: uid(), nome: '', tipo: 'OUTRO', valor: '' }]);
+  const removeCustoExtra = (id) => setCustosExtras(d => d.filter(x => x.id !== id));
+  const updateCusto = (id, k, v) => {
+    setCustos(d => d.map(x => x.id === id ? { ...x, [k]: v } : x));
+    setCustosExtras(d => d.map(x => x.id === id ? { ...x, [k]: v } : x));
   };
 
-  const totalDespesas = [...despesas, ...despesasExtras]
+  const totalCustos = [...custos, ...custosExtras]
     .reduce((acc, d) => acc + (Number(d.valor) || 0), 0);
+  const custoPorAtendimento = atendimentosMes > 0
+    ? (totalCustos / atendimentosMes).toFixed(2)
+    : '0.00';
 
   // ─── Navegação ─────────────────────────────────────────────────────────
   const avancar = () => { setAnimKey(k => k + 1); setEtapa(e => Math.min(e + 1, 4)); };
@@ -186,8 +193,10 @@ export default function WizardPrimeiroAcesso({ salaoId }) {
 
   // ─── Contadores para resumo ─────────────────────────────────────────────
   const totalFuncs = temFuncionarios ? funcionarios.filter(f => f.nome.trim()).length : 0;
-  const totalProcs = CATEGORIAS.reduce((acc, cat) => acc + procedimentos[cat.key].filter(p => p.nome.trim() && p.preco_p).length, 0);
-  const totalDesps = [...despesas, ...despesasExtras].filter(d => d.nome.trim() && d.valor).length;
+  const totalProcs = servicosCabelo.filter(p => p.nome.trim()).length
+    + produtosAplicados.filter(p => p.nome.trim()).length
+    + servicosEstetica.filter(p => p.nome.trim()).length;
+  const totalDesps = [...custos, ...custosExtras].filter(d => d.nome.trim() && d.valor).length;
 
   // ─── Finalizar ─────────────────────────────────────────────────────────
   const finalizar = async () => {
@@ -233,46 +242,61 @@ export default function WizardPrimeiroAcesso({ salaoId }) {
         }
       }
 
-      // 4. Procedimentos
+      // 4. Serviços e Produtos (V6)
       const rows = [];
-      CATEGORIAS.forEach(cat => {
-        procedimentos[cat.key]
-          .filter(p => p.nome.trim() && p.preco_p)
-          .forEach(p => {
-            rows.push({
-              salao_id:                 salaoId,
-              nome:                     p.nome.trim(),
-              categoria:                cat.key,
-              requer_comprimento:       cat.comTamanho,
-              preco_p:                  Number(p.preco_p) || null,
-              preco_m:                  cat.comTamanho ? (Number(p.preco_m) || null) : null,
-              preco_g:                  cat.comTamanho ? (Number(p.preco_g) || null) : null,
-              porcentagem_profissional: Number(p.porcentagem_profissional) || 40,
-              custo_variavel:           Number(p.custo_variavel) || 0,
-              ativo:                    true,
-            });
-          });
+      
+      servicosCabelo.filter(p => p.nome.trim()).forEach(p => {
+        rows.push({
+          salao_id: salaoId, nome: p.nome.trim(), categoria: 'SERVICO_CABELO', requer_comprimento: true,
+          preco_p: Number(p.preco_p) || null, preco_m: Number(p.preco_m) || null, preco_g: Number(p.preco_g) || null,
+          porcentagem_profissional: Number(p.porcentagem_profissional) || 40, custo_variavel: Number(p.custo_variavel) || 0,
+          ativo: true,
+        });
       });
+
+      produtosAplicados.filter(p => p.nome.trim()).forEach(p => {
+        const pFrasco = Number(p.preco_frasco) || 0;
+        const aplicacoes = Math.max(Number(p.aplicacoes_por_frasco) || 1, 1);
+        rows.push({
+          salao_id: salaoId, nome: p.nome.trim(), categoria: 'PRODUTO_APLICADO', requer_comprimento: false,
+          preco_p: Number(p.preco_p) || null, preco_frasco: pFrasco, aplicacoes_por_frasco: aplicacoes,
+          custo_variavel: pFrasco / aplicacoes,
+          porcentagem_profissional: 0, ativo: true,
+        });
+      });
+
+      servicosEstetica.filter(p => p.nome.trim()).forEach(p => {
+        rows.push({
+          salao_id: salaoId, nome: p.nome.trim(), categoria: 'SERVICO_ESTETICA', requer_comprimento: false,
+          preco_p: Number(p.preco_p) || null, porcentagem_profissional: Number(p.porcentagem_profissional) || 45,
+          custo_variavel: 0, ativo: true,
+        });
+      });
+
       if (rows.length > 0) {
         const { error } = await supabase.from('procedimentos').insert(rows);
         if (error) throw error;
       }
 
-      // 5. Despesas
-      const todasDespesas = [...despesas, ...despesasExtras].filter(d => d.nome.trim() && d.valor);
-      if (todasDespesas.length > 0) {
-        const hoje = new Date().toISOString().split('T')[0];
-        const { error } = await supabase.from('despesas').insert(
-          todasDespesas.map(d => ({
+      // 5. Custos Fixos (salva em custos_fixos_itens!)
+      const todosCustos = [...custos, ...custosExtras].filter(d => d.nome.trim() && d.valor);
+      if (todosCustos.length > 0) {
+        const { error } = await supabase.from('custos_fixos_itens').insert(
+          todosCustos.map(d => ({
             salao_id:   salaoId,
             descricao:  d.nome.trim(),
             tipo:       d.tipo,
             valor:      Number(d.valor),
-            valor_pago: 0,
-            data:       hoje,
+            valor_mensal: Number(d.valor),
+            ativo:      true
           }))
         );
         if (error) throw error;
+      }
+
+      // 6. Atualizar atendimentos_mes na config
+      if (atendimentosMes > 0) {
+        await supabase.from('configuracoes').update({ qtd_atendimentos_mes: Number(atendimentosMes) }).eq('salao_id', salaoId);
       }
 
       // Sucesso!
@@ -461,122 +485,151 @@ export default function WizardPrimeiroAcesso({ salaoId }) {
 
                 {/* Tabs por categoria */}
                 <div className="flex gap-2 overflow-x-auto pb-2 mb-6 scrollbar-hide">
-                  {CATEGORIAS.map(cat => (
-                    <button
-                      key={cat.key}
-                      onClick={() => setCatAtiva(cat.key)}
-                      className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold whitespace-nowrap transition-all duration-200 ${
-                        catAtiva === cat.key
-                          ? 'bg-slate-900 text-white'
-                          : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
-                      }`}
-                    >
-                      <span className="opacity-80">{cat.emoji}</span> {cat.label}
-                      {procedimentos[cat.key].length > 0 && (
-                        <span className={`ml-1 w-5 h-5 rounded-full text-[10px] flex items-center justify-center ${
-                          catAtiva === cat.key ? 'bg-white/20' : 'bg-slate-300 text-slate-800'
-                        }`}>
-                          {procedimentos[cat.key].length}
-                        </span>
-                      )}
-                    </button>
-                  ))}
+                  {CATEGORIAS.map(cat => {
+                    const count = cat.key === 'SERVICO_CABELO' ? servicosCabelo.length : cat.key === 'PRODUTO_APLICADO' ? produtosAplicados.length : servicosEstetica.length;
+                    return (
+                      <button
+                        key={cat.key}
+                        onClick={() => setCatAtiva(cat.key)}
+                        className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold whitespace-nowrap transition-all duration-200 ${
+                          catAtiva === cat.key
+                            ? 'bg-slate-900 text-white'
+                            : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                        }`}
+                      >
+                        <span className="opacity-80">{cat.emoji}</span> {cat.label}
+                        {count > 0 && (
+                          <span className={`ml-1 w-5 h-5 rounded-full text-[10px] flex items-center justify-center ${
+                            catAtiva === cat.key ? 'bg-white/20' : 'bg-slate-300 text-slate-800'
+                          }`}>
+                            {count}
+                          </span>
+                        )}
+                      </button>
+                    );
+                  })}
                 </div>
 
-                {/* Sugestões (chips clicáveis) */}
-                {CATEGORIAS.filter(c => c.key === catAtiva).map(cat => (
-                  <div key={cat.key}>
+                <p className="text-sm text-slate-500 mb-6 font-medium">
+                  {CATEGORIAS.find(c => c.key === catAtiva)?.descricao}
+                </p>
+
+                {/* ─── SERVICO_CABELO ───────────────────────────────────── */}
+                {catAtiva === 'SERVICO_CABELO' && (
+                  <div>
                     <p className="text-xs font-semibold text-slate-500 mb-3 uppercase tracking-wider">Sugestões rápidas</p>
                     <div className="flex flex-wrap gap-2 mb-6">
-                      {SUGESTOES[cat.key]?.map(sugestao => {
-                        const added = isSugestaoAdded(cat.key, sugestao);
+                      {SUGESTOES_CONST.SERVICO_CABELO.map(sug => {
+                        const added = isCabeloAdded(sug.nome);
                         return (
-                          <button
-                            key={sugestao}
-                            onClick={() => { if (!added) addProc(cat.key, sugestao); }}
-                            disabled={added}
-                            className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-all duration-200 border ${
-                              added
-                                ? 'bg-indigo-50 text-indigo-700 border-indigo-200 opacity-60 cursor-default'
-                                : 'bg-white text-slate-700 border-slate-300 hover:border-indigo-400 hover:text-indigo-600'
-                            }`}
-                          >
-                            {added && <Check size={14} className="inline mr-1" />}
-                            {!added && <Plus size={14} className="inline mr-1" />}
-                            {sugestao}
+                          <button key={sug.nome} onClick={() => { if (!added) addCabelo(sug.nome, sug.comissao); }} disabled={added}
+                            className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-all duration-200 border ${added ? 'bg-emerald-50 text-emerald-700 border-emerald-200 opacity-60 cursor-default' : 'bg-white text-slate-700 border-slate-300 hover:border-emerald-400 hover:text-emerald-600'}`}>
+                            {added ? <Check size={14} className="inline mr-1" /> : <Plus size={14} className="inline mr-1" />} {sug.nome}
                           </button>
                         );
                       })}
                     </div>
 
-                    {/* Procedimentos adicionados */}
-                    {procedimentos[cat.key].length > 0 && (
+                    {servicosCabelo.length > 0 && (
                       <div className="space-y-4">
-                        <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Serviços Selecionados</p>
-                        {procedimentos[cat.key].map(proc => (
+                        {servicosCabelo.map(proc => (
                           <div key={proc.id} className="bg-slate-50 rounded-xl p-4 sm:p-5 border border-slate-200 space-y-4 animate-fadeIn">
                             <div className="flex items-center justify-between">
-                              <input
-                                type="text" value={proc.nome}
-                                onChange={e => updateProc(cat.key, proc.id, 'nome', e.target.value.toUpperCase())}
-                                placeholder="Nome do Serviço"
-                                className="flex-1 border-0 bg-transparent text-base font-bold text-slate-900 outline-none placeholder:text-slate-400 p-0 focus:ring-0"
-                              />
-                              <button onClick={() => removeProc(cat.key, proc.id)} className="text-slate-400 hover:text-red-600 transition-colors">
-                                <Trash2 size={16} />
-                              </button>
+                              <input type="text" value={proc.nome} onChange={e => updateCabelo(proc.id, 'nome', e.target.value.toUpperCase())} placeholder="Nome do Serviço" className="flex-1 border-0 bg-transparent text-base font-bold text-slate-900 outline-none placeholder:text-slate-400 p-0 focus:ring-0" />
+                              <button onClick={() => removeCabelo(proc.id)} className="text-slate-400 hover:text-red-600 transition-colors"><Trash2 size={16} /></button>
                             </div>
-
-                            {cat.comTamanho ? (
-                              <div className="grid grid-cols-3 gap-3">
-                                <div>
-                                  <label className="text-xs font-semibold text-slate-600 block mb-1">P / Curto (R$)</label>
-                                  <input type="number" value={proc.preco_p} onChange={e => updateProc(cat.key, proc.id, 'preco_p', e.target.value)}
-                                    placeholder="0.00" className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500" />
-                                </div>
-                                <div>
-                                  <label className="text-xs font-semibold text-slate-600 block mb-1">M / Médio (R$)</label>
-                                  <input type="number" value={proc.preco_m} onChange={e => updateProc(cat.key, proc.id, 'preco_m', e.target.value)}
-                                    placeholder="0.00" className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500" />
-                                </div>
-                                <div>
-                                  <label className="text-xs font-semibold text-slate-600 block mb-1">G / Longo (R$)</label>
-                                  <input type="number" value={proc.preco_g} onChange={e => updateProc(cat.key, proc.id, 'preco_g', e.target.value)}
-                                    placeholder="0.00" className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500" />
-                                </div>
-                              </div>
-                            ) : (
-                              <div>
-                                <label className="text-xs font-semibold text-slate-600 block mb-1">Valor Padrão (R$)</label>
-                                <input type="number" value={proc.preco_p} onChange={e => updateProc(cat.key, proc.id, 'preco_p', e.target.value)}
-                                  placeholder="0.00" className="w-full sm:w-1/3 border border-slate-300 rounded-lg px-3 py-2 text-sm outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500" />
-                              </div>
-                            )}
-
+                            <div className="grid grid-cols-3 gap-3">
+                              <div><label className="text-xs font-semibold text-slate-600 block mb-1">P / Curto (R$)</label><input type="number" value={proc.preco_p} onChange={e => updateCabelo(proc.id, 'preco_p', e.target.value)} placeholder="0.00" className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500" /></div>
+                              <div><label className="text-xs font-semibold text-slate-600 block mb-1">M / Médio (R$)</label><input type="number" value={proc.preco_m} onChange={e => updateCabelo(proc.id, 'preco_m', e.target.value)} placeholder="0.00" className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500" /></div>
+                              <div><label className="text-xs font-semibold text-slate-600 block mb-1">G / Longo (R$)</label><input type="number" value={proc.preco_g} onChange={e => updateCabelo(proc.id, 'preco_g', e.target.value)} placeholder="0.00" className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500" /></div>
+                            </div>
                             <div className="grid grid-cols-2 gap-4 border-t border-slate-200 pt-4 mt-2">
-                              <div>
-                                <label className="text-xs font-semibold text-slate-600 block mb-1">Comissão Profissional (%)</label>
-                                <input type="number" value={proc.porcentagem_profissional}
-                                  onChange={e => updateProc(cat.key, proc.id, 'porcentagem_profissional', e.target.value)}
-                                  placeholder="40" className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500" />
-                              </div>
-                              <div>
-                                <label className="text-xs font-semibold text-slate-600 block mb-1">Custo de Material (R$)</label>
-                                <input type="number" value={proc.custo_variavel}
-                                  onChange={e => updateProc(cat.key, proc.id, 'custo_variavel', e.target.value)}
-                                  placeholder="0.00" className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500" />
-                              </div>
+                              <div><label className="text-xs font-semibold text-slate-600 block mb-1">Comissão (%)</label><input type="number" value={proc.porcentagem_profissional} onChange={e => updateCabelo(proc.id, 'porcentagem_profissional', e.target.value)} placeholder="40" className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500" /></div>
+                              <div><label className="text-xs font-semibold text-slate-600 block mb-1">Custo Mat. P (R$)</label><input type="number" value={proc.custo_variavel} onChange={e => updateCabelo(proc.id, 'custo_variavel', e.target.value)} placeholder="0.00" className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500" /></div>
                             </div>
                           </div>
                         ))}
                       </div>
                     )}
-
-                    <button onClick={() => addProc(cat.key)} className="mt-4 flex items-center justify-center gap-2 w-full py-3 border-2 border-dashed border-slate-300 rounded-xl text-sm text-slate-600 hover:text-indigo-600 hover:border-indigo-300 hover:bg-indigo-50 font-semibold transition-all">
-                      <Plus size={16} /> Adicionar serviço manualmente
-                    </button>
+                    <button onClick={() => addCabelo()} className="mt-4 flex items-center justify-center gap-2 w-full py-3 border-2 border-dashed border-slate-300 rounded-xl text-sm text-slate-600 hover:text-emerald-600 hover:border-emerald-300 hover:bg-emerald-50 font-semibold transition-all"><Plus size={16} /> Adicionar serviço de cabelo manualmente</button>
                   </div>
-                ))}
+                )}
+
+                {/* ─── PRODUTO_APLICADO ─────────────────────────────────── */}
+                {catAtiva === 'PRODUTO_APLICADO' && (
+                  <div>
+                    <p className="text-xs font-semibold text-slate-500 mb-3 uppercase tracking-wider">Sugestões rápidas</p>
+                    <div className="flex flex-wrap gap-2 mb-6">
+                      {SUGESTOES_CONST.PRODUTO_APLICADO.map(sug => {
+                        const added = isProdutoAdded(sug.nome);
+                        return (
+                          <button key={sug.nome} onClick={() => { if (!added) addProduto(sug.nome, sug.marca); }} disabled={added}
+                            className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-all duration-200 border ${added ? 'bg-violet-50 text-violet-700 border-violet-200 opacity-60 cursor-default' : 'bg-white text-slate-700 border-slate-300 hover:border-violet-400 hover:text-violet-600'}`}>
+                            {added ? <Check size={14} className="inline mr-1" /> : <Plus size={14} className="inline mr-1" />} {sug.nome}
+                          </button>
+                        );
+                      })}
+                    </div>
+
+                    {produtosAplicados.length > 0 && (
+                      <div className="space-y-4">
+                        {produtosAplicados.map(proc => (
+                          <div key={proc.id} className="bg-slate-50 rounded-xl p-4 sm:p-5 border border-slate-200 space-y-4 animate-fadeIn">
+                            <div className="flex items-center justify-between">
+                              <input type="text" value={proc.nome} onChange={e => updateProduto(proc.id, 'nome', e.target.value.toUpperCase())} placeholder="Nome do Produto/Serviço" className="flex-1 border-0 bg-transparent text-base font-bold text-slate-900 outline-none placeholder:text-slate-400 p-0 focus:ring-0" />
+                              <button onClick={() => removeProduto(proc.id)} className="text-slate-400 hover:text-red-600 transition-colors"><Trash2 size={16} /></button>
+                            </div>
+                            <div className="grid grid-cols-2 gap-4">
+                              <div><label className="text-xs font-semibold text-slate-600 block mb-1">Preço do Frasco/Kit (R$)</label><input type="number" value={proc.preco_frasco} onChange={e => updateProduto(proc.id, 'preco_frasco', e.target.value)} placeholder="0.00" className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500" /></div>
+                              <div><label className="text-xs font-semibold text-slate-600 block mb-1">Rende qtas aplicações?</label><input type="number" value={proc.aplicacoes_por_frasco} onChange={e => updateProduto(proc.id, 'aplicacoes_por_frasco', e.target.value)} placeholder="Ex: 10" className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500" /></div>
+                            </div>
+                            <div className="border-t border-slate-200 pt-4 mt-2">
+                              <label className="text-xs font-semibold text-slate-600 block mb-1">Valor Cobrado da Cliente por Aplicação (R$)</label>
+                              <input type="number" value={proc.preco_p} onChange={e => updateProduto(proc.id, 'preco_p', e.target.value)} placeholder="0.00" className="w-full sm:w-1/2 border border-slate-300 rounded-lg px-3 py-2 text-sm outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500" />
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                    <button onClick={() => addProduto()} className="mt-4 flex items-center justify-center gap-2 w-full py-3 border-2 border-dashed border-slate-300 rounded-xl text-sm text-slate-600 hover:text-violet-600 hover:border-violet-300 hover:bg-violet-50 font-semibold transition-all"><Plus size={16} /> Adicionar produto manualmente</button>
+                  </div>
+                )}
+
+                {/* ─── SERVICO_ESTETICA ─────────────────────────────────── */}
+                {catAtiva === 'SERVICO_ESTETICA' && (
+                  <div>
+                    <p className="text-xs font-semibold text-slate-500 mb-3 uppercase tracking-wider">Sugestões rápidas</p>
+                    <div className="flex flex-wrap gap-2 mb-6">
+                      {SUGESTOES_CONST.SERVICO_ESTETICA.map(sug => {
+                        const added = isEsteticaAdded(sug.nome);
+                        return (
+                          <button key={sug.nome} onClick={() => { if (!added) addEstetica(sug.nome, sug.comissao); }} disabled={added}
+                            className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-all duration-200 border ${added ? 'bg-pink-50 text-pink-700 border-pink-200 opacity-60 cursor-default' : 'bg-white text-slate-700 border-slate-300 hover:border-pink-400 hover:text-pink-600'}`}>
+                            {added ? <Check size={14} className="inline mr-1" /> : <Plus size={14} className="inline mr-1" />} {sug.nome}
+                          </button>
+                        );
+                      })}
+                    </div>
+
+                    {servicosEstetica.length > 0 && (
+                      <div className="space-y-4">
+                        {servicosEstetica.map(proc => (
+                          <div key={proc.id} className="bg-slate-50 rounded-xl p-4 sm:p-5 border border-slate-200 space-y-4 animate-fadeIn">
+                            <div className="flex items-center justify-between">
+                              <input type="text" value={proc.nome} onChange={e => updateEstetica(proc.id, 'nome', e.target.value.toUpperCase())} placeholder="Nome do Serviço" className="flex-1 border-0 bg-transparent text-base font-bold text-slate-900 outline-none placeholder:text-slate-400 p-0 focus:ring-0" />
+                              <button onClick={() => removeEstetica(proc.id)} className="text-slate-400 hover:text-red-600 transition-colors"><Trash2 size={16} /></button>
+                            </div>
+                            <div className="grid grid-cols-2 gap-4">
+                              <div><label className="text-xs font-semibold text-slate-600 block mb-1">Valor Cobrado (R$)</label><input type="number" value={proc.preco_p} onChange={e => updateEstetica(proc.id, 'preco_p', e.target.value)} placeholder="0.00" className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm outline-none focus:border-pink-500 focus:ring-1 focus:ring-pink-500" /></div>
+                              <div><label className="text-xs font-semibold text-slate-600 block mb-1">Comissão (%)</label><input type="number" value={proc.porcentagem_profissional} onChange={e => updateEstetica(proc.id, 'porcentagem_profissional', e.target.value)} placeholder="45" className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm outline-none focus:border-pink-500 focus:ring-1 focus:ring-pink-500" /></div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                    <button onClick={() => addEstetica()} className="mt-4 flex items-center justify-center gap-2 w-full py-3 border-2 border-dashed border-slate-300 rounded-xl text-sm text-slate-600 hover:text-pink-600 hover:border-pink-300 hover:bg-pink-50 font-semibold transition-all"><Plus size={16} /> Adicionar estética manualmente</button>
+                  </div>
+                )}
               </div>
 
               {/* Contador flutuante */}
@@ -610,14 +663,14 @@ export default function WizardPrimeiroAcesso({ salaoId }) {
                   </div>
                 </div>
 
-                {/* Despesas padrão com ícones */}
+                {/* Custos padrão com ícones */}
                 <div className="space-y-4">
-                  {despesas.map((d, idx) => {
-                    const config = DESPESAS_PADRAO[idx];
+                  {custos.map((d, idx) => {
+                    const config = CUSTOS_PADRAO[idx];
                     const Icon = config?.icon || ShoppingBag;
                     return (
                       <div key={d.id} className="flex items-center gap-4 bg-white rounded-xl p-3 border border-slate-200 hover:border-slate-300 transition-colors">
-                        <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center flex-shrink-0 text-slate-600">
+                        <div className={`w-10 h-10 rounded-lg bg-${config?.cor}-50 flex items-center justify-center flex-shrink-0 text-${config?.cor}-600`}>
                           <Icon size={18} />
                         </div>
                         <span className="text-sm font-semibold text-slate-700 w-24 flex-shrink-0">{d.nome}</span>
@@ -625,7 +678,7 @@ export default function WizardPrimeiroAcesso({ salaoId }) {
                           <span className="absolute left-3 top-2.5 text-sm font-medium text-slate-400">R$</span>
                           <input
                             type="number" value={d.valor}
-                            onChange={e => updateDespesa(d.id, 'valor', e.target.value)}
+                            onChange={e => updateCusto(d.id, 'valor', e.target.value)}
                             placeholder="0.00"
                             className="w-full border border-slate-300 rounded-lg pl-10 pr-3 py-2 text-sm text-slate-900 outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all"
                           />
@@ -635,27 +688,27 @@ export default function WizardPrimeiroAcesso({ salaoId }) {
                   })}
                 </div>
 
-                {/* Despesas extras */}
-                {despesasExtras.length > 0 && (
+                {/* Custos extras */}
+                {custosExtras.length > 0 && (
                   <div className="mt-6 pt-6 border-t border-slate-200 space-y-4">
                     <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">Despesas Adicionais</span>
-                    {despesasExtras.map(d => (
+                    {custosExtras.map(d => (
                       <div key={d.id} className="flex flex-col sm:flex-row items-start sm:items-center gap-3 animate-fadeIn bg-slate-50 p-3 rounded-xl border border-slate-200">
-                        <input type="text" value={d.nome} onChange={e => updateDespesa(d.id, 'nome', e.target.value.toUpperCase())}
+                        <input type="text" value={d.nome} onChange={e => updateCusto(d.id, 'nome', e.target.value.toUpperCase())}
                           placeholder="Descrição"
                           className="w-full sm:flex-1 border border-slate-300 rounded-lg px-3 py-2 text-sm outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500" />
                         
                         <div className="flex w-full sm:w-auto gap-3">
-                          <select value={d.tipo} onChange={e => updateDespesa(d.id, 'tipo', e.target.value)}
+                          <select value={d.tipo} onChange={e => updateCusto(d.id, 'tipo', e.target.value)}
                             className="flex-1 sm:w-32 border border-slate-300 rounded-lg px-2 py-2 text-sm bg-white outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500">
-                            {TIPOS_DESPESA.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}
+                            {TIPOS_CUSTO.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}
                           </select>
                           <div className="relative flex-1 sm:w-32">
                             <span className="absolute left-3 top-2.5 text-sm font-medium text-slate-400">R$</span>
-                            <input type="number" value={d.valor} onChange={e => updateDespesa(d.id, 'valor', e.target.value)}
+                            <input type="number" value={d.valor} onChange={e => updateCusto(d.id, 'valor', e.target.value)}
                               placeholder="0.00" className="w-full border border-slate-300 rounded-lg pl-9 pr-2 py-2 text-sm outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500" />
                           </div>
-                          <button onClick={() => removeDespesaExtra(d.id)} className="text-slate-400 hover:text-red-600 p-2 border border-transparent hover:bg-white rounded-lg transition-colors">
+                          <button onClick={() => removeCustoExtra(d.id)} className="text-slate-400 hover:text-red-600 p-2 border border-transparent hover:bg-white rounded-lg transition-colors">
                             <Trash2 size={18} />
                           </button>
                         </div>
@@ -664,15 +717,33 @@ export default function WizardPrimeiroAcesso({ salaoId }) {
                   </div>
                 )}
 
-                <button onClick={addDespesaExtra} className="mt-4 flex items-center justify-center gap-2 w-full py-3 border-2 border-dashed border-slate-300 rounded-xl text-sm text-slate-600 hover:text-indigo-600 hover:border-indigo-300 hover:bg-indigo-50 font-semibold transition-all">
+                <button onClick={addCustoExtra} className="mt-4 flex items-center justify-center gap-2 w-full py-3 border-2 border-dashed border-slate-300 rounded-xl text-sm text-slate-600 hover:text-indigo-600 hover:border-indigo-300 hover:bg-indigo-50 font-semibold transition-all">
                   <Plus size={16} /> Adicionar nova despesa
                 </button>
+
+                {/* Rateio de Atendimentos */}
+                <div className="mt-8 pt-6 border-t border-slate-200">
+                  <h3 className="text-sm font-bold text-slate-900 mb-2">Previsão de Atendimentos</h3>
+                  <p className="text-xs text-slate-500 mb-4">Quantos atendimentos o salão faz por mês em média? Isso definirá a taxa de custo fixo embutida em cada serviço.</p>
+                  <div className="flex items-center gap-4">
+                    <input type="number" value={atendimentosMes} onChange={e => setAtendimentosMes(e.target.value)}
+                      className="w-32 border border-slate-300 rounded-lg px-3 py-2 text-sm outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500" />
+                    <span className="text-sm font-semibold text-slate-700">atendimentos/mês</span>
+                  </div>
+                </div>
               </div>
 
               {/* Total */}
-              <div className="bg-slate-900 rounded-xl p-6 text-center shadow-lg">
-                <p className="text-slate-400 text-sm font-medium mb-1">Previsão de Custo Fixo Total</p>
-                <p className="text-white text-3xl font-extrabold">R$ {totalDespesas.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</p>
+              <div className="bg-slate-900 rounded-xl p-6 shadow-lg flex flex-col md:flex-row items-center justify-between gap-6">
+                <div className="text-center md:text-left">
+                  <p className="text-slate-400 text-sm font-medium mb-1">Custo Fixo Total / Mês</p>
+                  <p className="text-white text-3xl font-extrabold">R$ {totalCustos.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</p>
+                </div>
+                <div className="h-px w-full md:h-12 md:w-px bg-slate-700"></div>
+                <div className="text-center md:text-right">
+                  <p className="text-slate-400 text-sm font-medium mb-1">Custo por Atendimento</p>
+                  <p className="text-emerald-400 text-2xl font-bold">R$ {custoPorAtendimento}</p>
+                </div>
               </div>
 
               <div className="flex gap-3 pt-2">
@@ -735,7 +806,8 @@ export default function WizardPrimeiroAcesso({ salaoId }) {
                       <p className="text-base font-bold text-slate-900 mb-2">{totalProcs} Cadastrados</p>
                       <div className="flex flex-wrap gap-2">
                         {CATEGORIAS.map(cat => {
-                          const n = procedimentos[cat.key].filter(p => p.nome.trim() && p.preco_p).length;
+                          const lista = cat.key === 'SERVICO_CABELO' ? servicosCabelo : cat.key === 'PRODUTO_APLICADO' ? produtosAplicados : servicosEstetica;
+                          const n = lista.filter(p => p.nome.trim()).length;
                           return n > 0 ? (
                             <span key={cat.key} className="text-xs bg-slate-200 text-slate-700 px-2 py-1 rounded-md font-medium">
                               {cat.label}: {n}
@@ -753,7 +825,7 @@ export default function WizardPrimeiroAcesso({ salaoId }) {
                     </div>
                     <div>
                       <p className="text-xs text-slate-500 font-semibold uppercase tracking-wider mb-1">Despesas Fixas</p>
-                      <p className="text-base font-bold text-slate-900">R$ {totalDespesas.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</p>
+                      <p className="text-base font-bold text-slate-900">R$ {totalCustos.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</p>
                       <p className="text-xs text-slate-500 mt-1">{totalDesps} itens cadastrados</p>
                     </div>
                   </div>

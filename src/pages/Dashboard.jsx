@@ -213,6 +213,7 @@ const Dashboard = ({ salaoId }) => {
   const dadosGraficoProcs = useMemo(() => {
     return ranking.slice(0, 8).map(r => ({
       nome: r.procedimento,
+      categoria: r.categoria,
       receita: Number(r.receita_total) || 0,
       lucro: Number(r.lucro_total) || 0,
       qtd: Number(r.quantidade) || 0,
@@ -450,8 +451,22 @@ const Dashboard = ({ salaoId }) => {
                     <YAxis dataKey="nome" type="category" axisLine={false} tickLine={false} tick={{ fill: '#475569', fontSize: 11, fontWeight: 'bold' }} width={110} />
                     <Tooltip content={<TooltipMoeda />} cursor={{ fill: '#f8fafc' }} />
                     <Legend iconType="circle" wrapperStyle={{ fontSize: '11px', fontWeight: 'bold' }} />
-                    <Bar dataKey="receita" name="Receita" fill="#6366f1" radius={[0, 6, 6, 0]} barSize={18} />
-                    <Bar dataKey="lucro" name="Lucro" fill="#10b981" radius={[0, 6, 6, 0]} barSize={18} />
+                    <Bar dataKey="receita" name="Receita" radius={[0, 6, 6, 0]} barSize={18}>
+                      {dadosGraficoProcs.map((entry, index) => {
+                        const fill = entry.categoria === 'SERVICO_CABELO' ? '#34d399' :
+                                     entry.categoria === 'PRODUTO_APLICADO' ? '#a78bfa' :
+                                     entry.categoria === 'SERVICO_ESTETICA' ? '#f472b6' : '#94a3b8';
+                        return <Cell key={`receita-${index}`} fill={fill} />;
+                      })}
+                    </Bar>
+                    <Bar dataKey="lucro" name="Lucro" radius={[0, 6, 6, 0]} barSize={18}>
+                      {dadosGraficoProcs.map((entry, index) => {
+                        const fill = entry.categoria === 'SERVICO_CABELO' ? '#10b981' :
+                                     entry.categoria === 'PRODUTO_APLICADO' ? '#8b5cf6' :
+                                     entry.categoria === 'SERVICO_ESTETICA' ? '#ec4899' : '#64748b';
+                        return <Cell key={`lucro-${index}`} fill={fill} />;
+                      })}
+                    </Bar>
                   </BarChart>
                 </ResponsiveContainer>
               ) : (

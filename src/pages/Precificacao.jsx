@@ -6,7 +6,8 @@ import { FinancialEngine } from '../services/FinancialEngine';
 import { TAXA_MAQUININHA_PADRAO } from '../services/financialConstants';
 import CatalogoProdutos from './CatalogoProdutos';
 import BaseCustos from '../components/BaseCustos';
-import { Plus, Trash2, Calculator, AlertTriangle, ChevronDown, ChevronUp, Save, Pencil, Settings, Receipt, Package, Landmark, Info } from 'lucide-react';
+import { Plus, Trash2, Calculator, AlertTriangle, ChevronDown, ChevronUp, Save, Pencil, Settings, Receipt, Package, Landmark, Info, Zap } from 'lucide-react';
+import { CATEGORIAS, ORDEM_CATEGORIAS } from '../constants/categorias';
 
 const fmt = (v) => Number(v || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
 const fmtPct = (v) => `${Number(v || 0).toFixed(1)}%`;
@@ -16,6 +17,7 @@ export default function Precificacao({ salaoId }) {
 
   // ─── Aba ativa ───
   const [abaAtiva, setAbaAtiva] = useState('precificacao');
+  const [catAtiva, setCatAtiva] = useState('SERVICO_CABELO');
 
   // ─── Estado das configurações (do Supabase) ───
   const [config, setConfig] = useState({
@@ -30,6 +32,50 @@ export default function Precificacao({ salaoId }) {
   const [procedimentos, setProcedimentos] = useState([]);
   const [loading, setLoading] = useState(true);
   const [expandido, setExpandido] = useState(null); // ID do proc expandido pra ver detalhes
+
+  // ─── Modal Novo Procedimento ───
+  const [modalProc, setModalProc] = useState(false);
+  const [formProc, setFormProc] = useState({
+    nome: '',
+    categoria: 'SERVICO_CABELO',
+    preco_p: '',
+    preco_frasco: '',
+    aplicacoes_por_frasco: ''
+  });
+
+  const salvarProc = async () => {
+    if (!formProc.nome.trim()) return showToast('Nome é obrigatório', 'error');
+    
+    // Se for CABELO ou ESTETICA, preço de venda é obrigatório na criação. Para PRODUTO_APLICADO, pode ficar 0 para calcular depois.
+    const isProduto = formProc.categoria === 'PRODUTO_APLICADO';
+    if (!isProduto && !formProc.preco_p) return showToast('Valor cobrado é obrigatório', 'error');
+
+    const pFrasco = Number(formProc.preco_frasco) || 0;
+    const aplicacoes = Math.max(Number(formProc.aplicacoes_por_frasco) || 1, 1);
+    
+    const procData = {
+      salao_id: salaoId,
+      nome: formProc.nome.trim().toUpperCase(),
+      categoria: formProc.categoria,
+      requer_comprimento: formProc.categoria === 'SERVICO_CABELO',
+      preco_p: Number(formProc.preco_p) || null,
+      porcentagem_profissional: formProc.categoria === 'SERVICO_ESTETICA' ? 45 : (formProc.categoria === 'SERVICO_CABELO' ? 40 : 0),
+      custo_variavel: isProduto ? (pFrasco / aplicacoes) : 0,
+      preco_frasco: isProduto ? pFrasco : 0,
+      aplicacoes_por_frasco: isProduto ? aplicacoes : 1,
+      ativo: true
+    };
+
+    try {
+      const { data, error } = await supabase.from('procedimentos').insert([procData]).select().single();
+      if (error) throw error;
+      setProcedimentos(prev => [...prev, data].sort((a,b) => a.nome.localeCompare(b.nome)));
+      showToast('Procedimento adicionado com sucesso!', 'success');
+      setModalProc(false);
+    } catch (err) {
+      showToast('Erro: ' + err.message, 'error');
+    }
+  };
 
   // ─── Ganho líquido desejado por procedimento (mapa: procId → valor) ───
   const [ganhoMap, setGanhoMap] = useState({});
@@ -424,37 +470,111 @@ export default function Precificacao({ salaoId }) {
         </div>
       </div>
 
+      {/* ═══ TABS DE CATEGORIA ═══ */}
+      <div className="mb-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+        <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide w-full sm:w-auto">
+          {ORDEM_CATEGORIAS.map(key => {
+          const cat = CATEGORIAS[key];
+          const count = procedimentos.filter(p => p.categoria === key).length;
+          return (
+            <button
+              key={key}
+              onClick={() => setCatAtiva(key)}
+              className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold whitespace-nowrap transition-all duration-200 ${
+                catAtiva === key
+                  ? 'bg-slate-900 text-white shadow-md'
+                  : 'bg-white border border-slate-200 text-slate-600 hover:bg-slate-50'
+              }`}
+            >
+              <span className="opacity-80">{cat.emoji}</span> {cat.label}
+              {count > 0 && (
+                <span className={`ml-1 w-5 h-5 rounded-full text-[10px] flex items-center justify-center ${
+                  catAtiva === key ? 'bg-white/20' : 'bg-slate-100 text-slate-500'
+                }`}>
+                  {count}
+                </span>
+              )}
+            </button>
+          );
+        })}
+        </div>
+        <button 
+          onClick={() => {
+            setFormProc({ nome: '', categoria: catAtiva, preco_p: '', preco_frasco: '', aplicacoes_por_frasco: '' });
+            setModalProc(true);
+          }} 
+          className="flex-shrink-0 flex items-center gap-2 px-4 py-2.5 bg-slate-900 text-white rounded-xl hover:bg-slate-800 transition-all shadow-lg shadow-slate-200 text-sm font-bold w-full sm:w-auto justify-center"
+        >
+          <Plus size={16} /> Novo {catAtiva === 'PRODUTO_APLICADO' ? 'Produto' : 'Serviço'}
+        </button>
+      </div>
+
       {/* ═══ TABELA DE PROCEDIMENTOS ═══ */}
       <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
         <table className="w-full text-left border-collapse text-xs">
           <thead>
-            <tr className="bg-slate-900 text-white text-[10px] uppercase font-bold tracking-wider">
-              <th className="p-3" rowSpan={2}>Serviço</th>
-              <th className="p-3 text-center" rowSpan={2}>Comissão</th>
-              <th className="p-3 text-center" rowSpan={2}>Custo Mat.</th>
-              <th className="p-3 text-center border-l border-slate-700" colSpan={3}>Cabelo P</th>
-              <th className="p-3 text-center border-l border-slate-700" colSpan={3}>Cabelo M</th>
-              <th className="p-3 text-center border-l border-slate-700" colSpan={3}>Cabelo G</th>
-              <th className="p-3 text-center" rowSpan={2}></th>
-            </tr>
-            <tr className="bg-slate-800 text-slate-300 text-[10px] uppercase font-bold tracking-wider">
-              <th className="p-2 text-center border-l border-slate-700">Preço</th>
-              <th className="p-2 text-center">Lucro</th>
-              <th className="p-2 text-right text-emerald-400">Margem</th>
-              <th className="p-2 text-center border-l border-slate-700">Preço</th>
-              <th className="p-2 text-center">Lucro</th>
-              <th className="p-2 text-right text-emerald-400">Margem</th>
-              <th className="p-2 text-center border-l border-slate-700">Preço</th>
-              <th className="p-2 text-center">Lucro</th>
-              <th className="p-2 text-right text-emerald-400">Margem</th>
-            </tr>
+            {catAtiva === 'SERVICO_CABELO' ? (
+              <>
+                <tr className="bg-slate-900 text-white text-[10px] uppercase font-bold tracking-wider">
+                  <th className="p-3" rowSpan={2}>Serviço de Cabelo</th>
+                  <th className="p-3 text-center" rowSpan={2}>Comissão</th>
+                  <th className="p-3 text-center" rowSpan={2}>Custo Mat.</th>
+                  <th className="p-3 text-center border-l border-slate-700" colSpan={3}>Cabelo P</th>
+                  <th className="p-3 text-center border-l border-slate-700" colSpan={3}>Cabelo M</th>
+                  <th className="p-3 text-center border-l border-slate-700" colSpan={3}>Cabelo G</th>
+                  <th className="p-3 text-center" rowSpan={2}></th>
+                </tr>
+                <tr className="bg-slate-800 text-slate-300 text-[10px] uppercase font-bold tracking-wider">
+                  <th className="p-2 text-center border-l border-slate-700">Preço</th>
+                  <th className="p-2 text-center">Lucro</th>
+                  <th className="p-2 text-right text-emerald-400">Margem</th>
+                  <th className="p-2 text-center border-l border-slate-700">Preço</th>
+                  <th className="p-2 text-center">Lucro</th>
+                  <th className="p-2 text-right text-emerald-400">Margem</th>
+                  <th className="p-2 text-center border-l border-slate-700">Preço</th>
+                  <th className="p-2 text-center">Lucro</th>
+                  <th className="p-2 text-right text-emerald-400">Margem</th>
+                </tr>
+              </>
+            ) : catAtiva === 'PRODUTO_APLICADO' ? (
+              <>
+                <tr className="bg-slate-900 text-white text-[10px] uppercase font-bold tracking-wider">
+                  <th className="p-3" rowSpan={2}>Produto / Tratamento</th>
+                  <th className="p-3 text-center" rowSpan={2}>Preço Frasco</th>
+                  <th className="p-3 text-center" rowSpan={2}>Rende (Aplicações)</th>
+                  <th className="p-3 text-center" rowSpan={2}>Custo p/ Dose</th>
+                  <th className="p-3 text-center border-l border-slate-700" colSpan={3}>Valor Cobrado da Cliente</th>
+                  <th className="p-3 text-center" rowSpan={2}></th>
+                </tr>
+                <tr className="bg-slate-800 text-slate-300 text-[10px] uppercase font-bold tracking-wider">
+                  <th className="p-2 text-center border-l border-slate-700">Preço</th>
+                  <th className="p-2 text-center">Lucro</th>
+                  <th className="p-2 text-right text-emerald-400">Margem</th>
+                </tr>
+              </>
+            ) : (
+              <>
+                <tr className="bg-slate-900 text-white text-[10px] uppercase font-bold tracking-wider">
+                  <th className="p-3" rowSpan={2}>Serviço de Estética</th>
+                  <th className="p-3 text-center" rowSpan={2}>Comissão</th>
+                  <th className="p-3 text-center" rowSpan={2}>Custo Mat.</th>
+                  <th className="p-3 text-center border-l border-slate-700" colSpan={3}>Valor Cobrado</th>
+                  <th className="p-3 text-center" rowSpan={2}></th>
+                </tr>
+                <tr className="bg-slate-800 text-slate-300 text-[10px] uppercase font-bold tracking-wider">
+                  <th className="p-2 text-center border-l border-slate-700">Preço</th>
+                  <th className="p-2 text-center">Lucro</th>
+                  <th className="p-2 text-right text-emerald-400">Margem</th>
+                </tr>
+              </>
+            )}
           </thead>
           <tbody>
-            {procedimentos.length === 0 ? (
+            {procedimentos.filter(p => p.categoria === catAtiva).length === 0 ? (
               <tr><td colSpan={13} className="text-center py-12 text-slate-400">
-                Nenhum procedimento cadastrado. Adicione pelo Wizard ou Configurações.
+                Nenhum procedimento desta categoria cadastrado. Adicione pelo Wizard ou Configurações.
               </td></tr>
-            ) : procedimentos.map(proc => {
+            ) : procedimentos.filter(p => p.categoria === catAtiva).map(proc => {
               const p = calcularProcedimento(proc, 'P');
               const m = calcularProcedimento(proc, 'M');
               const g = calcularProcedimento(proc, 'G');
@@ -464,7 +584,7 @@ export default function Precificacao({ salaoId }) {
                 const r = res.resultado;
                 return (
                   <>
-                    <td className="p-2 text-center font-bold text-slate-800">
+                    <td className="p-2 text-center font-bold text-slate-800 border-l border-slate-100">
                       {fmt(r.valorBruto)}
                     </td>
                     <td className={`p-2 text-center font-black ${r.prejuizo ? 'text-red-500' : 'text-emerald-600'}`}>
@@ -485,11 +605,11 @@ export default function Precificacao({ salaoId }) {
                   {/* Nome */}
                   <td className="p-2">
                     <div className="flex items-center gap-2">
-                      <span className={`w-2 h-2 rounded-full ${proc.categoria === 'CABELO' ? 'bg-violet-500' : proc.categoria === 'UNHAS' ? 'bg-pink-500' : 'bg-amber-500'}`} />
+                      <span className={`w-2 h-2 rounded-full ${proc.categoria === 'SERVICO_CABELO' ? 'bg-emerald-500' : proc.categoria === 'PRODUTO_APLICADO' ? 'bg-violet-500' : 'bg-pink-500'}`} />
                       <span className="font-bold text-slate-800">{proc.nome}</span>
                       {isExpanded ? <ChevronUp size={12} className="text-slate-400" /> : <ChevronDown size={12} className="text-slate-300" />}
                     </div>
-                    {isExpanded && (() => {
+                    {isExpanded && catAtiva === 'SERVICO_CABELO' && (() => {
                       const custoP = Number(proc.custo_variavel) || 0;
                       const custoM = Number(proc.custo_variavel_m) || custoP;
                       const custoG = Number(proc.custo_variavel_g) || custoP;
@@ -580,63 +700,129 @@ export default function Precificacao({ salaoId }) {
                     })()}
                   </td>
 
-                  {/* Comissão (editável) */}
-                  <td className="p-2 text-center" onClick={e => e.stopPropagation()}>
-                    <div className="inline-flex items-center gap-0.5 bg-slate-100 rounded-full px-1 py-0.5">
-                      <input
-                        type="number"
-                        step="1"
-                        min="0"
-                        max="100"
-                        className="w-10 bg-transparent text-center text-[10px] font-bold text-slate-600 outline-none focus:text-emerald-700 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-                        value={proc.porcentagem_profissional ?? 0}
-                        onChange={e => {
-                          const val = Number(e.target.value);
-                          setProcedimentos(prev => prev.map(pr => pr.id === proc.id ? { ...pr, porcentagem_profissional: val } : pr));
-                        }}
-                        onBlur={async (e) => {
-                          const val = Number(e.target.value);
-                          try {
-                            const { error } = await supabase.from('procedimentos').update({ porcentagem_profissional: val }).eq('id', proc.id).eq('salao_id', salaoId);
-                            if (error) throw error;
-                            showToast(`Comissão de ${proc.nome} → ${val}%`, 'success');
-                          } catch (err) {
-                            showToast('Erro ao salvar comissão: ' + err.message, 'error');
-                          }
-                        }}
-                        title="Clique para editar a comissão"
-                      />
-                      <span className="text-[9px] text-slate-400 font-bold">%</span>
-                      <Pencil size={9} className="text-slate-300 ml-0.5" />
-                    </div>
-                  </td>
-
-                  {/* Custo Material */}
-                  <td className="p-2 text-center text-slate-500 font-medium">
-                    {fmt(proc.custo_variavel)}
-                  </td>
-
-                  {/* Colunas P */}
-                  <CelulaLucro res={p} />
-
-                  {/* Colunas M */}
-                  {proc.requer_comprimento ? (
-                    <CelulaLucro res={m} />
+                  {catAtiva === 'PRODUTO_APLICADO' ? (
+                    <>
+                      <td className="p-2 text-center" onClick={e => e.stopPropagation()}>
+                        <div className="inline-flex items-center gap-0.5 bg-slate-100 rounded-full px-2 py-0.5">
+                          <span className="text-[9px] text-slate-400 font-bold">R$</span>
+                          <input
+                            type="number" step="0.01" min="0"
+                            className="w-12 bg-transparent text-center text-[10px] font-bold text-slate-600 outline-none focus:text-violet-700 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                            value={proc.preco_frasco ?? 0}
+                            onChange={e => {
+                              const val = Number(e.target.value);
+                              setProcedimentos(prev => prev.map(pr => pr.id === proc.id ? { ...pr, preco_frasco: val } : pr));
+                            }}
+                            onBlur={async (e) => {
+                              const val = Number(e.target.value);
+                              const aplic = Math.max(Number(proc.aplicacoes_por_frasco) || 1, 1);
+                              const custo = val / aplic;
+                              try {
+                                const { error } = await supabase.from('procedimentos').update({ preco_frasco: val, custo_variavel: custo }).eq('id', proc.id).eq('salao_id', salaoId);
+                                if (error) throw error;
+                                setProcedimentos(prev => prev.map(pr => pr.id === proc.id ? { ...pr, custo_variavel: custo } : pr));
+                                showToast(`Preço do frasco atualizado!`, 'success');
+                              } catch (err) {
+                                showToast('Erro: ' + err.message, 'error');
+                              }
+                            }}
+                          />
+                          <Pencil size={9} className="text-slate-300 ml-0.5" />
+                        </div>
+                      </td>
+                      <td className="p-2 text-center" onClick={e => e.stopPropagation()}>
+                        <div className="inline-flex items-center gap-0.5 bg-slate-100 rounded-full px-2 py-0.5">
+                          <input
+                            type="number" step="1" min="1"
+                            className="w-8 bg-transparent text-center text-[10px] font-bold text-slate-600 outline-none focus:text-violet-700 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                            value={proc.aplicacoes_por_frasco ?? 1}
+                            onChange={e => {
+                              const val = Number(e.target.value);
+                              setProcedimentos(prev => prev.map(pr => pr.id === proc.id ? { ...pr, aplicacoes_por_frasco: val } : pr));
+                            }}
+                            onBlur={async (e) => {
+                              const val = Math.max(Number(e.target.value), 1);
+                              const pFrasco = Number(proc.preco_frasco) || 0;
+                              const custo = pFrasco / val;
+                              try {
+                                const { error } = await supabase.from('procedimentos').update({ aplicacoes_por_frasco: val, custo_variavel: custo }).eq('id', proc.id).eq('salao_id', salaoId);
+                                if (error) throw error;
+                                setProcedimentos(prev => prev.map(pr => pr.id === proc.id ? { ...pr, aplicacoes_por_frasco: val, custo_variavel: custo } : pr));
+                                showToast(`Rendimento atualizado!`, 'success');
+                              } catch (err) {
+                                showToast('Erro: ' + err.message, 'error');
+                              }
+                            }}
+                          />
+                          <Pencil size={9} className="text-slate-300 ml-0.5" />
+                        </div>
+                      </td>
+                      <td className="p-2 text-center text-slate-500 font-bold bg-slate-50">{fmt(proc.custo_variavel)}</td>
+                    </>
                   ) : (
-                    <><td className="p-2 text-center text-slate-300 border-l border-slate-100" colSpan={3}>—</td></>
+                    <>
+                      {/* Comissão (editável) */}
+                      <td className="p-2 text-center" onClick={e => e.stopPropagation()}>
+                        <div className="inline-flex items-center gap-0.5 bg-slate-100 rounded-full px-1 py-0.5">
+                          <input
+                            type="number"
+                            step="1"
+                            min="0"
+                            max="100"
+                            className="w-10 bg-transparent text-center text-[10px] font-bold text-slate-600 outline-none focus:text-emerald-700 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                            value={proc.porcentagem_profissional ?? 0}
+                            onChange={e => {
+                              const val = Number(e.target.value);
+                              setProcedimentos(prev => prev.map(pr => pr.id === proc.id ? { ...pr, porcentagem_profissional: val } : pr));
+                            }}
+                            onBlur={async (e) => {
+                              const val = Number(e.target.value);
+                              try {
+                                const { error } = await supabase.from('procedimentos').update({ porcentagem_profissional: val }).eq('id', proc.id).eq('salao_id', salaoId);
+                                if (error) throw error;
+                                showToast(`Comissão de ${proc.nome} → ${val}%`, 'success');
+                              } catch (err) {
+                                showToast('Erro ao salvar comissão: ' + err.message, 'error');
+                              }
+                            }}
+                            title="Clique para editar a comissão"
+                          />
+                          <span className="text-[9px] text-slate-400 font-bold">%</span>
+                          <Pencil size={9} className="text-slate-300 ml-0.5" />
+                        </div>
+                      </td>
+
+                      {/* Custo Material */}
+                      <td className="p-2 text-center text-slate-500 font-medium">
+                        {fmt(proc.custo_variavel)}
+                      </td>
+                    </>
                   )}
 
-                  {/* Colunas G */}
-                  {proc.requer_comprimento ? (
-                    <CelulaLucro res={g} />
-                  ) : (
-                    <><td className="p-2 text-center text-slate-300 border-l border-slate-100" colSpan={3}>—</td></>
+                  {/* Colunas P (Valor Único) */}
+                  <CelulaLucro res={p} />
+
+                  {/* Colunas M e G (apenas para CABELO) */}
+                  {catAtiva === 'SERVICO_CABELO' && (
+                    <>
+                      {proc.requer_comprimento ? (
+                        <CelulaLucro res={m} />
+                      ) : (
+                        <><td className="p-2 text-center text-slate-300 border-l border-slate-100" colSpan={3}>—</td></>
+                      )}
+
+                      {proc.requer_comprimento ? (
+                        <CelulaLucro res={g} />
+                      ) : (
+                        <><td className="p-2 text-center text-slate-300 border-l border-slate-100" colSpan={3}>—</td></>
+                      )}
+                    </>
                   )}
 
                   {/* Indicador */}
                   <td className="p-2 text-center" onClick={e => e.stopPropagation()}>
                     {p.resultado.prejuizo && (
-                      <span className="inline-flex items-center text-red-500" title="Prejuízo no tamanho P">
+                      <span className="inline-flex items-center text-red-500" title="Prejuízo neste serviço">
                         <AlertTriangle size={14} />
                       </span>
                     )}
@@ -655,6 +841,38 @@ export default function Precificacao({ salaoId }) {
         <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-red-500" /> Prejuízo</span>
         <span className="ml-auto">Motor: FinancialEngine v1.0 • Cálculos em centavos</span>
       </div>
+
+      <Modal open={modalProc} onClose={() => setModalProc(false)} title={`Novo ${formProc.categoria === 'PRODUTO_APLICADO' ? 'Produto' : 'Serviço'}`}>
+        <div className="space-y-4">
+          <div>
+            <label className="text-sm font-bold text-slate-700 mb-1 block">Nome do {formProc.categoria === 'PRODUTO_APLICADO' ? 'Produto/Tratamento' : 'Serviço'}</label>
+            <input type="text" value={formProc.nome} onChange={e => setFormProc({...formProc, nome: e.target.value.toUpperCase()})} placeholder="Ex: BOTOX CAPILAR" className="w-full border-2 border-slate-100 p-3 rounded-2xl focus:border-slate-900 outline-none" />
+          </div>
+
+          {formProc.categoria === 'PRODUTO_APLICADO' && (
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="text-sm font-bold text-slate-700 mb-1 block">Preço do Frasco (R$)</label>
+                <input type="number" step="0.01" value={formProc.preco_frasco} onChange={e => setFormProc({...formProc, preco_frasco: e.target.value})} className="w-full border-2 border-slate-100 p-3 rounded-2xl focus:border-slate-900 outline-none" />
+              </div>
+              <div>
+                <label className="text-sm font-bold text-slate-700 mb-1 block">Rende (Aplicações)</label>
+                <input type="number" step="1" value={formProc.aplicacoes_por_frasco} onChange={e => setFormProc({...formProc, aplicacoes_por_frasco: e.target.value})} className="w-full border-2 border-slate-100 p-3 rounded-2xl focus:border-slate-900 outline-none" />
+              </div>
+            </div>
+          )}
+
+          <div>
+            <label className="text-sm font-bold text-slate-700 mb-1 block">Valor Cobrado da Cliente (R$)</label>
+            <input type="number" step="0.01" value={formProc.preco_p} onChange={e => setFormProc({...formProc, preco_p: e.target.value})} className="w-full border-2 border-slate-100 p-3 rounded-2xl focus:border-slate-900 outline-none" />
+          </div>
+
+          <button onClick={salvarProc} className="w-full bg-slate-900 text-white py-4 rounded-2xl font-bold hover:bg-slate-800 transition-all shadow-lg shadow-slate-200 mt-4">
+            Salvar e Adicionar
+          </button>
+        </div>
+      </Modal>
+
       </>)}
 
       {/* ═══ ABA: DESPESAS ═══ */}

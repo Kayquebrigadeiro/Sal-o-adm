@@ -65,7 +65,7 @@ export class FinancialEngine {
     if (!qtdAtendimentosMes || qtdAtendimentosMes <= 0) {
       return 0;
     }
-    const somaFixos = despesasFixas.reduce(
+    const somaFixos = (despesasFixas || []).reduce(
       (acc, d) => acc + toCents(d.valor),
       0
     );

@@ -71,7 +71,7 @@ export default function Agenda({ salaoId, role }) {
         const [cfgRes, profRes, procRes, cliRes] = await Promise.all([
           supabase.from('configuracoes').select('custo_fixo_por_atendimento, taxa_maquininha_pct').eq('salao_id', salaoId).single(),
           supabase.from('profissionais').select('id, nome, cargo').eq('salao_id', salaoId).eq('ativo', true).order('nome'),
-          supabase.from('procedimentos').select('id, nome, categoria, requer_comprimento, preco_p, preco_m, preco_g, custo_variavel, porcentagem_profissional').eq('salao_id', salaoId).eq('ativo', true).order('nome'),
+          supabase.from('procedimentos').select('id, nome, categoria, requer_comprimento, preco_p, preco_m, preco_g, custo_variavel').eq('salao_id', salaoId).eq('ativo', true).order('nome'),
           supabase.from('clientes').select('id, nome, telefone').eq('salao_id', salaoId).order('nome'),
         ]);
 
@@ -181,8 +181,6 @@ export default function Agenda({ salaoId, role }) {
 
     return engine.calcularAtendimento({
       valorCobrado: Number(novo.valor),
-      categoriaProcedimento: proc.categoria || 'CABELO',
-      percentualComissao: Number(proc.porcentagem_profissional),
       custoProduto: Number(proc.custo_variavel) || 0,
       cargoProfissional: cargo,
     });
@@ -813,9 +811,6 @@ export default function Agenda({ salaoId, role }) {
                     {/* Detalhamento centavo a centavo */}
                     <div className="flex flex-wrap gap-x-4 gap-y-1 text-[10px] text-slate-400 font-medium">
                       <span>Maquininha: <b className="text-slate-600">{fmt(previewFinanceiro.valorMaquininha)}</b></span>
-                      {previewFinanceiro.valorComissao > 0 && (
-                        <span>Comissão: <b className="text-slate-600">{fmt(previewFinanceiro.valorComissao)}</b></span>
-                      )}
                       <span>Custo Fixo: <b className="text-slate-600">{fmt(previewFinanceiro.custoFixo)}</b></span>
                       <span>Material: <b className="text-slate-600">{fmt(previewFinanceiro.custoProduto)}</b></span>
                     </div>

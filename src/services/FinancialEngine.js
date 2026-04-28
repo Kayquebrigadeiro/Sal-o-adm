@@ -165,10 +165,10 @@ export class FinancialEngine {
     ganhoLiquido,
     taxaMaquininhaPct,
   }) {
-    const cFixo   = toCents(custoFixo != null ? custoFixo : this.custoFixo);
-    const cMat    = toCents(custoMaterial);
-    const cGanho  = toCents(ganhoLiquido);
-    const tMaq    = Number(taxaMaquininhaPct != null ? taxaMaquininhaPct : this.taxaMaq);
+    const cFixo = toCents(custoFixo != null ? custoFixo : this.custoFixo);
+    const cMat = toCents(custoMaterial);
+    const cGanho = toCents(ganhoLiquido);
+    const tMaq = Number(taxaMaquininhaPct != null ? taxaMaquininhaPct : this.taxaMaq);
 
     const base = cFixo + cMat + cGanho;
     const divisor = 1 - tMaq / 100;
@@ -214,10 +214,10 @@ export class FinancialEngine {
     lucroDesejado,
     taxaMaquininhaPct,
   }) {
-    const cFixo  = toCents(custoFixoRateado != null ? custoFixoRateado : this.custoFixo);
-    const cProd  = toCents(custoProduto);
+    const cFixo = toCents(custoFixoRateado != null ? custoFixoRateado : this.custoFixo);
+    const cProd = toCents(custoProduto);
     const cLucro = toCents(lucroDesejado);
-    const tMaq   = Number(taxaMaquininhaPct != null ? taxaMaquininhaPct : this.taxaMaq);
+    const tMaq = Number(taxaMaquininhaPct != null ? taxaMaquininhaPct : this.taxaMaq);
 
     // Custo Chão = fixo + produto + lucro desejado
     const custoChao = cFixo + cProd + cLucro;
@@ -336,8 +336,6 @@ export class FinancialEngine {
    *
    * @param {Object} params
    * @param {number}  params.valorCobrado         - R (Faturamento Bruto) em R$
-   * @param {string}  params.categoriaProcedimento - 'CABELO', 'UNHAS', 'SOMBRANCELHA', etc.
-   * @param {number}  [params.percentualComissao]  - Override do percentual de comissão
    * @param {number}  params.custoProduto          - Custo variável do material (R$)
    * @param {number}  [params.custoFixoRateado]    - Override do custo fixo (R$)
    * @param {number}  [params.taxaMaquininha]       - Override da taxa maquininha (%)
@@ -346,49 +344,33 @@ export class FinancialEngine {
    */
   calcularAtendimento({
     valorCobrado,
-    categoriaProcedimento,
-    percentualComissao,
     custoProduto = 0,
     custoFixoRateado,
     taxaMaquininha,
-    cargoProfissional = 'FUNCIONARIO',
+    cargoProfissional, // Ainda pode ser útil para outras lógicas
   }) {
     const vCobrado = toCents(valorCobrado);
     const tMaq = Number(taxaMaquininha != null ? taxaMaquininha : this.taxaMaq);
     const cFixo = toCents(custoFixoRateado != null ? custoFixoRateado : this.custoFixo);
     const cProd = toCents(custoProduto);
 
-    // Percentual de comissão — usa override ou busca pela categoria
-    const pctComissao = Number(
-      percentualComissao != null
-        ? percentualComissao
-        : (this.percentuais[categoriaProcedimento] || 0)
-    );
+    // Conforme refatoração v7, a comissão foi removida do cálculo de lucro.
+    const valorComissao = 0;
+    const pctComissao = 0;
 
     // Valores absolutos em centavos
     const valorMaquininha = Math.round(vCobrado * tMaq / 100);
-    const valorComissao = Math.round(vCobrado * pctComissao / 100);
 
     // --- Cálculo de lucro ---
-    const ehProprietario = (cargoProfissional || '').toUpperCase() === 'PROPRIETARIO';
-
-    let lucroLiquido;
-    let lucroPossivel;
-
-    if (ehProprietario) {
-      // Proprietária: não desconta comissão de si mesma
-      lucroLiquido = vCobrado - valorMaquininha - cFixo - cProd;
-      lucroPossivel = vCobrado - cFixo - cProd; // Sem maquininha = cenário ideal
-    } else {
-      // Funcionário: desconta comissão
-      lucroLiquido = vCobrado - valorMaquininha - valorComissao - cFixo - cProd;
-      lucroPossivel = vCobrado - valorComissao - cFixo - cProd;
-    }
+    // A comissão foi zerada, então o lucro do SALÃO é o mesmo independente do profissional.
+    const lucroLiquido = vCobrado - valorMaquininha - cFixo - cProd;
+    const lucroPossivel = vCobrado - cFixo - cProd; // Sem maquininha = cenário ideal
 
     // Rendimento do profissional (o que ele ganha)
+    const ehProprietario = (cargoProfissional || '').toUpperCase() === 'PROPRIETARIO';
     const rendimentoProfissional = ehProprietario
-      ? vCobrado - valorMaquininha // Proprietária fica com tudo menos a maquininha
-      : valorComissao;             // Funcionário ganha a comissão
+      ? lucroLiquido // O "rendimento" da proprietária é o próprio lucro do salão
+      : 0;           // Funcionário agora tem salário fixo, não comissão por serviço
 
     // Margem real
     const margemReal = vCobrado > 0
@@ -402,17 +384,17 @@ export class FinancialEngine {
     return {
       // Inputs
       valorBruto: toReais(vCobrado),
-      cargoProfissional: ehProprietario ? 'PROPRIETARIO' : 'FUNCIONARIO',
+      cargoProfissional: cargoProfissional || 'N/A',
 
       // Deduções (centavo por centavo)
       valorMaquininha: toReais(valorMaquininha),
-      valorComissao: ehProprietario ? 0 : toReais(valorComissao),
+      valorComissao: 0,
       custoFixo: toReais(cFixo),
       custoProduto: toReais(cProd),
 
       // Percentuais aplicados
       taxaMaquininhaPct: tMaq,
-      percentualComissao: ehProprietario ? 0 : pctComissao,
+      percentualComissao: 0,
 
       // Resultados
       rendimentoProfissional: toReais(rendimentoProfissional),

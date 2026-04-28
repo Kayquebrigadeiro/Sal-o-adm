@@ -220,10 +220,9 @@ const Dashboard = ({ salaoId }) => {
     }));
   }, [ranking]);
 
-  const dadosGraficoComissoes = useMemo(() => {
+  const dadosGraficoProfissionais = useMemo(() => {
     return rendimento.map(r => ({
       nome: r.profissional,
-      comissao: Number(r.rendimento_bruto) || 0,
       atendimentos: Number(r.atendimentos) || 0,
     }));
   }, [rendimento]);
@@ -232,12 +231,10 @@ const Dashboard = ({ salaoId }) => {
     const items = [];
     if (despesasDados.total > 0) items.push({ nome: 'Despesas Fixas', valor: despesasDados.total });
     if (salariosFixos > 0) items.push({ nome: 'Salários Fixos', valor: salariosFixos });
-    const totalComissao = rendimento.reduce((a, r) => a + Number(r.rendimento_bruto || 0), 0);
-    if (totalComissao > 0) items.push({ nome: 'Comissões', valor: totalComissao });
     if (homecareDados.pendencia > 0) items.push({ nome: 'Pendências HC', valor: homecareDados.pendencia });
     if (items.length === 0) items.push({ nome: 'Sem dados', valor: 1 });
     return items;
-  }, [despesasDados, rendimento, homecareDados, salariosFixos]);
+  }, [despesasDados, homecareDados, salariosFixos]);
 
   const verificarPin = (e) => {
     e.preventDefault();
@@ -454,16 +451,16 @@ const Dashboard = ({ salaoId }) => {
                     <Bar dataKey="receita" name="Receita" radius={[0, 6, 6, 0]} barSize={18}>
                       {dadosGraficoProcs.map((entry, index) => {
                         const fill = entry.categoria === 'SERVICO_CABELO' ? '#34d399' :
-                                     entry.categoria === 'PRODUTO_APLICADO' ? '#a78bfa' :
-                                     entry.categoria === 'SERVICO_ESTETICA' ? '#f472b6' : '#94a3b8';
+                          entry.categoria === 'PRODUTO_APLICADO' ? '#a78bfa' :
+                            entry.categoria === 'SERVICO_ESTETICA' ? '#f472b6' : '#94a3b8';
                         return <Cell key={`receita-${index}`} fill={fill} />;
                       })}
                     </Bar>
                     <Bar dataKey="lucro" name="Lucro" radius={[0, 6, 6, 0]} barSize={18}>
                       {dadosGraficoProcs.map((entry, index) => {
                         const fill = entry.categoria === 'SERVICO_CABELO' ? '#10b981' :
-                                     entry.categoria === 'PRODUTO_APLICADO' ? '#8b5cf6' :
-                                     entry.categoria === 'SERVICO_ESTETICA' ? '#ec4899' : '#64748b';
+                          entry.categoria === 'PRODUTO_APLICADO' ? '#8b5cf6' :
+                            entry.categoria === 'SERVICO_ESTETICA' ? '#ec4899' : '#64748b';
                         return <Cell key={`lucro-${index}`} fill={fill} />;
                       })}
                     </Bar>
@@ -474,24 +471,24 @@ const Dashboard = ({ salaoId }) => {
               )}
             </div>
 
-            {/* Gráfico 3: Comissões por Profissional */}
+            {/* Gráfico 3: Atendimentos por Profissional */}
             <div className="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm h-80">
               <h3 className="text-[10px] font-black text-slate-800 uppercase tracking-widest mb-4 flex items-center gap-2">
                 <div className="w-2 h-2 rounded-full bg-amber-500" />
-                Comissões a Pagar
+                Atendimentos por Profissional
               </h3>
-              {dadosGraficoComissoes.length > 0 ? (
+              {dadosGraficoProfissionais.length > 0 ? (
                 <ResponsiveContainer width="100%" height="85%">
-                  <BarChart data={dadosGraficoComissoes} layout="vertical" margin={{ top: 0, right: 20, left: 0, bottom: 0 }}>
+                  <BarChart data={dadosGraficoProfissionais} layout="vertical" margin={{ top: 0, right: 20, left: 0, bottom: 0 }}>
                     <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="#f1f5f9" />
                     <XAxis type="number" hide />
                     <YAxis dataKey="nome" type="category" axisLine={false} tickLine={false} tick={{ fill: '#475569', fontSize: 11, fontWeight: 'bold' }} width={80} />
                     <Tooltip content={<TooltipMoeda />} cursor={{ fill: '#f8fafc' }} />
-                    <Bar dataKey="comissao" name="Comissão" fill="#f59e0b" radius={[0, 6, 6, 0]} barSize={24} />
+                    <Bar dataKey="atendimentos" name="Atendimentos" fill="#f59e0b" radius={[0, 6, 6, 0]} barSize={24} />
                   </BarChart>
                 </ResponsiveContainer>
               ) : (
-                <div className="h-full flex items-center justify-center text-slate-300 text-sm">Sem comissões neste mês</div>
+                <div className="h-full flex items-center justify-center text-slate-300 text-sm">Sem atendimentos neste mês</div>
               )}
             </div>
 
@@ -501,7 +498,7 @@ const Dashboard = ({ salaoId }) => {
                 <div className="w-2 h-2 rounded-full bg-rose-500" />
                 Distribuição de Saídas
               </h3>
-              <p className="text-[10px] text-slate-400 font-bold mb-4">Despesas e Comissões do mês</p>
+              <p className="text-[10px] text-slate-400 font-bold mb-4">Despesas e Salários do mês</p>
               <div className="flex-1">
                 <ResponsiveContainer width="100%" height="100%">
                   <PieChart>

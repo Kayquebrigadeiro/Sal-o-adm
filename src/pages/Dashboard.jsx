@@ -85,7 +85,6 @@ const Dashboard = ({ salaoId }) => {
   }, [salaoId, mesSelecionado, unlocked]);
 
   const carregarDados = async () => {
-    setLoading(true);
     try {
       const [ano, mes] = mesSelecionado.split('-');
       const inicioMes = `${ano}-${mes}-01`;

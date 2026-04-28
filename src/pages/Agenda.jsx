@@ -2,20 +2,19 @@ import { useState, useEffect, useMemo } from 'react';
 import { supabase } from '../supabaseClient';
 import { useToast } from '../components/Toast';
 import { FinancialEngine } from '../services/FinancialEngine';
-import { TAXA_MAQUININHA_PADRAO } from '../services/financialConstants';
-import { Clock, User, Scissors, DollarSign, X, CheckCircle2, AlertCircle, AlertTriangle, UserPlus, List, ChevronLeft, ChevronRight, Loader2, Sparkles, Search, Phone, Plus, Eye, EyeOff, Trash2, Package } from 'lucide-react';
+import { User, X, CheckCircle2, AlertTriangle, UserPlus, ChevronLeft, ChevronRight, Loader2, Sparkles, Search, Phone, Plus, Eye, EyeOff, Trash2, Package } from 'lucide-react';
 
 const fmt = (v) => Number(v || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
 const fmtPct = (v) => `${Number(v || 0).toFixed(1)}%`;
 
 // Cores por profissional (inspirado Avec/SalãoVip) — paleta profissional
 const PROF_COLORS = [
-  { bg: 'bg-blue-500',     light: 'bg-blue-50',     text: 'text-blue-700',     border: 'border-blue-200',    hover: 'hover:bg-blue-50/60' },
-  { bg: 'bg-sky-500',      light: 'bg-sky-50',      text: 'text-sky-700',      border: 'border-sky-200',     hover: 'hover:bg-sky-50/60' },
-  { bg: 'bg-cyan-500',     light: 'bg-cyan-50',     text: 'text-cyan-700',     border: 'border-cyan-200',    hover: 'hover:bg-cyan-50/60' },
-  { bg: 'bg-indigo-500',   light: 'bg-indigo-50',   text: 'text-indigo-700',   border: 'border-indigo-200',  hover: 'hover:bg-indigo-50/60' },
-  { bg: 'bg-slate-500',    light: 'bg-slate-50',    text: 'text-slate-700',    border: 'border-slate-200',   hover: 'hover:bg-slate-50/60' },
-  { bg: 'bg-teal-500',     light: 'bg-teal-50',     text: 'text-teal-700',     border: 'border-teal-200',    hover: 'hover:bg-teal-50/60' },
+  { bg: 'bg-blue-500', light: 'bg-blue-50', text: 'text-blue-700', border: 'border-blue-200', hover: 'hover:bg-blue-50/60' },
+  { bg: 'bg-sky-500', light: 'bg-sky-50', text: 'text-sky-700', border: 'border-sky-200', hover: 'hover:bg-sky-50/60' },
+  { bg: 'bg-cyan-500', light: 'bg-cyan-50', text: 'text-cyan-700', border: 'border-cyan-200', hover: 'hover:bg-cyan-50/60' },
+  { bg: 'bg-indigo-500', light: 'bg-indigo-50', text: 'text-indigo-700', border: 'border-indigo-200', hover: 'hover:bg-indigo-50/60' },
+  { bg: 'bg-slate-500', light: 'bg-slate-50', text: 'text-slate-700', border: 'border-slate-200', hover: 'hover:bg-slate-50/60' },
+  { bg: 'bg-teal-500', light: 'bg-teal-50', text: 'text-teal-700', border: 'border-teal-200', hover: 'hover:bg-teal-50/60' },
 ];
 
 const HORARIOS = [
@@ -32,7 +31,7 @@ export default function Agenda({ salaoId, role }) {
   const [profissionais, setProfissionais] = useState([]);
   const [procedimentos, setProcedimentos] = useState([]);
   const [agendamentos, setAgendamentos] = useState([]);
-  const [config, setConfig] = useState({ custoFixo: 0, taxaMaq: TAXA_MAQUININHA_PADRAO });
+  const [config, setConfig] = useState({ custoFixo: 0 });
   const [loading, setLoading] = useState(true);
 
   // ─── Clientes cadastrados ───
@@ -56,10 +55,14 @@ export default function Agenda({ salaoId, role }) {
   const [ignorarPrejuizo, setIgnorarPrejuizo] = useState(false);
   const [mostrarSugerido, setMostrarSugerido] = useState(false);
 
+  // ─── Modal Novo Profissional (Atalho) ───
+  const [modalProfAberto, setModalProfAberto] = useState(false);
+  const [novoProf, setNovoProf] = useState({ nome: '', cargo: 'FUNCIONARIO' });
+  const [salvandoProf, setSalvandoProf] = useState(false);
+
   // ─── Engine ───
   const engine = useMemo(() => new FinancialEngine({
-    custoFixoPorAtendimento: config.custoFixo,
-    taxaMaquininhaPct: config.taxaMaq,
+    custoFixoPorAtendimento: config.custoFixo
   }), [config]);
 
   // ─── Carregar dados iniciais ───
@@ -69,7 +72,7 @@ export default function Agenda({ salaoId, role }) {
       setLoading(true);
       try {
         const [cfgRes, profRes, procRes, cliRes] = await Promise.all([
-          supabase.from('configuracoes').select('custo_fixo_por_atendimento, taxa_maquininha_pct').eq('salao_id', salaoId).single(),
+          supabase.from('configuracoes').select('custo_fixo_por_atendimento').eq('salao_id', salaoId).single(),
           supabase.from('profissionais').select('id, nome, cargo').eq('salao_id', salaoId).eq('ativo', true).order('nome'),
           supabase.from('procedimentos').select('id, nome, categoria, requer_comprimento, preco_p, preco_m, preco_g, custo_variavel').eq('salao_id', salaoId).eq('ativo', true).order('nome'),
           supabase.from('clientes').select('id, nome, telefone').eq('salao_id', salaoId).order('nome'),
@@ -77,8 +80,7 @@ export default function Agenda({ salaoId, role }) {
 
         if (cfgRes.data) {
           setConfig({
-            custoFixo: Number(cfgRes.data.custo_fixo_por_atendimento) || 0,
-            taxaMaq: Number(cfgRes.data.taxa_maquininha_pct) || TAXA_MAQUININHA_PADRAO,
+            custoFixo: Number(cfgRes.data.custo_fixo_por_atendimento) || 0
           });
         }
         // Ordena: proprietária primeiro, depois funcionários
@@ -91,7 +93,7 @@ export default function Agenda({ salaoId, role }) {
         setProcedimentos(procRes.data || []);
         setClientes(cliRes.data || []);
       } catch (err) {
-        showToast('Erro ao carregar agenda', 'error');
+        showToast('ERRO AO CARREGAR AGENDA', 'error');
       } finally {
         setLoading(false);
       }
@@ -149,9 +151,9 @@ export default function Agenda({ salaoId, role }) {
       setModoNovoCliente(false);
       setNovoClienteTelefone('');
       setShowSugestoes(false);
-      showToast(`✅ ${data.nome} cadastrada!`, 'success');
+      showToast(`✅ ${data.nome} CADASTRADA!`, 'success');
     } catch (err) {
-      showToast(`Erro: ${err.message}`, 'error');
+      showToast(`ERRO: ${err.message}`, 'error');
     } finally {
       setSalvandoCliente(false);
     }
@@ -168,7 +170,7 @@ export default function Agenda({ salaoId, role }) {
 
   const fmtDataCompleta = (d) => {
     const dt = new Date(d + 'T12:00:00');
-    return dt.toLocaleDateString('pt-BR', { weekday: 'long', day: 'numeric', month: 'long' });
+    return dt.toLocaleDateString('pt-BR', { weekday: 'long', day: 'numeric', month: 'long' }).toUpperCase();
   };
 
   // ─── Preview financeiro em tempo real ───
@@ -211,10 +213,10 @@ export default function Agenda({ salaoId, role }) {
   const selecionarTamanho = (tamanho) => {
     const proc = procedimentos.find(p => p.id === novo.procId);
     if (!proc) { setNovo(prev => ({ ...prev, tamanho })); return; }
-    
+
     let precoSugerido = 0;
     const precoP = Number(proc.preco_p) || 0;
-    
+
     if (tamanho === 'P') precoSugerido = precoP;
     else if (tamanho === 'M') precoSugerido = Number(proc.preco_m) || (precoP * 1.20);
     else if (tamanho === 'G') precoSugerido = Number(proc.preco_g) || (precoP * 1.30);
@@ -228,15 +230,41 @@ export default function Agenda({ salaoId, role }) {
     return !isNaN(num) && num > 0 && num <= 999999 && Number.isFinite(num);
   };
 
+  // ─── Criar Profissional Rápido ───
+  const criarProfissionalRapido = async () => {
+    if (!novoProf.nome.trim()) return showToast('DIGITE O NOME DO PROFISSIONAL', 'error');
+    setSalvandoProf(true);
+    try {
+      const { error } = await supabase.from('profissionais').upsert([{
+        salao_id: salaoId,
+        nome: novoProf.nome.trim().toUpperCase(),
+        cargo: novoProf.cargo,
+        salario_fixo: 0,
+        ativo: true
+      }], { onConflict: 'salao_id,nome' });
+      if (error) throw error;
+      showToast('PROFISSIONAL ADICIONADO À EQUIPE!', 'success');
+      setModalProfAberto(false);
+      setNovoProf({ nome: '', cargo: 'FUNCIONARIO' });
+      // Recarrega profissionais na grade
+      const { data: profData } = await supabase.from('profissionais').select('id, nome, cargo').eq('salao_id', salaoId).eq('ativo', true).order('nome');
+      setProfissionais(profData || []);
+    } catch (err) {
+      showToast('ERRO: ' + err.message, 'error');
+    } finally {
+      setSalvandoProf(false);
+    }
+  };
+
   // ─── Salvar atendimento ───
   const salvar = async () => {
     const nomeCliente = novo.cliente.trim() || buscaCliente.trim();
-    if (!nomeCliente) return showToast('Digite o nome da cliente!', 'error');
-    if (!novo.procId) return showToast('Selecione o procedimento!', 'error');
-    
+    if (!nomeCliente) return showToast('DIGITE O NOME DA CLIENTE!', 'error');
+    if (!novo.procId) return showToast('SELECIONE O PROCEDIMENTO!', 'error');
+
     // 🛡️ Validar valor monetário
     if (!novo.valor || !validarValorMonetario(novo.valor)) {
-      showToast('Valor deve estar entre R$ 0,01 e R$ 9.999,99', 'error');
+      showToast('VALOR DEVE ESTAR ENTRE R$ 0,01 E R$ 9.999,99', 'error');
       return;
     }
 
@@ -264,13 +292,13 @@ export default function Agenda({ salaoId, role }) {
       // Toast informativo com detalhes do atendimento (viciante!)
       const lucroEstimado = previewFinanceiro?.lucroLiquido || 0;
       showToast(
-        `✅ ${nomeCliente} às ${selecao.hora} | ${proc.nome} | Lucro: ${fmt(lucroEstimado)}`,
+        `✅ ${nomeCliente} ÀS ${selecao.hora} | ${proc.nome} | LUCRO: ${fmt(lucroEstimado)}`,
         'success'
       );
       setModalAberto(false);
       carregarAtendimentos();
     } catch (err) {
-      showToast(`Erro: ${err.message}`, 'error');
+      showToast(`ERRO: ${err.message}`, 'error');
     } finally {
       setSalvando(false);
     }
@@ -290,23 +318,24 @@ export default function Agenda({ salaoId, role }) {
   const togglePagamento = async () => {
     if (!agendamentoSelecionado) return;
     setAlterandoPagamento(true);
-    
+
     const novoValorPago = Number(agendamentoSelecionado.valor_pago) > 0 ? 0 : Number(agendamentoSelecionado.valor_cobrado);
-    
+
     try {
       const { error } = await supabase
         .from('atendimentos')
         .update({ valor_pago: novoValorPago })
-        .eq('id', agendamentoSelecionado.id);
+        .eq('id', agendamentoSelecionado.id)
+        .eq('salao_id', salaoId);
 
       if (error) throw error;
 
       // Atualiza o estado local para refletir na UI imediatamente
       setAgendamentoSelecionado(prev => ({ ...prev, valor_pago: novoValorPago }));
-      showToast(novoValorPago > 0 ? 'Atendimento marcado como PAGO!' : 'Atendimento marcado como NÃO PAGO.', 'success');
+      showToast(novoValorPago > 0 ? 'ATENDIMENTO MARCADO COMO PAGO!' : 'ATENDIMENTO MARCADO COMO NÃO PAGO.', 'success');
       carregarAtendimentos(); // Recarrega a grade
     } catch (err) {
-      showToast(`Erro ao alterar pagamento: ${err.message}`, 'error');
+      showToast(`ERRO AO ALTERAR PAGAMENTO: ${err.message}`, 'error');
     } finally {
       setAlterandoPagamento(false);
     }
@@ -314,22 +343,23 @@ export default function Agenda({ salaoId, role }) {
 
   const cancelarAgendamento = async () => {
     if (!agendamentoSelecionado) return;
-    if (!window.confirm('Tem certeza que deseja cancelar este atendimento?')) return;
+    if (!window.confirm('TEM CERTEZA QUE DESEJA CANCELAR ESTE ATENDIMENTO?')) return;
 
     setCancelando(true);
     try {
       const { error } = await supabase
         .from('atendimentos')
         .update({ status: 'CANCELADO' })
-        .eq('id', agendamentoSelecionado.id);
+        .eq('id', agendamentoSelecionado.id)
+        .eq('salao_id', salaoId);
 
       if (error) throw error;
 
-      showToast('Atendimento cancelado com sucesso!', 'success');
+      showToast('ATENDIMENTO CANCELADO COM SUCESSO!', 'success');
       setModalDetalhesAberto(false);
       carregarAtendimentos();
     } catch (err) {
-      showToast(`Erro: ${err.message}`, 'error');
+      showToast(`ERRO: ${err.message}`, 'error');
     } finally {
       setCancelando(false);
     }
@@ -345,7 +375,7 @@ export default function Agenda({ salaoId, role }) {
       <div className="min-h-screen flex items-center justify-center">
         <div className="flex items-center gap-3">
           <div className="w-5 h-5 border-2 border-blue-500 border-t-transparent rounded-full animate-spin" />
-          <span className="text-slate-400 font-medium text-sm">Carregando agenda...</span>
+          <span className="text-slate-400 font-medium text-sm uppercase">Carregando agenda...</span>
         </div>
       </div>
     );
@@ -358,17 +388,20 @@ export default function Agenda({ salaoId, role }) {
         <div>
           <div className="flex items-center gap-2 mb-0.5">
             <Sparkles size={16} className="text-blue-500" />
-            <h1 className="text-2xl font-black bg-gradient-to-r from-blue-950 to-slate-600 bg-clip-text text-transparent">Agenda</h1>
+            <h1 className="text-2xl font-black bg-gradient-to-r from-blue-950 to-slate-600 bg-clip-text text-transparent uppercase">Agenda</h1>
           </div>
-          <p className="text-slate-400 text-sm">Clique no horário para lançar o faturamento.</p>
+          <p className="text-slate-400 text-sm uppercase">Clique no horário para lançar o faturamento.</p>
         </div>
 
         <div className="flex items-center gap-2">
+          <button onClick={() => setModalProfAberto(true)} className="p-2 hover:bg-white rounded-lg transition-all shadow-sm border border-slate-200 bg-white text-blue-600 font-bold text-sm flex items-center gap-2 uppercase" title="Adicionar Profissional">
+            <UserPlus size={16} /> <span className="hidden sm:inline">Equipe</span>
+          </button>
           <button onClick={() => mudarDia(-1)} className="p-2 hover:bg-white rounded-lg transition-all shadow-sm border border-slate-200 bg-white">
             <ChevronLeft size={16} className="text-slate-500" />
           </button>
           <button onClick={hoje}
-            className={`px-4 py-2.5 rounded-xl text-sm font-bold transition-all shadow-sm ${ehHoje ? 'bg-gradient-to-r from-blue-600 to-sky-500 text-white shadow-blue-200/50' : 'bg-white border border-slate-200 text-slate-700 hover:bg-slate-50'}`}>
+            className={`px-4 py-2.5 rounded-xl text-sm font-bold transition-all shadow-sm uppercase ${ehHoje ? 'bg-gradient-to-r from-blue-600 to-sky-500 text-white shadow-blue-200/50' : 'bg-white border border-slate-200 text-slate-700 hover:bg-slate-50'}`}>
             {ehHoje ? '📅 Hoje' : fmtDataCompleta(dataSelecionada)}
           </button>
           <input type="date" value={dataSelecionada} onChange={e => setDataSelecionada(e.target.value)}
@@ -388,8 +421,8 @@ export default function Agenda({ salaoId, role }) {
               <span className="text-lg">👑</span>
             </div>
             <div>
-              <p className="text-sm font-bold text-amber-800">Você também atende? Adicione-se à agenda!</p>
-              <p className="text-xs text-amber-600">Como proprietária, você precisa de uma coluna própria para seus agendamentos.</p>
+              <p className="text-sm font-bold text-amber-800 uppercase">Você também atende? Adicione-se à agenda!</p>
+              <p className="text-xs text-amber-600 uppercase">Como proprietária, você precisa de uma coluna própria para seus agendamentos.</p>
             </div>
           </div>
           <button
@@ -398,23 +431,23 @@ export default function Agenda({ salaoId, role }) {
                 // Busca nome da proprietária do salão
                 const { data: salaoData } = await supabase.from('saloes').select('nome_proprietaria, nome').eq('id', salaoId).single();
                 const nome = salaoData?.nome_proprietaria || 'PROPRIETÁRIA';
-                const { error } = await supabase.from('profissionais').insert({
+                const { error } = await supabase.from('profissionais').upsert({
                   salao_id: salaoId,
                   nome,
                   cargo: 'PROPRIETARIO',
                   salario_fixo: 0,
                   ativo: true,
-                });
+                }, { onConflict: 'salao_id,nome' });
                 if (error) throw error;
-                showToast(`${nome} adicionada à agenda! 👑`, 'success');
+                showToast(`${nome} ADICIONADA À AGENDA! 👑`, 'success');
                 // Recarrega profissionais
                 const { data: profData } = await supabase.from('profissionais').select('id, nome, cargo').eq('salao_id', salaoId).eq('ativo', true).order('nome');
                 setProfissionais(profData || []);
               } catch (err) {
-                showToast('Erro: ' + err.message, 'error');
+                showToast('ERRO: ' + err.message, 'error');
               }
             }}
-            className="flex-shrink-0 px-4 py-2.5 bg-gradient-to-r from-amber-500 to-orange-500 text-white rounded-xl font-bold text-sm hover:from-amber-600 hover:to-orange-600 transition-all shadow-lg shadow-amber-200"
+            className="flex-shrink-0 px-4 py-2.5 bg-gradient-to-r from-amber-500 to-orange-500 text-white rounded-xl font-bold text-sm hover:from-amber-600 hover:to-orange-600 transition-all shadow-lg shadow-amber-200 uppercase"
           >
             Adicionar-me 👑
           </button>
@@ -424,33 +457,30 @@ export default function Agenda({ salaoId, role }) {
       {profissionais.length === 0 ? (
         <div className="bg-white rounded-2xl border border-slate-200 p-12 text-center">
           <User size={40} className="text-slate-300 mx-auto mb-3" />
-          <p className="text-slate-500 font-bold">Nenhum profissional cadastrado</p>
-          <p className="text-xs text-slate-400 mt-1">Adicione profissionais nas Configurações</p>
+          <p className="text-slate-500 font-bold uppercase">Nenhum profissional cadastrado</p>
+          <p className="text-xs text-slate-400 mt-1 uppercase">Adicione profissionais nas Configurações</p>
           {role === 'PROPRIETARIO' && (
-            <button
-              onClick={async () => {
-                try {
-                  const { data: salaoData } = await supabase.from('saloes').select('nome_proprietaria, nome').eq('id', salaoId).single();
-                  const nome = salaoData?.nome_proprietaria || 'PROPRIETÁRIA';
-                  const { error } = await supabase.from('profissionais').insert({
-                    salao_id: salaoId,
-                    nome,
-                    cargo: 'PROPRIETARIO',
-                    salario_fixo: 0,
-                    ativo: true,
-                  });
-                  if (error) throw error;
-                  showToast(`${nome} adicionada à agenda! 👑`, 'success');
-                  const { data: profData } = await supabase.from('profissionais').select('id, nome, cargo').eq('salao_id', salaoId).eq('ativo', true).order('nome');
-                  setProfissionais(profData || []);
-                } catch (err) {
-                  showToast('Erro: ' + err.message, 'error');
-                }
-              }}
-              className="mt-4 px-6 py-3 bg-gradient-to-r from-blue-600 to-sky-500 text-white rounded-xl font-bold text-sm hover:from-blue-700 hover:to-sky-600 transition-all shadow-lg shadow-blue-200"
-            >
-              👑 Começar — Adicionar-me como profissional
-            </button>
+            <div className="flex justify-center gap-3 mt-6">
+              <button
+                onClick={async () => {
+                  try {
+                    const { data: salaoData } = await supabase.from('saloes').select('nome_proprietaria, nome').eq('id', salaoId).single();
+                    const nome = salaoData?.nome_proprietaria || 'PROPRIETÁRIA';
+                    const { error } = await supabase.from('profissionais').upsert({ salao_id: salaoId, nome, cargo: 'PROPRIETARIO', salario_fixo: 0, ativo: true }, { onConflict: 'salao_id,nome' });
+                    if (error) throw error;
+                    showToast(`${nome} ADICIONADA À AGENDA! 👑`, 'success');
+                    const { data: profData } = await supabase.from('profissionais').select('id, nome, cargo').eq('salao_id', salaoId).eq('ativo', true).order('nome');
+                    setProfissionais(profData || []);
+                  } catch (err) { showToast('ERRO: ' + err.message, 'error'); }
+                }}
+                className="px-6 py-3 bg-gradient-to-r from-amber-500 to-orange-500 text-white rounded-xl font-bold text-sm hover:from-amber-600 transition-all shadow-lg shadow-amber-200 uppercase"
+              >
+                👑 Adicionar-me
+              </button>
+              <button onClick={() => setModalProfAberto(true)} className="px-6 py-3 bg-white border border-slate-200 text-slate-700 rounded-xl font-bold text-sm hover:bg-slate-50 transition-all shadow-sm uppercase">
+                + Adicionar Outros
+              </button>
+            </div>
           )}
         </div>
       ) : (
@@ -465,7 +495,7 @@ export default function Agenda({ salaoId, role }) {
                     <th key={p.id} className={`p-0 border-b border-slate-100`}>
                       <div className={`${cor.bg} px-4 py-3 text-white text-center`}>
                         <span className="text-xs font-bold uppercase tracking-wide">{p.nome}</span>
-                        <span className="block text-[9px] font-normal text-white/70 mt-0.5">
+                        <span className="block text-[9px] font-normal text-white/70 mt-0.5 uppercase">
                           {p.cargo === 'PROPRIETARIO' ? '👑 Proprietária' : '👤 Funcionário(a)'}
                         </span>
                       </div>
@@ -488,21 +518,19 @@ export default function Agenda({ salaoId, role }) {
                         className={`p-1 border-b border-slate-50 h-14 cursor-pointer transition-all ${!agend ? cor.hover : ''}`}
                       >
                         {agend ? (
-                          <div className={`h-full w-full rounded-lg p-1.5 text-[10px] relative overflow-hidden shadow-sm ${
-                            agend.status === 'EXECUTADO'
-                              ? 'bg-emerald-500 text-white'
-                              : `${cor.light} ${cor.text} border ${cor.border}`
-                          }`}>
+                          <div className={`h-full w-full rounded-lg p-1.5 text-[10px] relative overflow-hidden shadow-sm ${agend.status === 'EXECUTADO'
+                            ? 'bg-emerald-500 text-white'
+                            : `${cor.light} ${cor.text} border ${cor.border}`
+                            } uppercase`}>
                             <div className="font-bold truncate">{agend.cliente}</div>
-                            <div className="truncate text-[9px] opacity-70">
+                            <div className="truncate text-[9px] opacity-70 ">
                               {agend.procedimentos?.nome} {agend.comprimento ? `(${agend.comprimento})` : ''}
                             </div>
                             {role === 'PROPRIETARIO' && (
-                              <div className={`absolute bottom-0.5 right-1 px-1.5 py-0.5 rounded-full text-[8px] font-black ${
-                                agend.status === 'EXECUTADO'
-                                  ? 'bg-white/20 text-white'
-                                  : Number(agend.lucro_liquido) >= 0 ? 'bg-emerald-100 text-emerald-700' : 'bg-red-100 text-red-600'
-                              }`}>
+                              <div className={`absolute bottom-0.5 right-1 px-1.5 py-0.5 rounded-full text-[8px] font-black ${agend.status === 'EXECUTADO'
+                                ? 'bg-white/20 text-white'
+                                : Number(agend.lucro_liquido) >= 0 ? 'bg-emerald-100 text-emerald-700' : 'bg-red-100 text-red-600'
+                                }`}>
                                 {fmt(agend.lucro_liquido)}
                               </div>
                             )}
@@ -525,15 +553,44 @@ export default function Agenda({ salaoId, role }) {
         </div>
       )}
 
+      {/* ═══ MODAL NOVO PROFISSIONAL RÁPIDO ═══ */}
+      {modalProfAberto && (
+        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex justify-center items-center z-50" onClick={() => setModalProfAberto(false)}>
+          <div className="w-full max-w-sm bg-white rounded-2xl shadow-2xl p-6 animate-fadeIn" onClick={e => e.stopPropagation()}>
+            <div className="flex justify-between items-center mb-6">
+              <h2 className="text-xl font-black text-slate-900 uppercase">Novo Profissional</h2>
+              <button onClick={() => setModalProfAberto(false)} className="p-2 hover:bg-slate-100 rounded-full transition-colors"><X size={20} /></button>
+            </div>
+
+            <div className="space-y-4">
+              <div>
+                <label className="text-[10px] font-black uppercase text-slate-400 mb-1 block">Nome do Profissional</label>
+                <input type="text" value={novoProf.nome} onChange={e => setNovoProf({ ...novoProf, nome: e.target.value })} placeholder="EX: ANA SILVA" className="w-full border-2 border-slate-200 rounded-xl p-3 outline-none focus:border-blue-400 font-bold text-sm uppercase transition-colors" />
+              </div>
+              <div>
+                <label className="text-[10px] font-black uppercase text-slate-400 mb-1 block">Cargo</label>
+                <select value={novoProf.cargo} onChange={e => setNovoProf({ ...novoProf, cargo: e.target.value })} className="w-full border-2 border-slate-200 rounded-xl p-3 outline-none focus:border-blue-400 font-bold text-sm transition-colors bg-white uppercase">
+                  <option value="FUNCIONARIO">COLABORADOR</option>
+                  <option value="PROPRIETARIO">PROPRIETÁRIO / SÓCIO</option>
+                </select>
+              </div>
+              <button onClick={criarProfissionalRapido} disabled={salvandoProf} className="w-full py-3 bg-blue-600 text-white rounded-xl font-bold hover:bg-blue-700 transition-colors flex items-center justify-center gap-2 mt-2 uppercase">
+                {salvandoProf ? <Loader2 size={18} className="animate-spin" /> : <Plus size={18} />}
+                Adicionar à Equipe
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
       {/* ═══ MODAL DETALHES DO ATENDIMENTO ═══ */}
       {modalDetalhesAberto && agendamentoSelecionado && (
         <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex justify-center items-center z-50" onClick={() => setModalDetalhesAberto(false)}>
           <div className="w-full max-w-sm bg-white rounded-2xl shadow-2xl p-6 animate-fadeIn" onClick={e => e.stopPropagation()}>
             <div className="flex justify-between items-center mb-6">
-              <h2 className="text-xl font-black text-slate-900">Detalhes</h2>
+              <h2 className="text-xl font-black text-slate-900 uppercase">Detalhes</h2>
               <button onClick={() => setModalDetalhesAberto(false)} className="p-2 hover:bg-slate-100 rounded-full transition-colors"><X size={20} /></button>
             </div>
-            
+
             <div className="space-y-4 mb-8">
               <div>
                 <p className="text-[10px] font-black uppercase text-slate-400">Cliente</p>
@@ -541,7 +598,7 @@ export default function Agenda({ salaoId, role }) {
               </div>
               <div>
                 <p className="text-[10px] font-black uppercase text-slate-400">Procedimento</p>
-                <p className="font-medium text-slate-700">{agendamentoSelecionado.procedimentos?.nome} {agendamentoSelecionado.comprimento ? `(${agendamentoSelecionado.comprimento})` : ''}</p>
+                <p className="font-medium text-slate-700 uppercase">{agendamentoSelecionado.procedimentos?.nome} {agendamentoSelecionado.comprimento ? `(${agendamentoSelecionado.comprimento})` : ''}</p>
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
@@ -564,11 +621,11 @@ export default function Agenda({ salaoId, role }) {
                   {alterandoPagamento ? <Loader2 size={12} className="animate-spin text-emerald-500" /> : <CheckCircle2 size={14} />}
                 </div>
                 <div className="flex flex-col flex-1">
-                  <span className={`text-sm font-bold leading-none ${Number(agendamentoSelecionado.valor_pago) > 0 ? 'text-emerald-700' : 'text-slate-700'}`}>
+                  <span className={`text-sm font-bold leading-none uppercase ${Number(agendamentoSelecionado.valor_pago) > 0 ? 'text-emerald-700' : 'text-slate-700'}`}>
                     {Number(agendamentoSelecionado.valor_pago) > 0 ? 'Atendimento Pago' : 'Pagamento Pendente'}
                   </span>
-                  <span className="text-[10px] mt-1 opacity-70">
-                    Clique para alterar o status de pagamento.
+                  <span className="text-[10px] mt-1 opacity-70 uppercase">
+                    CLIQUE PARA ALTERAR O STATUS DE PAGAMENTO.
                   </span>
                 </div>
               </div>
@@ -577,7 +634,7 @@ export default function Agenda({ salaoId, role }) {
             <button
               onClick={cancelarAgendamento}
               disabled={cancelando}
-              className="w-full py-3 rounded-xl font-bold text-red-600 bg-red-50 hover:bg-red-100 transition-colors flex items-center justify-center gap-2"
+              className="w-full py-3 rounded-xl font-bold text-red-600 bg-red-50 hover:bg-red-100 transition-colors flex items-center justify-center gap-2 uppercase"
             >
               {cancelando ? <Loader2 size={18} className="animate-spin" /> : <Trash2 size={18} />}
               Cancelar Atendimento
@@ -593,7 +650,7 @@ export default function Agenda({ salaoId, role }) {
             onClick={e => e.stopPropagation()}>
             <div className="flex justify-between items-center mb-8">
               <div>
-                <h2 className="text-xl font-black text-slate-900">Novo Atendimento</h2>
+                <h2 className="text-xl font-black text-slate-900 uppercase">Novo Atendimento</h2>
                 <p className="text-xs text-slate-500 font-bold uppercase">
                   {selecao.hora} — {selecao.profNome}
                   <span className="text-slate-300 ml-2">{fmtDataCompleta(dataSelecionada)}</span>
@@ -611,7 +668,7 @@ export default function Agenda({ salaoId, role }) {
                   <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-300" />
                   <input
                     type="text"
-                    placeholder="Buscar ou digitar nome..."
+                    placeholder="BUSCAR OU DIGITAR NOME..."
                     className="w-full border-2 border-slate-200 rounded-xl p-3 pl-9 outline-none focus:border-blue-400 font-bold text-sm uppercase transition-colors"
                     value={buscaCliente}
                     onChange={e => {
@@ -644,7 +701,7 @@ export default function Agenda({ salaoId, role }) {
                           ))}
                           <button
                             onClick={() => { setModoNovoCliente(true); setShowSugestoes(false); }}
-                            className="w-full text-left px-4 py-3 hover:bg-sky-50 flex items-center gap-2 text-sky-600 font-bold text-sm border-t border-slate-100"
+                            className="w-full text-left px-4 py-3 hover:bg-sky-50 flex items-center gap-2 text-sky-600 font-bold text-sm border-t border-slate-100 uppercase"
                           >
                             <UserPlus size={14} />
                             Cadastrar "{buscaCliente.trim()}" como nova cliente
@@ -653,7 +710,7 @@ export default function Agenda({ salaoId, role }) {
                       ) : (
                         <button
                           onClick={() => { setModoNovoCliente(true); setShowSugestoes(false); }}
-                          className="w-full text-left px-4 py-3 hover:bg-sky-50 flex items-center gap-2 text-sky-600 font-bold text-sm"
+                          className="w-full text-left px-4 py-3 hover:bg-sky-50 flex items-center gap-2 text-sky-600 font-bold text-sm uppercase"
                         >
                           <UserPlus size={14} />
                           Cadastrar "{buscaCliente.trim()}" como nova cliente
@@ -666,7 +723,7 @@ export default function Agenda({ salaoId, role }) {
                 {/* Mini-formulário de nova cliente */}
                 {modoNovoCliente && (
                   <div className="mt-2 bg-sky-50 border border-sky-200 rounded-xl p-3 animate-fadeIn">
-                    <p className="text-[10px] font-black uppercase text-sky-600 mb-2 flex items-center gap-1">
+                    <p className="text-[10px] font-black uppercase text-sky-600 mb-2 flex items-center gap-1 ">
                       <UserPlus size={12} /> Nova cliente: {buscaCliente.trim()}
                     </p>
                     <div className="flex gap-2">
@@ -674,7 +731,7 @@ export default function Agenda({ salaoId, role }) {
                         <Phone size={12} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-sky-400" />
                         <input
                           type="text"
-                          placeholder="WhatsApp (opcional)"
+                          placeholder="WHATSAPP (OPCIONAL)"
                           className="w-full bg-white border border-sky-200 rounded-lg px-3 py-2 pl-8 text-xs outline-none focus:border-sky-400"
                           value={novoClienteTelefone}
                           onChange={e => setNovoClienteTelefone(e.target.value)}
@@ -683,7 +740,7 @@ export default function Agenda({ salaoId, role }) {
                       <button
                         onClick={criarClienteRapido}
                         disabled={salvandoCliente}
-                        className="bg-sky-500 text-white px-4 py-2 rounded-lg text-xs font-bold hover:bg-sky-600 transition-colors disabled:opacity-50 flex items-center gap-1"
+                        className="bg-sky-500 text-white px-4 py-2 rounded-lg text-xs font-bold hover:bg-sky-600 transition-colors disabled:opacity-50 flex items-center gap-1 uppercase"
                       >
                         {salvandoCliente ? <Loader2 size={12} className="animate-spin" /> : <Plus size={12} />}
                         Salvar
@@ -701,7 +758,7 @@ export default function Agenda({ salaoId, role }) {
                   value={novo.procId}
                   onChange={e => selecionarProcedimento(e.target.value)}
                 >
-                  <option value="">Selecione...</option>
+                  <option value="">SELECIONE...</option>
                   {procedimentos.map(p => <option key={p.id} value={p.id}>{p.nome}</option>)}
                 </select>
               </div>
@@ -712,11 +769,11 @@ export default function Agenda({ salaoId, role }) {
                 if (!proc || proc.categoria !== 'PRODUTO_APLICADO') return null;
                 return (
                   <div className="mt-2 bg-violet-50 border border-violet-200 rounded-xl p-3">
-                    <p className="text-[10px] font-black uppercase text-violet-600 mb-1 flex items-center gap-1">
+                    <p className="text-[10px] font-black uppercase text-violet-600 mb-1 flex items-center gap-1 ">
                       <Package size={12} /> Detalhes do Produto
                     </p>
-                    <div className="flex items-center justify-between text-xs text-violet-800">
-                      <span>Rende: <b>{proc.aplicacoes_por_frasco} aplicações</b></span>
+                    <div className="flex items-center justify-between text-xs text-violet-800 uppercase">
+                      <span>Rende: <b>{proc.aplicacoes_por_frasco} APLICAÇÕES</b></span>
                       <span>Custo/Dose: <b>{fmt(proc.custo_variavel)}</b></span>
                     </div>
                   </div>
@@ -734,11 +791,10 @@ export default function Agenda({ salaoId, role }) {
                       {['P', 'M', 'G'].map(t => (
                         <button key={t}
                           onClick={() => selecionarTamanho(t)}
-                          className={`flex-1 py-3 rounded-xl font-black border-2 transition-all ${
-                            novo.tamanho === t
-                              ? 'bg-blue-600 border-blue-600 text-white shadow-lg shadow-blue-200/50'
-                              : 'border-slate-200 text-slate-400 hover:border-slate-300'
-                          }`}
+                          className={`flex-1 py-3 rounded-xl font-black border-2 transition-all ${novo.tamanho === t
+                            ? 'bg-blue-600 border-blue-600 text-white shadow-lg shadow-blue-200/50'
+                            : 'border-slate-200 text-slate-400 hover:border-slate-300'
+                            }`}
                         >
                           {t === 'P' ? 'Curto' : t === 'M' ? 'Médio' : 'Longo'}
                         </button>
@@ -749,11 +805,10 @@ export default function Agenda({ salaoId, role }) {
               })()}
 
               {/* VALOR + PREVIEW FINANCEIRO */}
-              <div className={`p-4 rounded-2xl border-2 transition-all duration-300 ${
-                role === 'PROPRIETARIO' && previewFinanceiro?.prejuizo && !ignorarPrejuizo
-                  ? 'bg-red-50 border-red-400'
-                  : 'bg-slate-50 border-transparent'
-              }`}>
+              <div className={`p-4 rounded-2xl border-2 transition-all duration-300 ${role === 'PROPRIETARIO' && previewFinanceiro?.prejuizo && !ignorarPrejuizo
+                ? 'bg-red-50 border-red-400'
+                : 'bg-slate-50 border-transparent'
+                }`}>
                 <div className="flex justify-between items-start mb-1">
                   <label className="text-[10px] font-black uppercase text-slate-400">Valor Cobrado (R$)</label>
                   {(() => {
@@ -764,15 +819,15 @@ export default function Agenda({ salaoId, role }) {
                     if (novo.tamanho === 'P') sugerido = precoP;
                     else if (novo.tamanho === 'M') sugerido = Number(proc.preco_m) || (precoP * 1.20);
                     else if (novo.tamanho === 'G') sugerido = Number(proc.preco_g) || (precoP * 1.30);
-                    
+
                     if (!sugerido) return null;
                     return (
                       <div className="flex items-center gap-1">
                         <button onClick={() => setNovo(prev => ({ ...prev, valor: sugerido }))}
-                          className="text-[9px] font-black bg-blue-100 text-blue-600 px-2 py-1 rounded-lg hover:bg-blue-200 transition-colors">
+                          className="text-[9px] font-black bg-blue-100 text-blue-600 px-2 py-1 rounded-lg hover:bg-blue-200 transition-colors uppercase">
                           Tabela: {mostrarSugerido ? fmt(sugerido) : '***'}
                         </button>
-                        <button onClick={() => setMostrarSugerido(!mostrarSugerido)} className="p-1 text-slate-400 hover:text-blue-600 transition-colors" title={mostrarSugerido ? "Ocultar" : "Mostrar"}>
+                        <button onClick={() => setMostrarSugerido(!mostrarSugerido)} className="p-1 text-slate-400 hover:text-blue-600 transition-colors" title={mostrarSugerido ? "OCULTAR" : "MOSTRAR"}>
                           {mostrarSugerido ? <EyeOff size={12} /> : <Eye size={12} />}
                         </button>
                       </div>
@@ -781,14 +836,14 @@ export default function Agenda({ salaoId, role }) {
                 </div>
                 <input
                   type="number" step="0.01"
-                  className={`w-full bg-transparent text-3xl font-black outline-none ${
-                    role === 'PROPRIETARIO' && previewFinanceiro?.prejuizo ? 'text-red-600' : 'text-slate-900'
-                  }`}
+                  className={`w-full bg-transparent text-3xl font-black outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none ${role === 'PROPRIETARIO' && previewFinanceiro?.prejuizo ? 'text-red-600' : 'text-slate-900'
+                    }`}
+                  onFocus={e => e.target.select()}
                   value={novo.valor}
-                  onChange={e => setNovo({...novo, valor: e.target.value})}
+                  onChange={e => setNovo({ ...novo, valor: e.target.value })}
                   placeholder="0,00"
                 />
-                <p className="text-[9px] text-slate-400 mt-1">Valor entre R$ 0,01 e R$ 9.999,99 — sistema calcula lucro automaticamente.</p>
+                <p className="text-[9px] text-slate-400 mt-1 uppercase">Valor entre R$ 0,01 e R$ 9.999,99 — sistema calcula lucro automaticamente.</p>
 
                 {/* Desmembramento do Motor Financeiro */}
                 {role === 'PROPRIETARIO' && previewFinanceiro && (
@@ -808,11 +863,13 @@ export default function Agenda({ salaoId, role }) {
                       </div>
                     </div>
 
-                    {/* Detalhamento centavo a centavo */}
-                    <div className="flex flex-wrap gap-x-4 gap-y-1 text-[10px] text-slate-400 font-medium">
-                      <span>Maquininha: <b className="text-slate-600">{fmt(previewFinanceiro.valorMaquininha)}</b></span>
-                      <span>Custo Fixo: <b className="text-slate-600">{fmt(previewFinanceiro.custoFixo)}</b></span>
-                      <span>Material: <b className="text-slate-600">{fmt(previewFinanceiro.custoProduto)}</b></span>
+                    {/* Detalhamento Matemático Óbvio */}
+                    <div className="font-mono text-[11px] text-slate-500 bg-slate-100/50 p-2 rounded flex flex-col gap-0.5 uppercase">
+                      <div className="flex justify-between"><span>Faturamento:</span> <span className="font-bold text-slate-700">{fmt(previewFinanceiro.valorBruto)}</span></div>
+                      <div className="flex justify-between"><span><span className="text-red-400">(-)</span> Fixo:</span> <span className="text-red-500">-{fmt(previewFinanceiro.custoFixo)}</span></div>
+                      <div className="flex justify-between"><span><span className="text-red-400">(-)</span> Material:</span> <span className="text-red-500">-{fmt(previewFinanceiro.custoProduto)}</span></div>
+                      <div className="h-px bg-slate-200 my-1"></div>
+                      <div className="flex justify-between font-bold"><span><span className="text-emerald-500 font-black">(=)</span> Lucro:</span> <span className="text-emerald-600">{fmt(previewFinanceiro.lucroLiquido)}</span></div>
                     </div>
 
                     {/* Alerta de prejuízo */}
@@ -835,19 +892,19 @@ export default function Agenda({ salaoId, role }) {
               {/* OBS */}
               <div>
                 <label className="text-[10px] font-black uppercase text-slate-400 mb-1 block">Observação</label>
-                <input type="text" placeholder="Opcional..."
+                <input type="text" placeholder="OPCIONAL..."
                   className="w-full border-2 border-slate-200 rounded-xl p-3 outline-none focus:border-blue-400 text-sm transition-colors"
-                  value={novo.obs} onChange={e => setNovo({...novo, obs: e.target.value.toUpperCase()})} />
+                  value={novo.obs} onChange={e => setNovo({ ...novo, obs: e.target.value.toUpperCase() })} />
               </div>
 
               {/* PAGO OU NÃO */}
-              <div className="flex items-center gap-2 p-3 border-2 border-slate-200 rounded-xl bg-white cursor-pointer transition-colors hover:border-blue-200" onClick={() => setNovo({...novo, pago: !novo.pago})}>
+              <div className="flex items-center gap-2 p-3 border-2 border-slate-200 rounded-xl bg-white cursor-pointer transition-colors hover:border-blue-200" onClick={() => setNovo({ ...novo, pago: !novo.pago })}>
                 <div className={`w-5 h-5 rounded flex items-center justify-center transition-colors ${novo.pago ? 'bg-emerald-500 text-white' : 'bg-slate-200 text-transparent'}`}>
                   <CheckCircle2 size={14} />
                 </div>
                 <div className="flex flex-col">
-                  <span className="text-sm font-bold text-slate-700 leading-none">Atendimento já foi pago?</span>
-                  <span className="text-[10px] text-slate-400 mt-1">Marque se a cliente já realizou o pagamento.</span>
+                  <span className="text-sm font-bold text-slate-700 leading-none uppercase">Atendimento já foi pago?</span>
+                  <span className="text-[10px] text-slate-400 mt-1 uppercase">Marque se a cliente já realizou o pagamento.</span>
                 </div>
               </div>
 
@@ -855,15 +912,14 @@ export default function Agenda({ salaoId, role }) {
               <button
                 onClick={salvar}
                 disabled={salvando}
-                className={`w-full py-4 rounded-2xl font-black text-lg transition-all shadow-xl flex items-center justify-center gap-2 ${
-                  salvando ? 'bg-slate-300 text-slate-500 cursor-not-allowed' :
+                className={`w-full py-4 rounded-2xl font-black text-lg transition-all shadow-xl flex items-center justify-center gap-2 ${salvando ? 'bg-slate-300 text-slate-500 cursor-not-allowed' :
                   role === 'PROPRIETARIO' && previewFinanceiro?.prejuizo
                     ? 'bg-red-600 text-white shadow-red-200 hover:bg-red-700'
                     : 'bg-gradient-to-r from-blue-600 to-sky-500 text-white shadow-blue-200/50 hover:from-blue-700 hover:to-sky-600'
-                }`}
+                  }`}
               >
                 {salvando ? (
-                  <><Loader2 size={20} className="animate-spin" /> Salvando...</>
+                  <><Loader2 size={20} className="animate-spin" /> SALVANDO...</>
                 ) : role === 'PROPRIETARIO' && previewFinanceiro?.prejuizo ? (
                   'CONFIRMAR MESMO COM PREJUÍZO'
                 ) : (

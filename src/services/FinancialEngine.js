@@ -8,8 +8,6 @@
 
 import {
   MULTIPLICADOR_COMPRIMENTO,
-  PERCENTUAL_POR_CATEGORIA,
-  TAXA_MAQUININHA_PADRAO,
 } from './financialConstants.js';
 
 // ---------------------------------------------------------------------------
@@ -40,9 +38,7 @@ export class FinancialEngine {
    */
   constructor(config = {}) {
     this.custoFixo = Number(config.custoFixoPorAtendimento) || 0;
-    this.taxaMaq = Number(config.taxaMaquininhaPct) || TAXA_MAQUININHA_PADRAO;
     this.multiplicadores = config.multiplicadores || MULTIPLICADOR_COMPRIMENTO;
-    this.percentuais = config.percentuaisPorCategoria || PERCENTUAL_POR_CATEGORIA;
   }
 
   // -------------------------------------------------------------------------
@@ -162,21 +158,16 @@ export class FinancialEngine {
   calcularPrecoPMG({
     custoFixo,
     custoMaterial,
-    ganhoLiquido,
-    taxaMaquininhaPct,
+    ganhoLiquido
   }) {
     const cFixo = toCents(custoFixo != null ? custoFixo : this.custoFixo);
     const cMat = toCents(custoMaterial);
     const cGanho = toCents(ganhoLiquido);
-    const tMaq = Number(taxaMaquininhaPct != null ? taxaMaquininhaPct : this.taxaMaq);
 
+    // A matemática pura e óbvia: Fixo + Material + Ganho
     const base = cFixo + cMat + cGanho;
-    const divisor = 1 - tMaq / 100;
-    if (divisor <= 0) {
-      return { base: toReais(base), precoP: Infinity, precoM: Infinity, precoG: Infinity, erro: 'TAXA_MAQUININHA_INVALIDA' };
-    }
 
-    const precoP = Math.round(base / divisor);
+    const precoP = base;
     const precoM = Math.round(precoP * 1.20);
     const precoG = Math.round(precoP * 1.30);
 
@@ -345,63 +336,32 @@ export class FinancialEngine {
   calcularAtendimento({
     valorCobrado,
     custoProduto = 0,
-    custoFixoRateado,
-    taxaMaquininha,
-    cargoProfissional, // Ainda pode ser útil para outras lógicas
+    custoFixoRateado
   }) {
     const vCobrado = toCents(valorCobrado);
-    const tMaq = Number(taxaMaquininha != null ? taxaMaquininha : this.taxaMaq);
     const cFixo = toCents(custoFixoRateado != null ? custoFixoRateado : this.custoFixo);
     const cProd = toCents(custoProduto);
 
-    // Conforme refatoração v7, a comissão foi removida do cálculo de lucro.
-    const valorComissao = 0;
-    const pctComissao = 0;
-
-    // Valores absolutos em centavos
-    const valorMaquininha = Math.round(vCobrado * tMaq / 100);
 
     // --- Cálculo de lucro ---
-    // A comissão foi zerada, então o lucro do SALÃO é o mesmo independente do profissional.
-    const lucroLiquido = vCobrado - valorMaquininha - cFixo - cProd;
-    const lucroPossivel = vCobrado - cFixo - cProd; // Sem maquininha = cenário ideal
-
-    // Rendimento do profissional (o que ele ganha)
-    const ehProprietario = (cargoProfissional || '').toUpperCase() === 'PROPRIETARIO';
-    const rendimentoProfissional = ehProprietario
-      ? lucroLiquido // O "rendimento" da proprietária é o próprio lucro do salão
-      : 0;           // Funcionário agora tem salário fixo, não comissão por serviço
+    const lucroLiquido = vCobrado - cFixo - cProd;
 
     // Margem real
     const margemReal = vCobrado > 0
       ? round2((lucroLiquido / vCobrado) * 100)
       : 0;
 
-    const margemPossivel = vCobrado > 0
-      ? round2((lucroPossivel / vCobrado) * 100)
-      : 0;
-
     return {
       // Inputs
       valorBruto: toReais(vCobrado),
-      cargoProfissional: cargoProfissional || 'N/A',
 
       // Deduções (centavo por centavo)
-      valorMaquininha: toReais(valorMaquininha),
-      valorComissao: 0,
       custoFixo: toReais(cFixo),
       custoProduto: toReais(cProd),
 
-      // Percentuais aplicados
-      taxaMaquininhaPct: tMaq,
-      percentualComissao: 0,
-
       // Resultados
-      rendimentoProfissional: toReais(rendimentoProfissional),
       lucroLiquido: toReais(lucroLiquido),
-      lucroPossivel: toReais(lucroPossivel),
       margemReal,
-      margemPossivel,
 
       // Alertas
       prejuizo: lucroLiquido < 0,
@@ -490,9 +450,6 @@ export class FinancialEngine {
   static calcularResumoMensal(atendimentos = [], homecare = [], paralelos = []) {
     let faturamentoBruto = 0;
     let lucroTotal = 0;
-    let lucroPossivelTotal = 0;
-    let totalMaquininha = 0;
-    let totalComissao = 0;
     let totalCustoFixo = 0;
     let totalCustoProduto = 0;
     let totalPendente = 0;
@@ -503,9 +460,6 @@ export class FinancialEngine {
       const vb = toCents(a.valorBruto);
       faturamentoBruto += vb;
       lucroTotal += toCents(a.lucroLiquido);
-      lucroPossivelTotal += toCents(a.lucroPossivel);
-      totalMaquininha += toCents(a.valorMaquininha);
-      totalComissao += toCents(a.valorComissao);
       totalCustoFixo += toCents(a.custoFixo);
       totalCustoProduto += toCents(a.custoProduto);
 
@@ -576,12 +530,9 @@ export class FinancialEngine {
       totalAtendimentos: qtdAtendimentos,
       faturamentoBruto: toReais(faturamentoBruto),
       lucroLiquido: toReais(lucroTotal),
-      lucroPossivel: toReais(lucroPossivelTotal),
       ticketMedio: toReais(ticketMedio),
 
       // Deduções totais
-      totalMaquininha: toReais(totalMaquininha),
-      totalComissao: toReais(totalComissao),
       totalCustoFixo: toReais(totalCustoFixo),
       totalCustoProduto: toReais(totalCustoProduto),
 

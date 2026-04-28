@@ -1,203 +1,177 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../supabaseClient';
 import { useToast } from './Toast';
-import { Plus, Trash2, Link } from 'lucide-react';
-import Modal from './Modal';
+import { Plus, Trash2, Loader2, Package } from 'lucide-react';
 
 const fmt = (v) => Number(v || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
 
 export default function ProdutosRelacionados({ salaoId, servicoId, onUpdate }) {
   const { showToast } = useToast();
-  const [relacionamentos, setRelacionamentos] = useState([]);
+  const [vinculos, setVinculos] = useState([]);
+  const [catalogo, setCatalogo] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [salvando, setSalvando] = useState(false);
 
-  // Modal
-  const [modalOpen, setModalOpen] = useState(false);
-  const [produtosCatalogo, setProdutosCatalogo] = useState([]);
-  const [produtoSelecionado, setProdutoSelecionado] = useState('');
+  // Form de novo vínculo
+  const [novoProdutoId, setNovoProdutoId] = useState('');
+  const [novaQtd, setNovaQtd] = useState(1);
 
   useEffect(() => {
-    carregar();
+    if (servicoId) carregar();
   }, [servicoId]);
 
   const carregar = async () => {
     setLoading(true);
     try {
-      const { data, error } = await supabase
-        .from('procedimento_produtos')
-        .select(`
-          id,
-          procedimento_id,
-          produto_id,
-          qtd_usada,
-          produtos_catalogo (
-            id,
-            nome,
-            preco_compra,
-            qtd_aplicacoes,
-            custo_por_uso
-          )
-        `)
-        .eq('procedimento_id', servicoId);
+      // Dispara as buscas de Catálogo e Vínculos AO MESMO TEMPO (Paralelo)
+      const [catRes, vincRes] = await Promise.all([
+        supabase.from('produtos_catalogo').select('*').eq('salao_id', salaoId).eq('ativo', true).order('nome'),
+        supabase.from('procedimento_produtos').select('*').eq('procedimento_id', servicoId)
+      ]);
 
-      if (error) throw error;
-      setRelacionamentos(data || []);
+      if (catRes.error) throw catRes.error;
+      if (vincRes.error) throw vincRes.error;
+
+      setCatalogo(catRes.data || []);
+      setVinculos(vincRes.data || []);
     } catch (err) {
-      showToast('Erro ao carregar produtos vinculados: ' + err.message, 'error');
+      console.error(err);
+      showToast('ERRO AO CARREGAR PRODUTOS RELACIONADOS', 'error');
     } finally {
       setLoading(false);
     }
   };
 
-  const carregarCatalogo = async () => {
-    try {
-      const { data, error } = await supabase
-        .from('produtos_catalogo')
-        .select('*')
-        .eq('salao_id', salaoId)
-        .eq('ativo', true)
-        .order('nome');
-      if (error) throw error;
-      setProdutosCatalogo(data || []);
-    } catch (err) {
-      showToast('Erro ao carregar catálogo: ' + err.message, 'error');
-    }
-  };
-
-  const abrirModal = () => {
-    carregarCatalogo();
-    setProdutoSelecionado('');
-    setModalOpen(true);
-  };
-
-  const vincularProduto = async () => {
-    if (!produtoSelecionado) return showToast('Selecione um produto', 'error');
-    
-    if (relacionamentos.find(r => r.produto_id === produtoSelecionado)) {
-      return showToast('Este produto já está vinculado!', 'error');
-    }
-
+  const adicionar = async () => {
+    if (!novoProdutoId) return showToast('SELECIONE UM PRODUTO', 'error');
+    setSalvando(true);
     try {
       const { error } = await supabase.from('procedimento_produtos').insert([{
+        salao_id: salaoId,
         procedimento_id: servicoId,
-        produto_id: produtoSelecionado,
-        qtd_usada: 1
+        produto_id: novoProdutoId,
+        qtd_usada: Number(novaQtd) || 1
       }]);
+
       if (error) throw error;
-      
-      showToast('Produto vinculado com sucesso', 'success');
-      setModalOpen(false);
+
+      showToast('PRODUTO VINCULADO COM SUCESSO!', 'success');
+      setNovoProdutoId('');
+      setNovaQtd(1);
+
       await carregar();
-      if (onUpdate) onUpdate();
+      if (onUpdate) onUpdate(); // Atualiza a tabela principal
     } catch (err) {
-      showToast('Erro ao vincular produto: ' + err.message, 'error');
+      showToast('ERRO AO VINCULAR PRODUTO', 'error');
+    } finally {
+      setSalvando(false);
     }
   };
 
-  const atualizarQtd = async (id, novaQtd) => {
-    const qtd = Number(novaQtd) || 0;
-    if (qtd < 0) return;
-    
-    setRelacionamentos(prev => prev.map(r => r.id === id ? { ...r, qtd_usada: qtd } : r));
-
+  const remover = async (produtoId) => {
+    if (!window.confirm('REMOVER ESTE PRODUTO DO SERVIÇO?')) return;
     try {
-      const { error } = await supabase
-        .from('procedimento_produtos')
-        .update({ qtd_usada: qtd })
-        .eq('id', id);
+      const { error } = await supabase.from('procedimento_produtos').delete().eq('procedimento_id', servicoId).eq('produto_id', produtoId).eq('salao_id', salaoId);
       if (error) throw error;
-      if (onUpdate) onUpdate();
-    } catch (err) {
-      showToast('Erro ao atualizar quantidade: ' + err.message, 'error');
-      carregar();
-    }
-  };
 
-  const removerVinculo = async (id) => {
-    if (!window.confirm('Remover este produto do serviço?')) return;
-    try {
-      const { error } = await supabase.from('procedimento_produtos').delete().eq('id', id);
-      if (error) throw error;
-      showToast('Produto removido do serviço', 'success');
+      showToast('REMOVIDO COM SUCESSO!', 'success');
       await carregar();
-      if (onUpdate) onUpdate();
+      if (onUpdate) onUpdate(); // Atualiza a tabela principal
     } catch (err) {
-      showToast('Erro ao remover vínculo: ' + err.message, 'error');
+      showToast('ERRO AO REMOVER', 'error');
     }
   };
 
-  if (loading) return <div className="p-4 text-center text-slate-400 text-sm">Carregando produtos vinculados...</div>;
+  if (loading) {
+    return <div className="p-4 text-center text-xs font-bold text-indigo-400 uppercase animate-pulse">CARREGANDO PRODUTOS...</div>;
+  }
 
   return (
-    <div className="p-4 bg-white rounded-xl shadow-sm border border-slate-200">
-      <div className="flex justify-between items-center mb-4">
-        <h4 className="text-sm font-bold text-slate-800 flex items-center gap-2">
-          <Link size={14} className="text-indigo-500"/> Composição de Material
-        </h4>
-        <button onClick={abrirModal} className="flex items-center gap-1 px-3 py-1.5 bg-indigo-50 text-indigo-600 rounded-lg text-xs font-bold hover:bg-indigo-100 transition-colors">
-          <Plus size={14} /> Vincular Produto
-        </button>
-      </div>
+    <div className="bg-white rounded-xl border border-indigo-100 p-5 shadow-inner">
+      <h4 className="text-xs font-black text-indigo-800 uppercase mb-4 flex items-center gap-2">
+        <Package size={14} className="text-indigo-500" />
+        Composição do Custo de Material
+      </h4>
 
-      <div className="overflow-x-auto">
-        <table className="w-full text-left text-xs">
-          <thead>
-            <tr className="border-b border-slate-100 text-slate-400 uppercase tracking-wider">
-              <th className="pb-2 font-bold">Produto</th>
-              <th className="pb-2 font-bold text-right">Valor/Frasco</th>
-              <th className="pb-2 font-bold text-center">Aplicações</th>
-              <th className="pb-2 font-bold text-right">Custo/Aplic</th>
-              <th className="pb-2 font-bold text-center">Qtd Usada</th>
-              <th className="pb-2 font-bold text-right">Total</th>
-              <th className="pb-2 font-bold text-center">Ações</th>
-            </tr>
-          </thead>
-          <tbody>
-            {relacionamentos.length === 0 ? (
-              <tr><td colSpan={7} className="py-4 text-center text-slate-400">Nenhum produto vinculado.</td></tr>
-            ) : relacionamentos.map(rel => {
-              const prod = rel.produtos_catalogo;
-              const custoAplic = Number(prod.preco_compra) / Math.max(Number(prod.qtd_aplicacoes), 1);
-              const total = custoAplic * rel.qtd_usada;
+      {/* Lista de produtos já vinculados */}
+      {vinculos.length === 0 ? (
+        <div className="text-center py-5 bg-slate-50 rounded-xl border border-dashed border-slate-200 mb-4">
+          <p className="text-[10px] font-bold text-slate-400 uppercase">NENHUM PRODUTO VINCULADO A ESTE SERVIÇO</p>
+        </div>
+      ) : (
+        <div className="space-y-2 mb-5">
+          {vinculos.map(v => {
+            // Localiza o produto no catálogo usando o ID para mostrar os nomes sem depender do banco
+            const p = catalogo.find(c => c.id === v.produto_id);
+            if (!p) return null;
 
+            // Fallback caso a coluna custo_por_uso falhe
+            const fallbackMatematica = (Number(p.preco_compra) || 0) / Math.max(Number(p.qtd_aplicacoes) || 1, 1);
+            const custoUnitario = Number(p.custo_por_uso) || fallbackMatematica;
+            const custoTotal = custoUnitario * Number(v.qtd_usada);
+
+            return (
+              <div key={v.produto_id} className="flex items-center justify-between bg-indigo-50/50 border border-indigo-100 p-3 rounded-xl transition-all hover:bg-indigo-50">
+                <div className="flex-1">
+                  <p className="text-xs font-bold text-slate-700 uppercase">{p.nome}</p>
+                  <p className="text-[10px] text-slate-500 uppercase">{fmt(custoUnitario)} POR DOSE</p>
+                </div>
+                <div className="flex items-center gap-5">
+                  <div className="text-center">
+                    <p className="text-[9px] font-bold text-slate-400 uppercase">Qtd Usada</p>
+                    <p className="text-xs font-black text-indigo-600">{v.qtd_usada}x</p>
+                  </div>
+                  <div className="text-right w-20">
+                    <p className="text-[9px] font-bold text-slate-400 uppercase">Custo</p>
+                    <p className="text-xs font-black text-red-500">{fmt(custoTotal)}</p>
+                  </div>
+                  <button onClick={() => remover(v.produto_id)} className="p-2 text-red-400 hover:bg-red-50 hover:text-red-600 rounded-lg transition-colors" title="REMOVER PRODUTO">
+                    <Trash2 size={16} />
+                  </button>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
+
+      {/* Adicionar novo vínculo */}
+      <div className="flex items-end gap-3 bg-slate-50 p-4 rounded-xl border border-slate-200">
+        <div className="flex-1">
+          <label className="block text-[10px] font-black text-slate-500 uppercase mb-1.5">Vincular Novo Produto</label>
+          <select
+            className="w-full border-2 border-slate-200 rounded-xl px-3 py-2.5 text-xs font-bold text-slate-700 uppercase outline-none focus:border-indigo-500 bg-white"
+            value={novoProdutoId}
+            onChange={e => setNovoProdutoId(e.target.value)}
+          >
+            <option value="">SELECIONE UM PRODUTO DO CATÁLOGO...</option>
+            {catalogo.map(c => {
+              const fb = (Number(c.preco_compra) || 0) / Math.max(Number(c.qtd_aplicacoes) || 1, 1);
               return (
-                <tr key={rel.id} className="border-b border-slate-50 last:border-0 hover:bg-slate-50">
-                  <td className="py-2 font-medium text-slate-700">{prod.nome}</td>
-                  <td className="py-2 text-right text-slate-500">{fmt(prod.preco_compra)}</td>
-                  <td className="py-2 text-center text-slate-500">{prod.qtd_aplicacoes}x</td>
-                  <td className="py-2 text-right font-medium text-indigo-400">{fmt(custoAplic)}</td>
-                  <td className="py-2 text-center">
-                    <input type="number" step="0.1" value={rel.qtd_usada} onChange={(e) => atualizarQtd(rel.id, e.target.value)}
-                      className="w-16 text-center border border-slate-200 rounded p-1 text-xs outline-none focus:border-indigo-500" />
-                  </td>
-                  <td className="py-2 text-right font-bold text-indigo-600">{fmt(total)}</td>
-                  <td className="py-2 text-center">
-                    <button onClick={() => removerVinculo(rel.id)} className="text-red-400 hover:text-red-600"><Trash2 size={14} /></button>
-                  </td>
-                </tr>
+                <option key={c.id} value={c.id}>
+                  {c.nome} ({fmt(c.custo_por_uso || fb)} / DOSE)
+                </option>
               );
             })}
-          </tbody>
-        </table>
-      </div>
-
-      <Modal open={modalOpen} onClose={() => setModalOpen(false)} title="Vincular Produto ao Serviço">
-        <div className="space-y-4">
-          <div>
-            <label className="text-sm font-bold text-slate-700 mb-1 block">Selecione o Produto</label>
-            <select value={produtoSelecionado} onChange={(e) => setProdutoSelecionado(e.target.value)}
-              className="w-full border-2 border-slate-100 p-3 rounded-xl focus:border-indigo-500 outline-none bg-white">
-              <option value="">-- Escolha um produto --</option>
-              {produtosCatalogo.map(p => (
-                <option key={p.id} value={p.id}>{p.nome} ({fmt(p.preco_compra)})</option>
-              ))}
-            </select>
-          </div>
-          <button onClick={vincularProduto} className="w-full bg-indigo-600 text-white py-3 rounded-xl font-bold hover:bg-indigo-700 transition-all">
-            Vincular
-          </button>
+          </select>
         </div>
-      </Modal>
+        <div className="w-24">
+          <label className="block text-[10px] font-black text-slate-500 uppercase mb-1.5">Doses Usadas</label>
+          <input
+            type="number" min="0.1" step="0.1"
+            className="w-full border-2 border-slate-200 rounded-xl px-3 py-2.5 text-xs font-bold text-center outline-none focus:border-indigo-500 bg-white"
+            value={novaQtd}
+            onChange={e => setNovaQtd(e.target.value)}
+          />
+        </div>
+        <button
+          onClick={adicionar}
+          disabled={salvando}
+          className="bg-indigo-600 text-white px-5 py-2.5 rounded-xl font-bold hover:bg-indigo-700 transition-colors flex items-center justify-center disabled:opacity-50 h-[38px] uppercase text-xs shadow-md shadow-indigo-200"
+        >
+          {salvando ? <Loader2 size={16} className="animate-spin" /> : <><Plus size={16} className="mr-1" /> Vincular</>}
+        </button>
+      </div>
     </div>
   );
 }

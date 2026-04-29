@@ -203,9 +203,9 @@ export default function Precificacao({ salaoId }) {
       // Dispara todas as 4 queries simultaneamente para evitar "waterfall" na rede
       const [cfgRes, procRes, custoRes, catRes] = await Promise.all([
         supabase.from('configuracoes').select('custo_fixo_por_atendimento, qtd_atendimentos_mes').eq('salao_id', salaoId).single(),
-        supabase.from('procedimentos').select('*').eq('salao_id', salaoId).eq('ativo', true).order('nome'),
-        supabase.from('custo_composto_procedimento').select('*').eq('salao_id', salaoId),
-        supabase.from('produtos_catalogo').select('*').eq('salao_id', salaoId).eq('ativo', true).order('nome')
+        supabase.from('procedimentos').select('id, nome, categoria, requer_comprimento, preco_p, preco_m, preco_g, ganho_liquido_desejado, custo_variavel, ativo').eq('salao_id', salaoId).eq('ativo', true).order('nome'),
+        supabase.from('custo_composto_procedimento').select('procedimento_id, custo_total_composicao, qtd_produtos').eq('salao_id', salaoId),
+        supabase.from('produtos_catalogo').select('id, nome, preco_compra, qtd_aplicacoes, custo_por_uso, ativo').eq('salao_id', salaoId).eq('ativo', true).order('nome')
       ]);
 
       if (cfgRes.data) {

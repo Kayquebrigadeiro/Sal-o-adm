@@ -33,6 +33,11 @@ export default function Agenda({ salaoId, role }) {
   const [agendamentos, setAgendamentos] = useState([]);
   const [config, setConfig] = useState({ custoFixo: 0 });
   const [loading, setLoading] = useState(true);
+  const [custosCompostos, setCustosCompostos] = useState({});
+
+  // ─── Drag and Drop ───
+  const [dragging, setDragging] = useState(null); // { agendId, profId, hora }
+  const [dragOver, setDragOver] = useState(null);  // { profId, hora }
 
   // ─── Clientes cadastrados ───
   const [clientes, setClientes] = useState([]);
@@ -71,11 +76,12 @@ export default function Agenda({ salaoId, role }) {
     const carregar = async () => {
       setLoading(true);
       try {
-        const [cfgRes, profRes, procRes, cliRes] = await Promise.all([
+        const [cfgRes, profRes, procRes, cliRes, custoRes] = await Promise.all([
           supabase.from('configuracoes').select('custo_fixo_por_atendimento').eq('salao_id', salaoId).single(),
           supabase.from('profissionais').select('id, nome, cargo').eq('salao_id', salaoId).eq('ativo', true).order('nome'),
           supabase.from('procedimentos').select('id, nome, categoria, requer_comprimento, preco_p, preco_m, preco_g, custo_variavel').eq('salao_id', salaoId).eq('ativo', true).order('nome'),
           supabase.from('clientes').select('id, nome, telefone').eq('salao_id', salaoId).order('nome'),
+          supabase.from('custo_composto_procedimento').select('procedimento_id, custo_total_composicao').eq('salao_id', salaoId),
         ]);
 
         if (cfgRes.data) {
@@ -92,6 +98,13 @@ export default function Agenda({ salaoId, role }) {
         setProfissionais(sorted);
         setProcedimentos(procRes.data || []);
         setClientes(cliRes.data || []);
+
+        // Criar mapa de custos compostos
+        const custoMap = {};
+        (custoRes.data || []).forEach(c => {
+          custoMap[c.procedimento_id] = Number(c.custo_total_composicao) || 0;
+        });
+        setCustosCompostos(custoMap);
       } catch (err) {
         showToast('ERRO AO CARREGAR AGENDA', 'error');
       } finally {
@@ -183,10 +196,10 @@ export default function Agenda({ salaoId, role }) {
 
     return engine.calcularAtendimento({
       valorCobrado: Number(novo.valor),
-      custoProduto: Number(proc.custo_variavel) || 0,
+      custoProduto: custosCompostos[proc.id] ?? Number(proc.custo_variavel) ?? 0,
       cargoProfissional: cargo,
     });
-  }, [engine, novo.procId, novo.valor, novo.tamanho, selecao.profId, procedimentos, profissionais]);
+  }, [engine, novo.procId, novo.valor, novo.tamanho, selecao.profId, procedimentos, profissionais, custosCompostos]);
 
   // ─── Abrir modal ───
   const abrirAgendamento = (hora, profId) => {
@@ -365,6 +378,63 @@ export default function Agenda({ salaoId, role }) {
     }
   };
 
+  // ─── Drag and Drop Handler ───
+  const handleDrop = async (novoProfId, novaHora) => {
+    if (!dragging) return;
+    const { agendId, profId: profOrigem, hora: horaOrigem } = dragging;
+
+    // Sem mudança
+    if (novoProfId === profOrigem && novaHora === horaOrigem) {
+      setDragging(null);
+      setDragOver(null);
+      return;
+    }
+
+    // 🛡️ Verificar conflito: horário ocupado na profissional de destino?
+    const conflito = agendamentos.find(a =>
+      a.profissional_id === novoProfId &&
+      a.horario?.substring(0, 5) === novaHora &&
+      a.id !== agendId
+    );
+
+    if (conflito) {
+      showToast(`⚠️ ${conflito.cliente} JÁ ESTÁ AGENDADA ÀS ${novaHora} COM ESSA PROFISSIONAL!`, 'error');
+      setDragging(null);
+      setDragOver(null);
+      return;
+    }
+
+    // Confirmar mudança de profissional (só se mudou)
+    if (novoProfId !== profOrigem) {
+      const profDestino = profissionais.find(p => p.id === novoProfId);
+      const confirmar = window.confirm(
+        `Mover para ${profDestino?.nome} às ${novaHora}?`
+      );
+      if (!confirmar) { setDragging(null); setDragOver(null); return; }
+    }
+
+    try {
+      const { error } = await supabase
+        .from('atendimentos')
+        .update({
+          profissional_id: novoProfId,
+          horario: novaHora + ':00',
+        })
+        .eq('id', agendId)
+        .eq('salao_id', salaoId);
+
+      if (error) throw error;
+
+      showToast('✅ AGENDAMENTO MOVIDO COM SUCESSO!', 'success');
+      carregarAtendimentos();
+    } catch (err) {
+      showToast(`ERRO AO MOVER: ${err.message}`, 'error');
+    } finally {
+      setDragging(null);
+      setDragOver(null);
+    }
+  };
+
   // ─── Encontrar agendamento na grade ───
   const getAgendamento = (hora, profId) => {
     return agendamentos.find(a => a.horario?.substring(0, 5) === hora && a.profissional_id === profId);
@@ -514,23 +584,31 @@ export default function Agenda({ salaoId, role }) {
                     return (
                       <td
                         key={prof.id}
-                        onClick={() => !agend ? abrirAgendamento(hora, prof.id) : abrirDetalhes(agend)}
-                        className={`p-1 border-b border-slate-50 h-14 cursor-pointer transition-all ${!agend ? cor.hover : ''}`}
+                        className={`p-1 border-b border-slate-50 h-14 transition-all ${!agend ? cor.hover : ''}`}
                       >
                         {agend ? (
-                          <div className={`h-full w-full rounded-lg p-1.5 text-[10px] relative overflow-hidden shadow-sm ${agend.status === 'EXECUTADO'
-                            ? 'bg-emerald-500 text-white'
-                            : `${cor.light} ${cor.text} border ${cor.border}`
-                            } uppercase`}>
+                          <div
+                            className={`h-full w-full rounded-lg p-1.5 text-[10px] relative overflow-hidden shadow-sm cursor-grab active:cursor-grabbing
+                              ${dragging?.agendId === agend.id ? 'opacity-40 scale-95' : ''}
+                              ${agend.status === 'EXECUTADO' ? 'bg-emerald-500 text-white' : `${cor.light} ${cor.text} border ${cor.border}`}
+                              uppercase`}
+                            draggable
+                            onDragStart={(e) => {
+                              e.dataTransfer.effectAllowed = 'move';
+                              setDragging({ agendId: agend.id, profId: prof.id, hora });
+                            }}
+                            onDragEnd={() => { setDragging(null); setDragOver(null); }}
+                            onClick={() => abrirDetalhes(agend)}
+                          >
                             <div className="font-bold truncate">{agend.cliente}</div>
-                            <div className="truncate text-[9px] opacity-70 ">
+                            <div className="truncate text-[9px] opacity-70">
                               {agend.procedimentos?.nome} {agend.comprimento ? `(${agend.comprimento})` : ''}
                             </div>
                             {role === 'PROPRIETARIO' && (
-                              <div className={`absolute bottom-0.5 right-1 px-1.5 py-0.5 rounded-full text-[8px] font-black ${agend.status === 'EXECUTADO'
-                                ? 'bg-white/20 text-white'
-                                : Number(agend.lucro_liquido) >= 0 ? 'bg-emerald-100 text-emerald-700' : 'bg-red-100 text-red-600'
-                                }`}>
+                              <div className={`absolute bottom-0.5 right-1 px-1.5 py-0.5 rounded-full text-[8px] font-black
+                                ${agend.status === 'EXECUTADO' ? 'bg-white/20 text-white'
+                                  : Number(agend.lucro_liquido) >= 0 ? 'bg-emerald-100 text-emerald-700'
+                                  : 'bg-red-100 text-red-600'}`}>
                                 {fmt(agend.lucro_liquido)}
                               </div>
                             )}
@@ -539,7 +617,16 @@ export default function Agenda({ salaoId, role }) {
                             )}
                           </div>
                         ) : (
-                          <div className="h-full w-full flex items-center justify-center opacity-0 group-hover:opacity-30 transition-opacity">
+                          <div
+                            className={`h-full w-full flex items-center justify-center transition-all rounded-lg cursor-pointer
+                              ${dragOver?.profId === prof.id && dragOver?.hora === hora
+                                ? 'bg-blue-100 border-2 border-dashed border-blue-400 scale-95'
+                                : 'opacity-0 group-hover:opacity-30'}`}
+                            onDragOver={(e) => { e.preventDefault(); e.dataTransfer.dropEffect = 'move'; setDragOver({ profId: prof.id, hora }); }}
+                            onDragLeave={() => setDragOver(null)}
+                            onDrop={(e) => { e.preventDefault(); handleDrop(prof.id, hora); }}
+                            onClick={() => abrirAgendamento(hora, prof.id)}
+                          >
                             <PlusIcon />
                           </div>
                         )}

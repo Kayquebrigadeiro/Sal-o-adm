@@ -93,7 +93,7 @@ const Dashboard = ({ salaoId }) => {
       // 1. Fechamento mensal (view no banco)
       const { data: fechData } = await supabase
         .from('fechamento_mensal')
-        .select('*')
+        .select('mes, faturamento_bruto, lucro_real, total_atendimentos, total_pendente, lucro_possivel')
         .eq('salao_id', salaoId)
         .order('mes', { ascending: true })
         .limit(12);
@@ -102,7 +102,7 @@ const Dashboard = ({ salaoId }) => {
       // 2. Ranking de procedimentos (view no banco)
       const { data: rankData } = await supabase
         .from('ranking_procedimentos')
-        .select('*')
+        .select('procedimento, categoria, receita_total, lucro_total, quantidade, mes')
         .eq('salao_id', salaoId)
         .gte('mes', inicioMes)
         .lte('mes', fimMes)
@@ -112,7 +112,7 @@ const Dashboard = ({ salaoId }) => {
       // 3. Rendimento por profissional (view no banco)
       const { data: rendData } = await supabase
         .from('rendimento_por_profissional')
-        .select('*')
+        .select('profissional, atendimentos, rendimento_bruto, mes')
         .eq('salao_id', salaoId)
         .gte('mes', inicioMes)
         .lte('mes', fimMes)

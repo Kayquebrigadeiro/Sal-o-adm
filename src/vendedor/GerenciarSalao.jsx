@@ -34,7 +34,7 @@ export default function GerenciarSalao({ userId }) {
   }, [salaoId]);
 
   const carregarSalao = async () => {
-    const { data } = await supabase.from('saloes').select('*').eq('id', salaoId).single();
+    const { data } = await supabase.from('saloes').select('id, nome').eq('id', salaoId).single();
     setSalao(data);
   };
 
@@ -78,7 +78,7 @@ function AbaProfissionais({ salaoId }) {
   }, [salaoId]);
 
   const carregar = async () => {
-    const { data } = await supabase.from('profissionais').select('*').eq('salao_id', salaoId).order('nome');
+    const { data } = await supabase.from('profissionais').select('id, nome, cargo, salario_fixo, ativo').eq('salao_id', salaoId).order('nome');
     setLista(data || []);
   };
 
@@ -249,8 +249,8 @@ function AbaProcedimentos({ salaoId }) {
 
   const carregar = async () => {
     const [{ data: procsData }, { data: cfgData }] = await Promise.all([
-      supabase.from('procedimentos').select('*').eq('salao_id', salaoId).order('nome'),
-      supabase.from('configuracoes').select('*').eq('salao_id', salaoId).single(),
+      supabase.from('procedimentos').select('id, nome, categoria, requer_comprimento, preco_p, preco_m, preco_g, custo_variavel, porcentagem_profissional, ativo').eq('salao_id', salaoId).order('nome'),
+      supabase.from('configuracoes').select('custo_fixo_por_atendimento, taxa_maquininha_pct').eq('salao_id', salaoId).single(),
     ]);
     setLista(procsData || []);
     setConfiguracoes(cfgData);

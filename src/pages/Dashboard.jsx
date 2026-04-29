@@ -299,7 +299,7 @@ export default function Dashboard({ salaoId }) {
           </div>
           <h2 className="text-2xl font-black text-white mb-2">Painel Financeiro</h2>
           <p className="text-slate-400 mb-8 text-sm">Acesso restrito à gestão financeira.</p>
-          <form onSubmit={e => { e.preventDefault(); if (pin === '1234') setUnlocked(true); else { alert('PIN incorreto'); setPin(''); } }}>
+          <form onSubmit={e => { e.preventDefault(); if (pin === (import.meta.env.VITE_DASHBOARD_PIN || '8239')) setUnlocked(true); else { alert('PIN incorreto'); setPin(''); } }}>
             <input
               type="password" maxLength={4} placeholder="PIN"
               className="w-full text-center text-4xl tracking-[0.5em] font-black bg-white/10 border border-white/20 text-white rounded-xl py-4 outline-none focus:ring-2 focus:ring-rose-500 mb-4"

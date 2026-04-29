@@ -122,9 +122,9 @@ export default function App() {
   return (
     <BrowserRouter>
       <ToastProvider>
-        <div className="flex min-h-screen bg-gradient-to-br from-slate-50 to-rose-50/20">
+        <div className="flex flex-col md:flex-row min-h-screen bg-gradient-to-br from-slate-50 to-rose-50/20 pb-[72px] md:pb-0">
           <Sidebar role={role} email={email} salaoNome={salaoNome} />
-          <main className="flex-1 overflow-auto flex flex-col">
+          <main className="flex-1 min-w-0 overflow-x-hidden overflow-y-auto flex flex-col w-full relative">
             {role === 'PROPRIETARIO' && configurado === false && (
               <div className="bg-amber-100 border-b border-amber-200 p-3 text-center text-amber-800 text-sm font-medium">
                 ⚙️ Configure seu salão na aba Base de Custos e cadastre seus serviços no Catálogo.

@@ -62,8 +62,8 @@ const HomeCare = () => {
       </div>
 
       {/* TABELA DE ESTOQUE */}
-      <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm">
-        <table className="w-full text-left border-collapse">
+      <div className="bg-white rounded-2xl border border-slate-200 overflow-x-auto shadow-sm">
+        <table className="w-full text-left border-collapse min-w-[600px]">
           <thead>
             <tr className="bg-slate-50 border-b border-slate-200 text-[10px] font-black text-slate-400 uppercase tracking-widest">
               <th className="p-4 w-12 text-center"><Package size={14} className="inline"/></th>

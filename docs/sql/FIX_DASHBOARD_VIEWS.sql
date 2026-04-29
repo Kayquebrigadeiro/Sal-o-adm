@@ -2,8 +2,7 @@
 -- Este script corrige os 3 pontos de desconexão identificados.
 
 -- 1. CORREÇÃO DA VIEW rendimento_por_profissional
--- Como a comissão foi removida (valor_profissional = 0), a view agora usa valor_cobrado
--- para mostrar o rendimento (faturamento gerado) por cada profissional.
+DROP VIEW IF EXISTS public.rendimento_por_profissional CASCADE;
 CREATE OR REPLACE VIEW public.rendimento_por_profissional 
 WITH (security_invoker = true) AS
 SELECT
@@ -20,7 +19,7 @@ JOIN profissionais p ON p.id = a.profissional_id
 GROUP BY a.salao_id, DATE_TRUNC('month', a.data)::date, p.id, p.nome, p.cargo;
 
 -- 2. CORREÇÃO DA VIEW fechamento_mensal (Aliases para o Dashboard)
--- Adiciona os aliases que o frontend espera: faturamento_bruto, lucro_real, lucro_possivel, total_pendente
+DROP VIEW IF EXISTS public.fechamento_mensal CASCADE;
 CREATE OR REPLACE VIEW public.fechamento_mensal 
 WITH (security_invoker = true) AS
 WITH base AS (

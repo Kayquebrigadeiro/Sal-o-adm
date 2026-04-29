@@ -12,7 +12,7 @@ build/
 
 # misc
 .DS_Store
-# .env (comentado para repositório privado - facilita deploy)
+.env
 .env.local
 .env.development.local
 .env.test.local

@@ -378,6 +378,28 @@ export default function Agenda({ salaoId, role }) {
     }
   };
 
+  const finalizarAtendimento = async () => {
+    if (!agendamentoSelecionado) return;
+    setCancelando(true); // Reutilizando estado de loading
+    try {
+      const { error } = await supabase
+        .from('atendimentos')
+        .update({ status: 'EXECUTADO' })
+        .eq('id', agendamentoSelecionado.id)
+        .eq('salao_id', salaoId);
+
+      if (error) throw error;
+
+      showToast('✅ ATENDIMENTO FINALIZADO COM SUCESSO!', 'success');
+      setModalDetalhesAberto(false);
+      carregarAtendimentos();
+    } catch (err) {
+      showToast(`ERRO: ${err.message}`, 'error');
+    } finally {
+      setCancelando(false);
+    }
+  };
+
   // ─── Drag and Drop Handler ───
   const handleDrop = async (novoProfId, novaHora) => {
     if (!dragging) return;
@@ -718,14 +740,27 @@ export default function Agenda({ salaoId, role }) {
               </div>
             </div>
 
-            <button
-              onClick={cancelarAgendamento}
-              disabled={cancelando}
-              className="w-full py-3 rounded-xl font-bold text-red-600 bg-red-50 hover:bg-red-100 transition-colors flex items-center justify-center gap-2 uppercase"
-            >
-              {cancelando ? <Loader2 size={18} className="animate-spin" /> : <Trash2 size={18} />}
-              Cancelar Atendimento
-            </button>
+            <div className="flex flex-col gap-2">
+              {agendamentoSelecionado.status !== 'EXECUTADO' && (
+                <button
+                  onClick={finalizarAtendimento}
+                  disabled={cancelando}
+                  className="w-full py-4 rounded-xl font-black text-white bg-emerald-600 hover:bg-emerald-700 transition-all shadow-lg shadow-emerald-200 flex items-center justify-center gap-2 uppercase"
+                >
+                  {cancelando ? <Loader2 size={18} className="animate-spin" /> : <CheckCircle2 size={18} />}
+                  Finalizar Atendimento
+                </button>
+              )}
+
+              <button
+                onClick={cancelarAgendamento}
+                disabled={cancelando}
+                className="w-full py-3 rounded-xl font-bold text-red-600 bg-red-50 hover:bg-red-100 transition-colors flex items-center justify-center gap-2 uppercase"
+              >
+                {cancelando ? <Loader2 size={18} className="animate-spin" /> : <Trash2 size={18} />}
+                Cancelar Atendimento
+              </button>
+            </div>
           </div>
         </div>
       )}

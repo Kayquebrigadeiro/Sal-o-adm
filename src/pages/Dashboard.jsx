@@ -710,44 +710,94 @@ export default function Dashboard({ salaoId }) {
               </div>
               <div>
                 <h3 className="text-sm font-black text-slate-800">Fechamento do Mês</h3>
-                <p className="text-xs text-slate-500 mt-0.5">Salve uma foto dos resultados deste mês.</p>
+                <p className="text-xs text-slate-500 mt-0.5">
+                  {fechamentoExiste
+                    ? 'Este mês já foi fechado. Você pode atualizar os dados.'
+                    : 'Salve uma foto dos resultados deste mês.'}
+                </p>
               </div>
             </div>
-            {fechamentoExiste ? (
-              <div className="flex items-center gap-2 px-4 py-2.5 bg-emerald-50 border border-emerald-200 rounded-xl text-emerald-600 font-bold text-sm">
-                <CheckCircle size={16} /> Mês fechado
-              </div>
-            ) : (
+            <div className="flex items-center gap-3">
+              {fechamentoExiste && (
+                <div className="flex items-center gap-1.5 px-3 py-2 bg-emerald-50 border border-emerald-200 rounded-xl text-emerald-600 font-bold text-xs">
+                  <CheckCircle size={14} /> Fechado
+                </div>
+              )}
               <button
                 onClick={async () => {
-                  if (!mesAtual) return;
-                  setSalvandoFechamento(true);
-                  const lucro = Number(mesAtual.lucro_real) || 0;
-                  const resultadoFinal = lucro + homecareDados.lucro - despesasDados.total - gastosPessoais - salariosFixos;
                   const [ano, mes] = mesSelecionado.split('-');
-                  const { error } = await supabase.from('fechamentos').upsert({
-                    salao_id: salaoId,
-                    mes: `${ano}-${mes}-01`,
-                    faturamento_bruto: Number(mesAtual.faturamento_bruto) || 0,
-                    lucro_liquido: lucro,
-                    lucro_possivel: Number(mesAtual.lucro_possivel) || lucro,
-                    total_atendimentos: Number(mesAtual.total_atendimentos) || 0,
-                    total_pendente: Number(mesAtual.total_pendente) || 0,
-                    total_despesas: despesasDados.total,
-                    total_gastos_pessoais: gastosPessoais,
-                    lucro_homecare: homecareDados.lucro,
-                    resultado_final: resultadoFinal,
-                  }, { onConflict: 'salao_id,mes' });
-                  setSalvandoFechamento(false);
-                  if (error) alert('Erro: ' + error.message);
-                  else { setFechamentoExiste(true); alert('✅ Mês fechado com sucesso!'); }
+                  const mesLabel = new Date(`${ano}-${mes}-01`).toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' });
+
+                  const acao = fechamentoExiste ? 'atualizar' : 'fechar';
+                  if (!confirm(`Deseja ${acao} o mês de ${mesLabel}?\n\nIsso salvará uma foto dos resultados financeiros atuais.`)) return;
+
+                  setSalvandoFechamento(true);
+                  try {
+                    const faturamento = Number(mesAtual?.faturamento_bruto) || 0;
+                    const lucro = Number(mesAtual?.lucro_real) || 0;
+                    const possivel = Number(mesAtual?.lucro_possivel) || lucro;
+                    const atendimentos = Number(mesAtual?.total_atendimentos) || 0;
+                    const pendente = Number(mesAtual?.total_pendente) || 0;
+                    const resultadoFinal = lucro + homecareDados.lucro - despesasDados.total - gastosPessoais - salariosFixos;
+
+                    const payload = {
+                      salao_id: salaoId,
+                      mes: `${ano}-${mes}-01`,
+                      faturamento_bruto: faturamento,
+                      lucro_liquido: lucro,
+                      lucro_possivel: possivel,
+                      total_atendimentos: atendimentos,
+                      total_pendente: pendente,
+                      total_despesas: despesasDados.total,
+                      total_gastos_pessoais: gastosPessoais,
+                      lucro_homecare: homecareDados.lucro,
+                      resultado_final: resultadoFinal,
+                    };
+
+                    const { error } = await supabase
+                      .from('fechamentos')
+                      .upsert(payload, { onConflict: 'salao_id,mes' });
+
+                    if (error) throw error;
+
+                    setFechamentoExiste(true);
+                    alert(`✅ Mês de ${mesLabel} ${fechamentoExiste ? 'atualizado' : 'fechado'} com sucesso!\n\nResultado final: ${fmt(resultadoFinal)}`);
+                  } catch (err) {
+                    console.error('Erro ao fechar mês:', err);
+                    alert(`❌ Erro ao ${acao} o mês:\n${err.message}`);
+                  } finally {
+                    setSalvandoFechamento(false);
+                  }
                 }}
                 disabled={salvandoFechamento}
-                className="px-6 py-3 bg-gradient-to-r from-indigo-500 to-violet-600 text-white rounded-xl font-bold hover:opacity-90 transition-all shadow-lg text-sm disabled:opacity-50"
+                className={`px-6 py-3 rounded-xl font-bold transition-all shadow-lg text-sm disabled:opacity-50 ${
+                  fechamentoExiste
+                    ? 'bg-gradient-to-r from-amber-500 to-orange-500 text-white hover:opacity-90'
+                    : 'bg-gradient-to-r from-indigo-500 to-violet-600 text-white hover:opacity-90'
+                }`}
               >
-                {salvandoFechamento ? 'Salvando...' : '📸 Fechar Este Mês'}
+                {salvandoFechamento
+                  ? 'Salvando...'
+                  : fechamentoExiste
+                    ? '🔄 Atualizar Fechamento'
+                    : '📸 Fechar Este Mês'}
               </button>
-            )}
+            </div>
+          </div>
+
+          {/* Resumo do que será salvo */}
+          <div className="mt-4 grid grid-cols-2 md:grid-cols-4 gap-3">
+            {[
+              ['Faturamento', Number(mesAtual?.faturamento_bruto) || 0],
+              ['Lucro Líquido', Number(mesAtual?.lucro_real) || 0],
+              ['Despesas', despesasDados.total],
+              ['Resultado', (Number(mesAtual?.lucro_real) || 0) + homecareDados.lucro - despesasDados.total - gastosPessoais - salariosFixos],
+            ].map(([label, val]) => (
+              <div key={label} className="bg-slate-50 rounded-xl px-3 py-2 border border-slate-100">
+                <p className="text-[9px] font-bold text-slate-400 uppercase">{label}</p>
+                <p className={`text-sm font-black ${Number(val) >= 0 ? 'text-slate-700' : 'text-red-600'}`}>{fmt(val)}</p>
+              </div>
+            ))}
           </div>
         </div>
 

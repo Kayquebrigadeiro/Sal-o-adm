@@ -1,5 +1,7 @@
 -- ========================================================================================
---  SCHEMA SAAS COMPLETO E DEFINITIVO V6 - CATÁLOGO, CUSTOS, FECHAMENTO E CATEGORIAS V6
+--  SCHEMA SAAS COMPLETO E DEFINITIVO V7 — PRODUÇÃO
+--  Última atualização: 2026-05-01
+--  ⚠️  Os aliases das views DEVEM coincidir com o que Dashboard.jsx busca via Supabase.
 -- ========================================================================================
 
 -- ========================================================================================
@@ -589,14 +591,14 @@ with base as (
 atend as (
   select
     salao_id, date_trunc('month', data)::date as mes,
-    sum(valor_cobrado) filter (where status <> 'CANCELADO') as receita_bruta,
+    sum(valor_cobrado) filter (where status <> 'CANCELADO') as faturamento_bruto,
     sum(valor_pago) filter (where status <> 'CANCELADO') as receita_recebida,
-    sum(valor_pendente) filter (where status = 'EXECUTADO') as pendencias,
+    sum(valor_cobrado - valor_pago) filter (where status = 'EXECUTADO') as total_pendente,
     sum(valor_maquininha) filter (where status <> 'CANCELADO') as total_maquininha,
     sum(valor_profissional) filter (where status <> 'CANCELADO') as total_profissionais,
     sum(custo_fixo) filter (where status <> 'CANCELADO') as total_custo_fixo,
     sum(custo_variavel) filter (where status <> 'CANCELADO') as total_custo_variavel,
-    sum(lucro_liquido) filter (where status <> 'CANCELADO') as lucro_liquido,
+    sum(lucro_liquido) filter (where status <> 'CANCELADO') as lucro_real,
     sum(lucro_possivel) filter (where status <> 'CANCELADO') as lucro_possivel,
     count(*) filter (where status <> 'CANCELADO') as total_atendimentos,
     count(*) filter (where status = 'CANCELADO') as total_cancelamentos
@@ -622,15 +624,16 @@ sal as (
 )
 select
   b.salao_id, b.mes,
-  coalesce(a.receita_bruta, 0)            as receita_bruta,
+  -- ⚠️ Aliases abaixo DEVEM coincidir com Dashboard.jsx .select()
+  coalesce(a.faturamento_bruto, 0)        as faturamento_bruto,
   coalesce(a.receita_recebida, 0)         as receita_recebida,
-  coalesce(a.pendencias, 0)               as pendencias,
+  coalesce(a.total_pendente, 0)           as total_pendente,
   coalesce(a.total_maquininha, 0)         as total_maquininha,
   coalesce(a.total_profissionais, 0)      as total_profissionais,
   coalesce(a.total_custo_fixo, 0)         as total_custo_fixo,
   coalesce(a.total_custo_variavel, 0)     as total_custo_variavel,
-  coalesce(a.lucro_liquido, 0)            as lucro_liquido_atendimentos,
-  coalesce(a.lucro_possivel, 0)           as lucro_possivel_atendimentos,
+  coalesce(a.lucro_real, 0)               as lucro_real,
+  coalesce(a.lucro_possivel, 0)           as lucro_possivel,
   coalesce(a.total_atendimentos, 0)       as total_atendimentos,
   coalesce(a.total_cancelamentos, 0)      as total_cancelamentos,
   coalesce(h.receita_homecare, 0)         as receita_homecare,
@@ -640,8 +643,8 @@ select
   coalesce(p.pendente_paralelos, 0)       as pendente_paralelos,
   coalesce(d.total_despesas, 0)           as total_despesas,
   coalesce(s.total_salarios_fixos, 0)     as total_salarios_fixos,
-  coalesce(a.receita_bruta, 0) + coalesce(h.receita_homecare, 0) + coalesce(p.receita_paralelos, 0) as receita_total,
-  coalesce(a.lucro_liquido, 0) + coalesce(h.lucro_homecare, 0) - coalesce(d.total_despesas, 0) - coalesce(s.total_salarios_fixos, 0) as saude_financeira
+  coalesce(a.faturamento_bruto, 0) + coalesce(h.receita_homecare, 0) + coalesce(p.receita_paralelos, 0) as receita_total,
+  coalesce(a.lucro_real, 0) + coalesce(h.lucro_homecare, 0) - coalesce(d.total_despesas, 0) - coalesce(s.total_salarios_fixos, 0) as saude_financeira
 from base b
 left join atend a on a.salao_id = b.salao_id and a.mes = b.mes
 left join hc    h on h.salao_id = b.salao_id and h.mes = b.mes
@@ -660,11 +663,12 @@ select
 from atendimentos a join procedimentos pr on pr.id = a.procedimento_id
 group by a.salao_id, date_trunc('month', a.data)::date, pr.nome, pr.categoria;
 
+-- V7: Comissão removida → rendimento_bruto usa valor_cobrado em vez de valor_profissional
 create or replace view rendimento_por_profissional with (security_invoker = true) as
 select
   a.salao_id, date_trunc('month', a.data)::date as mes, p.nome as profissional, p.cargo,
   count(*) filter (where a.status = 'EXECUTADO') as atendimentos,
-  sum(a.valor_profissional) filter (where a.status = 'EXECUTADO') as rendimento_bruto,
+  sum(a.valor_cobrado) filter (where a.status = 'EXECUTADO') as rendimento_bruto,
   sum(a.valor_cobrado) filter (where a.status = 'EXECUTADO') as faturamento_gerado
 from atendimentos a join profissionais p on p.id = a.profissional_id
 group by a.salao_id, date_trunc('month', a.data)::date, p.id, p.nome, p.cargo;

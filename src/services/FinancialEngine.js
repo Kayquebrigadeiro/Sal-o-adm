@@ -155,24 +155,24 @@ export class FinancialEngine {
    * @param {number} [params.taxaMaquininhaPct] - Taxa da maquininha em % (ex: 5). Se null, usa this.taxaMaq
    * @returns {{ base: number, precoP: number, precoM: number, precoG: number, erro?: string }}
    */
-  calcularPrecoPMG({
-    custoFixo,
-    custoMaterial,
-    ganhoLiquido
-  }) {
-    const cFixo = toCents(custoFixo != null ? custoFixo : this.custoFixo);
-    const cMat = toCents(custoMaterial);
+  calcularPrecoPMG({ custoFixo, custoMaterial, ganhoLiquido }) {
+    const cFixo  = toCents(custoFixo  != null ? custoFixo  : this.custoFixo);
+    const cMat   = toCents(custoMaterial);
     const cGanho = toCents(ganhoLiquido);
 
-    // A matemática pura e óbvia: Fixo + Material + Ganho
+    // BASE = custo fixo + material + ganho desejado
     const base = cFixo + cMat + cGanho;
 
-    const precoP = base;
+    // PREÇO P = BASE ÷ 0,95 (embute a maquininha de 5%)
+    const fator = 0.95;
+    const precoP = Math.round(base / fator);
+
+    // M e G derivados automaticamente
     const precoM = Math.round(precoP * 1.20);
     const precoG = Math.round(precoP * 1.30);
 
     return {
-      base: toReais(base),
+      base:   toReais(base),
       precoP: toReais(precoP),
       precoM: toReais(precoM),
       precoG: toReais(precoG),

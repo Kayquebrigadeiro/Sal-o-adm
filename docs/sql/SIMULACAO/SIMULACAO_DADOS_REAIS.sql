@@ -6,7 +6,7 @@
 DO $$
 DECLARE
     -- 1. INSIRA SEU ID DO SALÃO AQUI
-    v_salao_id UUID := 'SEU_UUID_AQUI'; 
+    v_salao_id UUID := '5cd4bdaf-5a27-403d-892b-24db30a54f98'; 
     
     v_prof_prop_id UUID;
     v_prof_jess_id UUID;
@@ -163,8 +163,3 @@ BEGIN
 
     RAISE NOTICE 'Simulação Real concluída com sucesso!';
 END $$;
-
--- LIMPEZA:
--- DELETE FROM atendimentos WHERE obs = 'Simulação Real' AND salao_id = 'SEU_UUID_AQUI';
--- DELETE FROM homecare WHERE cliente = 'Cliente HomeCare' AND salao_id = 'SEU_UUID_AQUI';
--- DELETE FROM despesas WHERE salao_id = 'SEU_UUID_AQUI' AND data BETWEEN '2026-04-01' AND '2026-04-30';

@@ -21,21 +21,23 @@ const fmtK = (v) => {
 const MESES_PT = ['', 'Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
 
 // ─── Cores idênticas à planilha ───
-const COR_BARRA_PRINCIPAL = '#e84c3d';   // vermelho/laranja da planilha
-const COR_BARRA_LUCRO     = '#c0392b';   // vermelho mais escuro
-const COR_NEGATIVO        = '#922b21';   // vermelho escuro (prejuízo)
+const COR_BARRA_PRINCIPAL = '#e84c3d';
+const COR_BARRA_LUCRO     = '#c0392b';
+const COR_NEGATIVO        = '#7f1d1d';
 const COR_POSITIVO        = '#e84c3d';
 const COR_FUNCIONARIA     = '#e84c3d';
-const FUNDO_HEADER        = '#1a2744';   // azul escuro dos headers
+const COR_LARANJA         = '#f97316';
+const FUNDO_HEADER        = '#1e2433';
+const FUNDO_CARD          = '#1e2433';
 
-// ─── Tooltip customizado ───
+// ─── Tooltip customizado (escuro) ───
 const TooltipMoeda = ({ active, payload, label }) => {
   if (!active || !payload?.length) return null;
   return (
-    <div className="bg-white border border-slate-200 shadow-xl rounded-xl p-3 text-xs">
-      <p className="font-bold text-slate-700 mb-1">{label}</p>
+    <div className="bg-slate-800 border border-slate-600 shadow-xl rounded-xl p-3 text-xs">
+      <p className="font-bold text-slate-200 mb-1">{label}</p>
       {payload.map((entry, i) => (
-        <p key={i} style={{ color: entry.color || '#333' }} className="font-bold">
+        <p key={i} style={{ color: entry.color || '#e2e8f0' }} className="font-bold">
           {entry.name}: {typeof entry.value === 'number' && Math.abs(entry.value) > 10
             ? fmt(entry.value)
             : entry.value}
@@ -50,7 +52,7 @@ const LabelQtd = ({ x, y, width, value }) => {
   if (!value) return null;
   return (
     <text x={x + width / 2} y={y - 6} textAnchor="middle"
-      fill="#374151" fontSize={10} fontWeight="bold">
+      fill="#e2e8f0" fontSize={10} fontWeight="bold">
       {value}
     </text>
   );
@@ -75,6 +77,22 @@ const KpiCard = ({ label, value, sub, cor = 'text-slate-800' }) => (
     <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">{label}</p>
     <p className={`text-xl font-black ${cor} truncate`}>{value}</p>
     {sub && <p className="text-[10px] text-slate-400 mt-0.5">{sub}</p>}
+  </div>
+);
+
+// ─── Explicação de gráfico (reutilizável) ───
+const ExplicacaoGrafico = ({ texto, dica }) => (
+  <div className="mb-4 space-y-2">
+    <div className="flex items-start gap-2 bg-slate-700/50 rounded-lg p-3">
+      <span className="text-lg flex-shrink-0">💡</span>
+      <p className="text-slate-300 text-xs leading-relaxed">{texto}</p>
+    </div>
+    {dica && (
+      <div className="flex items-start gap-2 bg-orange-500/10 border border-orange-500/20 rounded-lg p-3">
+        <span className="text-orange-400 flex-shrink-0 text-xs font-bold">📌</span>
+        <p className="text-orange-300 text-xs leading-relaxed">{dica}</p>
+      </div>
+    )}
   </div>
 );
 
@@ -403,50 +421,48 @@ export default function Dashboard({ salaoId }) {
             GRÁFICO 1 — VALOR FATURADO BRUTO (barras mensais)
             Idêntico à planilha: qtd em cima, valor embaixo
         ════════════════════════════════════════════════════ */}
-        <div className="bg-white rounded-2xl border border-slate-200 shadow-sm mb-6 overflow-hidden">
-          <div className="px-6 py-4" style={{ backgroundColor: FUNDO_HEADER }}>
+        <div className="rounded-2xl shadow-sm mb-6 overflow-hidden" style={{ backgroundColor: FUNDO_CARD }}>
+          <div className="px-6 py-4 border-b border-white/10">
             <h2 className="text-sm font-black text-white uppercase tracking-wider">
               Valor Faturado Bruto
             </h2>
-            <p className="text-[10px] text-slate-400 mt-0.5">
-              Procedimentos realizados mês a mês
-            </p>
           </div>
           <div className="p-6">
+            <ExplicacaoGrafico
+              texto="Quanto seu salão cobrou em cada mês. O número acima de cada barra é a quantidade de atendimentos realizados."
+              dica="Meses com muitos atendimentos mas valor baixo indicam serviços muito baratos. Hora de revisar preços."
+            />
             {dadosFaturamento.length > 0 ? (
               <ResponsiveContainer width="100%" height={300}>
                 <BarChart data={dadosFaturamento} margin={{ top: 30, right: 20, left: 10, bottom: 5 }}>
-                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#2d3748" />
                   <XAxis dataKey="mes" axisLine={false} tickLine={false}
-                    tick={{ fill: '#64748b', fontSize: 11, fontWeight: 'bold' }} />
+                    tick={{ fill: '#94a3b8', fontSize: 11, fontWeight: 'bold' }} />
                   <YAxis axisLine={false} tickLine={false}
-                    tick={{ fill: '#94a3b8', fontSize: 10 }}
+                    tick={{ fill: '#475569', fontSize: 10 }}
                     tickFormatter={fmtK} />
-                  <Tooltip content={<TooltipMoeda />} cursor={{ fill: '#f8fafc' }} />
-                  {/* Barra de faturamento com quantidade acima */}
+                  <Tooltip content={<TooltipMoeda />} cursor={{ fill: 'rgba(255,255,255,0.05)' }} />
                   <Bar dataKey="faturamento" name="Faturamento" fill={COR_BARRA_PRINCIPAL}
                     radius={[4, 4, 0, 0]} maxBarSize={55}>
                     <LabelList dataKey="qtd" content={<LabelQtd />} />
                   </Bar>
-                  {/* Barra de lucro sobreposta */}
                   <Bar dataKey="lucro" name="Lucro Real" fill={COR_BARRA_LUCRO}
                     radius={[4, 4, 0, 0]} maxBarSize={55} />
                 </BarChart>
               </ResponsiveContainer>
             ) : (
-              <div className="h-64 flex items-center justify-center text-slate-300 text-sm">
+              <div className="h-64 flex items-center justify-center text-slate-500 text-sm">
                 Sem dados de faturamento
               </div>
             )}
-            {/* Legenda manual como na planilha */}
             <div className="flex items-center gap-6 mt-2 justify-center">
               <div className="flex items-center gap-1.5">
                 <div className="w-3 h-3 rounded-sm" style={{ backgroundColor: COR_BARRA_PRINCIPAL }} />
-                <span className="text-[11px] font-bold text-slate-500 uppercase">Faturamento Bruto</span>
+                <span className="text-[11px] font-bold text-slate-400 uppercase">Faturamento Bruto</span>
               </div>
               <div className="flex items-center gap-1.5">
                 <div className="w-3 h-3 rounded-sm" style={{ backgroundColor: COR_BARRA_LUCRO }} />
-                <span className="text-[11px] font-bold text-slate-500 uppercase">Lucro Real</span>
+                <span className="text-[11px] font-bold text-slate-400 uppercase">Lucro Real</span>
               </div>
             </div>
           </div>
@@ -459,33 +475,36 @@ export default function Dashboard({ salaoId }) {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
 
           {/* Lucro Possível por procedimento */}
-          <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
-            <div className="px-5 py-4" style={{ backgroundColor: FUNDO_HEADER }}>
+          <div className="rounded-2xl shadow-sm overflow-hidden" style={{ backgroundColor: FUNDO_CARD }}>
+            <div className="px-5 py-4 border-b border-white/10">
               <h2 className="text-sm font-black text-white uppercase tracking-wider">
-                Procedimentos + Feitos
+                Procedimentos Mais Rentáveis
               </h2>
-              <p className="text-[10px] text-slate-400 mt-0.5">Lucro Possível por serviço</p>
             </div>
             <div className="p-5">
+              <ExplicacaoGrafico
+                texto="Quanto cada serviço pode gerar de lucro se a cliente pagar no pix ou dinheiro. Quanto maior a barra, mais rentável o serviço."
+                dica="Os serviços no topo são os que você deve priorizar e divulgar mais."
+              />
               {dadosLucroPossivel.length > 0 ? (
                 <ResponsiveContainer width="100%" height={Math.max(260, dadosLucroPossivel.length * 34)}>
                   <BarChart data={dadosLucroPossivel} layout="vertical"
                     margin={{ top: 0, right: 80, left: 10, bottom: 0 }}>
-                    <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="#f1f5f9" />
+                    <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="#2d3748" />
                     <XAxis type="number" hide />
                     <YAxis dataKey="nome" type="category" axisLine={false} tickLine={false}
-                      tick={{ fill: '#374151', fontSize: 11, fontWeight: '600' }} width={110} />
-                    <Tooltip content={<TooltipMoeda />} cursor={{ fill: '#fef2f2' }} />
+                      tick={{ fill: '#e2e8f0', fontSize: 11, fontWeight: '600' }} width={110} />
+                    <Tooltip content={<TooltipMoeda />} cursor={{ fill: 'rgba(255,255,255,0.05)' }} />
                     <Bar dataKey="valor" name="Lucro Possível" fill={COR_POSITIVO}
                       radius={[0, 4, 4, 0]} barSize={20}>
                       <LabelList dataKey="valor" position="right"
                         formatter={v => fmt(v)}
-                        style={{ fill: '#374151', fontSize: 10, fontWeight: 'bold' }} />
+                        style={{ fill: '#e2e8f0', fontSize: 10, fontWeight: 'bold' }} />
                     </Bar>
                   </BarChart>
                 </ResponsiveContainer>
               ) : (
-                <div className="h-48 flex items-center justify-center text-slate-300 text-sm">
+                <div className="h-48 flex items-center justify-center text-slate-500 text-sm">
                   Sem dados neste mês
                 </div>
               )}
@@ -493,26 +512,27 @@ export default function Dashboard({ salaoId }) {
           </div>
 
           {/* Lucro Real por procedimento (pode ter negativos) */}
-          <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
-            <div className="px-5 py-4" style={{ backgroundColor: FUNDO_HEADER }}>
+          <div className="rounded-2xl shadow-sm overflow-hidden" style={{ backgroundColor: FUNDO_CARD }}>
+            <div className="px-5 py-4 border-b border-white/10">
               <h2 className="text-sm font-black text-white uppercase tracking-wider">
-                Lucro por Procedimento
+                Lucro Real por Serviço
               </h2>
-              <p className="text-[10px] text-slate-400 mt-0.5">
-                Lucro Real — valores negativos = prejuízo
-              </p>
             </div>
             <div className="p-5">
+              <ExplicacaoGrafico
+                texto="O que cada serviço realmente sobrou para o caixa após descontar todos os custos. ATENÇÃO: barras para a esquerda = prejuízo."
+                dica="Serviços no vermelho (prejuízo) precisam ter o preço revisado urgentemente."
+              />
               {dadosLucroReal.length > 0 ? (
                 <ResponsiveContainer width="100%" height={Math.max(260, dadosLucroReal.length * 34)}>
                   <BarChart data={dadosLucroReal} layout="vertical"
                     margin={{ top: 0, right: 80, left: 10, bottom: 0 }}>
-                    <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="#f1f5f9" />
+                    <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="#2d3748" />
                     <XAxis type="number" hide />
-                    <ReferenceLine x={0} stroke="#94a3b8" strokeWidth={1} />
+                    <ReferenceLine x={0} stroke="#475569" strokeWidth={1} />
                     <YAxis dataKey="nome" type="category" axisLine={false} tickLine={false}
-                      tick={{ fill: '#374151', fontSize: 11, fontWeight: '600' }} width={110} />
-                    <Tooltip content={<TooltipMoeda />} cursor={{ fill: '#fef2f2' }} />
+                      tick={{ fill: '#e2e8f0', fontSize: 11, fontWeight: '600' }} width={110} />
+                    <Tooltip content={<TooltipMoeda />} cursor={{ fill: 'rgba(255,255,255,0.05)' }} />
                     <Bar dataKey="valor" name="Lucro Real" barSize={20} radius={[0, 4, 4, 0]}>
                       {dadosLucroReal.map((entry, index) => (
                         <Cell key={`cell-${index}`}
@@ -520,12 +540,12 @@ export default function Dashboard({ salaoId }) {
                       ))}
                       <LabelList dataKey="valor" position="right"
                         formatter={v => fmt(v)}
-                        style={{ fill: '#374151', fontSize: 10, fontWeight: 'bold' }} />
+                        style={{ fill: '#e2e8f0', fontSize: 10, fontWeight: 'bold' }} />
                     </Bar>
                   </BarChart>
                 </ResponsiveContainer>
               ) : (
-                <div className="h-48 flex items-center justify-center text-slate-300 text-sm">
+                <div className="h-48 flex items-center justify-center text-slate-500 text-sm">
                   Sem dados neste mês
                 </div>
               )}
@@ -537,14 +557,17 @@ export default function Dashboard({ salaoId }) {
             GRÁFICO 4 — LUCRO POSSÍVEL vs LUCRO REAL (totais)
             Duas barras grandes lado a lado
         ════════════════════════════════════════════════════ */}
-        <div className="bg-white rounded-2xl border border-slate-200 shadow-sm mb-6 overflow-hidden">
-          <div className="px-6 py-4" style={{ backgroundColor: FUNDO_HEADER }}>
+        <div className="rounded-2xl shadow-sm mb-6 overflow-hidden" style={{ backgroundColor: FUNDO_CARD }}>
+          <div className="px-6 py-4 border-b border-white/10">
             <h2 className="text-sm font-black text-white uppercase tracking-wider">
               Lucro Possível vs Lucro Real
             </h2>
-            <p className="text-[10px] text-slate-400 mt-0.5">Comparativo acumulado do período</p>
           </div>
           <div className="p-6">
+            <ExplicacaoGrafico
+              texto="Lucro Possível é o que você ganharia se todos pagassem no pix. Lucro Real é o que entrou de fato no caixa após a maquininha."
+              dica="Quanto maior a diferença entre as duas barras, mais seus clientes estão pagando no cartão. Incentive o pagamento no pix."
+            />
             <ResponsiveContainer width="100%" height={220}>
               <BarChart
                 data={[
@@ -552,18 +575,18 @@ export default function Dashboard({ salaoId }) {
                   { nome: 'Lucro Real', valor: totalReal },
                 ]}
                 margin={{ top: 30, right: 40, left: 20, bottom: 5 }}>
-                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
+                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#2d3748" />
                 <XAxis dataKey="nome" axisLine={false} tickLine={false}
-                  tick={{ fill: '#374151', fontSize: 12, fontWeight: 'bold' }} />
+                  tick={{ fill: '#e2e8f0', fontSize: 12, fontWeight: 'bold' }} />
                 <YAxis axisLine={false} tickLine={false}
-                  tick={{ fill: '#94a3b8', fontSize: 10 }} tickFormatter={fmtK} />
-                <Tooltip content={<TooltipMoeda />} cursor={{ fill: '#fef2f2' }} />
+                  tick={{ fill: '#475569', fontSize: 10 }} tickFormatter={fmtK} />
+                <Tooltip content={<TooltipMoeda />} cursor={{ fill: 'rgba(255,255,255,0.05)' }} />
                 <Bar dataKey="valor" maxBarSize={120} radius={[6, 6, 0, 0]}>
+                  <Cell fill={COR_LARANJA} />
                   <Cell fill={COR_BARRA_PRINCIPAL} />
-                  <Cell fill={COR_BARRA_LUCRO} />
                   <LabelList dataKey="valor" position="top"
                     formatter={v => fmt(v)}
-                    style={{ fill: '#374151', fontSize: 11, fontWeight: 'bold' }} />
+                    style={{ fill: '#e2e8f0', fontSize: 11, fontWeight: 'bold' }} />
                 </Bar>
               </BarChart>
             </ResponsiveContainer>
@@ -571,36 +594,38 @@ export default function Dashboard({ salaoId }) {
         </div>
 
         {/* ════════════════════════════════════════════════════
-            GRÁFICO 5 — RENDIMENTO LÍQUIDO DO FUNCIONÁRIO
-            Barras verticais por profissional com valor acima
+            GRÁFICO 5 — RENDIMENTO LÍQUIDO POR PROFISSIONAL
         ════════════════════════════════════════════════════ */}
-        <div className="bg-white rounded-2xl border border-slate-200 shadow-sm mb-6 overflow-hidden">
-          <div className="px-6 py-4" style={{ backgroundColor: FUNDO_HEADER }}>
+        <div className="rounded-2xl shadow-sm mb-6 overflow-hidden" style={{ backgroundColor: FUNDO_CARD }}>
+          <div className="px-6 py-4 border-b border-white/10">
             <h2 className="text-sm font-black text-white uppercase tracking-wider">
-              Rendimento Líquido do Funcionário
+              Rendimento Líquido por Profissional
             </h2>
-            <p className="text-[10px] text-slate-400 mt-0.5">Quanto cada profissional gerou no período</p>
           </div>
           <div className="p-6">
+            <ExplicacaoGrafico
+              texto="Quanto cada profissional gerou de faturamento para o salão no período selecionado."
+              dica="Use esse gráfico para reconhecer as profissionais mais produtivas e identificar quem precisa de apoio."
+            />
             {dadosRendimento.length > 0 ? (
               <ResponsiveContainer width="100%" height={280}>
                 <BarChart data={dadosRendimento} margin={{ top: 30, right: 20, left: 10, bottom: 5 }}>
-                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#2d3748" />
                   <XAxis dataKey="nome" axisLine={false} tickLine={false}
-                    tick={{ fill: '#374151', fontSize: 11, fontWeight: 'bold' }} />
+                    tick={{ fill: '#e2e8f0', fontSize: 11, fontWeight: 'bold' }} />
                   <YAxis axisLine={false} tickLine={false}
-                    tick={{ fill: '#94a3b8', fontSize: 10 }} tickFormatter={fmtK} />
-                  <Tooltip content={<TooltipMoeda />} cursor={{ fill: '#fef2f2' }} />
+                    tick={{ fill: '#475569', fontSize: 10 }} tickFormatter={fmtK} />
+                  <Tooltip content={<TooltipMoeda />} cursor={{ fill: 'rgba(255,255,255,0.05)' }} />
                   <Bar dataKey="valor" name="Rendimento" fill={COR_FUNCIONARIA}
                     radius={[4, 4, 0, 0]} maxBarSize={60}>
                     <LabelList dataKey="valor" position="top"
                       formatter={v => fmt(v)}
-                      style={{ fill: '#374151', fontSize: 10, fontWeight: 'bold' }} />
+                      style={{ fill: '#e2e8f0', fontSize: 10, fontWeight: 'bold' }} />
                   </Bar>
                 </BarChart>
               </ResponsiveContainer>
             ) : (
-              <div className="h-48 flex items-center justify-center text-slate-300 text-sm">
+              <div className="h-48 flex items-center justify-center text-slate-500 text-sm">
                 Sem dados de rendimento neste mês
               </div>
             )}
@@ -608,18 +633,15 @@ export default function Dashboard({ salaoId }) {
         </div>
 
         {/* ════════════════════════════════════════════════════
-            GRÁFICO 6 — VENDA HOME CAR
-            Com seletor de ano (2024/2025) igual à planilha
+            GRÁFICO 6 — VENDA HOME CARE
         ════════════════════════════════════════════════════ */}
-        <div className="bg-white rounded-2xl border border-slate-200 shadow-sm mb-6 overflow-hidden">
-          <div className="px-6 py-4 flex items-center justify-between" style={{ backgroundColor: FUNDO_HEADER }}>
+        <div className="rounded-2xl shadow-sm mb-6 overflow-hidden" style={{ backgroundColor: FUNDO_CARD }}>
+          <div className="px-6 py-4 flex items-center justify-between border-b border-white/10">
             <div>
               <h2 className="text-sm font-black text-white uppercase tracking-wider">
-                Venda Home Care
+                Venda de Produtos (Home Care)
               </h2>
-              <p className="text-[10px] text-slate-400 mt-0.5">Produtos vendidos para levar para casa</p>
             </div>
-            {/* Seletor de ano igual à planilha */}
             <div className="flex items-center gap-1 bg-white/10 rounded-lg p-1">
               {[new Date().getFullYear(), new Date().getFullYear() - 1].map(ano => (
                 <button key={ano} onClick={() => setAnoHomecare(ano)}
@@ -632,42 +654,43 @@ export default function Dashboard({ salaoId }) {
             </div>
           </div>
           <div className="p-6">
-            {/* KPI total do ano */}
+            <ExplicacaoGrafico
+              texto="Receita gerada com a venda de produtos para as clientes levarem para casa. Selecione o ano com os botões acima."
+              dica="Produtos em casa fidelizam a cliente e aumentam o ticket médio sem ocupar horário na agenda."
+            />
             <div className="mb-4 flex items-center justify-between">
-              <p className="text-sm font-bold text-slate-600 uppercase">
+              <p className="text-sm font-bold text-slate-400 uppercase">
                 Venda Home Care {anoHomecare}
               </p>
-              <p className="text-2xl font-black text-slate-800">{fmt(totalHomecarAno)}</p>
+              <p className="text-2xl font-black text-white">{fmt(totalHomecarAno)}</p>
             </div>
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              {/* Barras de venda */}
               <div>
-                <p className="text-[10px] font-bold text-slate-400 uppercase mb-3">Venda / Pendência por Mês</p>
+                <p className="text-[10px] font-bold text-slate-500 uppercase mb-3">Venda / Pendência por Mês</p>
                 <ResponsiveContainer width="100%" height={220}>
                   <BarChart data={homecareMensal} margin={{ top: 10, right: 10, left: -10, bottom: 0 }}>
-                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
+                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#2d3748" />
                     <XAxis dataKey="mes" axisLine={false} tickLine={false}
                       tick={{ fill: '#94a3b8', fontSize: 10 }} />
                     <YAxis axisLine={false} tickLine={false}
-                      tick={{ fill: '#94a3b8', fontSize: 10 }} tickFormatter={fmtK} />
-                    <Tooltip content={<TooltipMoeda />} cursor={{ fill: '#fef2f2' }} />
-                    <Bar dataKey="venda" name="Venda" fill={COR_BARRA_PRINCIPAL}
+                      tick={{ fill: '#475569', fontSize: 10 }} tickFormatter={fmtK} />
+                    <Tooltip content={<TooltipMoeda />} cursor={{ fill: 'rgba(255,255,255,0.05)' }} />
+                    <Bar dataKey="venda" name="Venda" fill={COR_LARANJA}
                       radius={[4, 4, 0, 0]} maxBarSize={40} />
                   </BarChart>
                 </ResponsiveContainer>
               </div>
-              {/* Barras de lucro */}
               <div>
-                <p className="text-[10px] font-bold text-slate-400 uppercase mb-3">Lucro por Mês</p>
+                <p className="text-[10px] font-bold text-slate-500 uppercase mb-3">Lucro por Mês</p>
                 <ResponsiveContainer width="100%" height={220}>
                   <BarChart data={homecareMensal} margin={{ top: 10, right: 10, left: -10, bottom: 0 }}>
-                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
+                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#2d3748" />
                     <XAxis dataKey="mes" axisLine={false} tickLine={false}
                       tick={{ fill: '#94a3b8', fontSize: 10 }} />
                     <YAxis axisLine={false} tickLine={false}
-                      tick={{ fill: '#94a3b8', fontSize: 10 }} tickFormatter={fmtK} />
-                    <Tooltip content={<TooltipMoeda />} cursor={{ fill: '#fef2f2' }} />
-                    <Bar dataKey="lucro" name="Lucro" fill={COR_BARRA_LUCRO}
+                      tick={{ fill: '#475569', fontSize: 10 }} tickFormatter={fmtK} />
+                    <Tooltip content={<TooltipMoeda />} cursor={{ fill: 'rgba(255,255,255,0.05)' }} />
+                    <Bar dataKey="lucro" name="Lucro" fill={COR_BARRA_PRINCIPAL}
                       radius={[4, 4, 0, 0]} maxBarSize={40} />
                   </BarChart>
                 </ResponsiveContainer>

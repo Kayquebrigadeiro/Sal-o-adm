@@ -250,7 +250,7 @@ function AbaProcedimentos({ salaoId }) {
   const carregar = async () => {
     const [{ data: procsData }, { data: cfgData }] = await Promise.all([
       supabase.from('procedimentos').select('id, nome, categoria, requer_comprimento, preco_p, preco_m, preco_g, custo_variavel, porcentagem_profissional, ativo').eq('salao_id', salaoId).order('nome'),
-      supabase.from('configuracoes').select('custo_fixo_por_atendimento, taxa_maquininha_pct').eq('salao_id', salaoId).single(),
+      supabase.from('configuracoes').select('custo_fixo_por_atendimento, taxa_maquininha_pct').eq('salao_id', salaoId).maybeSingle(),
     ]);
     setLista(procsData || []);
     setConfiguracoes(cfgData);

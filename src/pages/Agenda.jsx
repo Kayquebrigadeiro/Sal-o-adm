@@ -77,7 +77,7 @@ export default function Agenda({ salaoId, role }) {
       setLoading(true);
       try {
         const [cfgRes, profRes, procRes, cliRes, custoRes] = await Promise.all([
-          supabase.from('configuracoes').select('custo_fixo_por_atendimento').eq('salao_id', salaoId).single(),
+          supabase.from('configuracoes').select('custo_fixo_por_atendimento').eq('salao_id', salaoId).maybeSingle(),
           supabase.from('profissionais').select('id, nome, cargo').eq('salao_id', salaoId).eq('ativo', true).order('nome'),
           supabase.from('procedimentos').select('id, nome, categoria, requer_comprimento, preco_p, preco_m, preco_g, custo_variavel').eq('salao_id', salaoId).eq('ativo', true).order('nome'),
           supabase.from('clientes').select('id, nome, telefone').eq('salao_id', salaoId).order('nome'),
@@ -248,13 +248,13 @@ export default function Agenda({ salaoId, role }) {
     if (!novoProf.nome.trim()) return showToast('DIGITE O NOME DO PROFISSIONAL', 'error');
     setSalvandoProf(true);
     try {
-      const { error } = await supabase.from('profissionais').upsert([{
+      const { error } = await supabase.from('profissionais').insert([{
         salao_id: salaoId,
         nome: novoProf.nome.trim().toUpperCase(),
         cargo: novoProf.cargo,
         salario_fixo: 0,
         ativo: true
-      }], { onConflict: 'salao_id,nome' });
+      }]);
       if (error) throw error;
       showToast('PROFISSIONAL ADICIONADO À EQUIPE!', 'success');
       setModalProfAberto(false);
@@ -556,9 +556,9 @@ export default function Agenda({ salaoId, role }) {
               <button
                 onClick={async () => {
                   try {
-                    const { data: salaoData } = await supabase.from('saloes').select('nome_proprietaria, nome').eq('id', salaoId).single();
+                    const { data: salaoData } = await supabase.from('saloes').select('nome_proprietaria, nome').eq('id', salaoId).maybeSingle();
                     const nome = salaoData?.nome_proprietaria || 'PROPRIETÁRIA';
-                    const { error } = await supabase.from('profissionais').upsert({ salao_id: salaoId, nome, cargo: 'PROPRIETARIO', salario_fixo: 0, ativo: true }, { onConflict: 'salao_id,nome' });
+                    const { error } = await supabase.from('profissionais').insert({ salao_id: salaoId, nome, cargo: 'PROPRIETARIO', salario_fixo: 0, ativo: true });
                     if (error) throw error;
                     showToast(`${nome} ADICIONADA À AGENDA! 👑`, 'success');
                     const { data: profData } = await supabase.from('profissionais').select('id, nome, cargo').eq('salao_id', salaoId).eq('ativo', true).order('nome');

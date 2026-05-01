@@ -64,42 +64,48 @@ const TableRow = ({ proc, config, custoMaterial, isExpanded, onToggleExpand, sal
 
   const handleGanhoBlur = async () => {
     const numGanho = Number(ganho) || 0;
-    if (numGanho !== Number(proc.ganho_liquido_desejado)) {
-      const engine = new FinancialEngine({ custoFixoPorAtendimento: config.custo_fixo_por_atendimento });
-      const calc = engine.calcularPrecoPMG({
-        custoFixo: config.custo_fixo_por_atendimento,
-        custoMaterial: custoMaterial,
-        ganhoLiquido: numGanho
-      });
+    if (numGanho === Number(proc.ganho_liquido_desejado)) return; // nada mudou
 
-      if (!calc.erro) {
-        setPrecoP(calc.precoP);
+    const engine = new FinancialEngine({
+      custoFixoPorAtendimento: config.custo_fixo_por_atendimento
+    });
 
-        // Agrupa todas as alterações em uma única query para otimizar tempo de rede
-        const updates = {
-          ganho_liquido_desejado: numGanho,
-          preco_p: calc.precoP
-        };
+    const calc = engine.calcularPrecoPMG({
+      custoFixo: config.custo_fixo_por_atendimento,
+      custoMaterial: custoMaterial,
+      ganhoLiquido: numGanho,
+    });
 
-        if (proc.requer_comprimento) {
-          if (!precoM) {
-            setPrecoM(calc.precoM);
-            updates.preco_m = calc.precoM;
-          }
-          if (!precoG) {
-            setPrecoG(calc.precoG);
-            updates.preco_g = calc.precoG;
-          }
-        }
+    if (calc.erro) return;
 
-        try {
-          await supabase.from('procedimentos').update(updates).eq('id', proc.id).eq('salao_id', salaoId);
-          showToast('PREÇOS CALCULADOS E SALVOS!', 'success');
-          carregar();
-        } catch (err) {
-          showToast('ERRO AO SALVAR PREÇOS', 'error');
-        }
-      }
+    // Atualiza estado local — sempre, não só se vazio
+    setPrecoP(calc.precoP);
+
+    const updates = {
+      ganho_liquido_desejado: numGanho,
+      preco_p: calc.precoP,
+    };
+
+    // M e G: sempre recalcula automaticamente se o serviço tiver comprimento
+    if (proc.requer_comprimento) {
+      setPrecoM(calc.precoM);
+      setPrecoG(calc.precoG);
+      updates.preco_m = calc.precoM;
+      updates.preco_g = calc.precoG;
+    }
+
+    try {
+      const { error } = await supabase
+        .from('procedimentos')
+        .update(updates)
+        .eq('id', proc.id)
+        .eq('salao_id', salaoId);
+
+      if (error) throw error;
+      showToast(`✓ P: ${fmt(calc.precoP)} | M: ${fmt(calc.precoM)} | G: ${fmt(calc.precoG)}`, 'success');
+      carregar();
+    } catch (err) {
+      showToast('ERRO AO SALVAR PREÇOS', 'error');
     }
   };
 

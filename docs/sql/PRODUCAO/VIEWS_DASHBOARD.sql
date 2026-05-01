@@ -40,7 +40,7 @@ atend AS (
     SUM(valor_profissional) FILTER (WHERE status <> 'CANCELADO') AS total_profissionais,
     SUM(custo_fixo) FILTER (WHERE status <> 'CANCELADO') AS total_custo_fixo,
     SUM(custo_variavel) FILTER (WHERE status <> 'CANCELADO') AS total_custo_variavel,
-    SUM(lucro_real) FILTER (WHERE status <> 'CANCELADO') AS lucro_real,
+    SUM(lucro_liquido) FILTER (WHERE status <> 'CANCELADO') AS lucro_real,
     SUM(lucro_possivel) FILTER (WHERE status <> 'CANCELADO') AS lucro_possivel,
     COUNT(*) FILTER (WHERE status <> 'CANCELADO') AS total_atendimentos,
     COUNT(*) FILTER (WHERE status = 'CANCELADO') AS total_cancelamentos

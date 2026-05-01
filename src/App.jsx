@@ -11,6 +11,7 @@ import Precificacao from './pages/Precificacao';
 import HomeCar from './pages/HomeCar';
 import Paralelos from './pages/Paralelos';
 import Configuracoes from './pages/Configuracoes';
+import WizardBemVinda from './pages/WizardBemVinda';
 
 import VendedorApp from './vendedor/VendedorApp';
 
@@ -119,29 +120,28 @@ export default function App() {
     );
   }
 
+  // Wizard de primeiro acesso — tela cheia, sem sidebar
+  if (role === 'PROPRIETARIO' && configurado === false) {
+    return <WizardBemVinda />;
+  }
+
   return (
     <BrowserRouter>
       <ToastProvider>
         <div className="flex flex-col md:flex-row min-h-screen bg-gradient-to-br from-slate-50 to-rose-50/20 pb-[72px] md:pb-0">
           <Sidebar role={role} email={email} salaoNome={salaoNome} />
           <main className="flex-1 min-w-0 overflow-x-hidden overflow-y-auto flex flex-col w-full relative">
-            {role === 'PROPRIETARIO' && configurado === false && (
-              <div className="bg-amber-100 border-b border-amber-200 p-3 text-center text-amber-800 text-sm font-medium">
-                ⚙️ Configure seu salão na aba Base de Custos e cadastre seus serviços no Catálogo.
-              </div>
-            )}
             <div className="animate-fadeIn flex-1">
               <Routes>
-                <Route path="/" element={<Navigate to={configurado === false ? "/precificacao" : "/agenda"} />} />
+                <Route path="/" element={<Navigate to="/agenda" />} />
                 <Route path="/agenda" element={<Agenda {...ctx} />} />
                 <Route path="/clientes" element={role === 'PROPRIETARIO' ? <Clientes {...ctx} /> : <Navigate to="/agenda" />} />
                 <Route path="/dashboard" element={role === 'PROPRIETARIO' ? <Dashboard {...ctx} /> : <Navigate to="/agenda" />} />
                 <Route path="/precificacao" element={role === 'PROPRIETARIO' ? <Precificacao {...ctx} /> : <Navigate to="/agenda" />} />
                 <Route path="/homecar" element={role === 'PROPRIETARIO' ? <HomeCar {...ctx} /> : <Navigate to="/agenda" />} />
-
                 <Route path="/paralelos" element={role === 'PROPRIETARIO' ? <Paralelos {...ctx} /> : <Navigate to="/agenda" />} />
                 <Route path="/configuracoes" element={role === 'PROPRIETARIO' ? <Configuracoes {...ctx} /> : <Navigate to="/agenda" />} />
-                <Route path="*" element={<Navigate to={configurado === false ? "/precificacao" : "/agenda"} />} />
+                <Route path="*" element={<Navigate to="/agenda" />} />
               </Routes>
             </div>
           </main>

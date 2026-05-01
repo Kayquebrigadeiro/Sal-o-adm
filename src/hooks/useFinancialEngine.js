@@ -46,7 +46,7 @@ export function useFinancialEngine(salaoId) {
           .from('configuracoes')
           .select('*')
           .eq('salao_id', salaoId)
-          .single();
+          .maybeSingle();
 
         if (cancelado) return;
 
@@ -63,6 +63,12 @@ export function useFinancialEngine(salaoId) {
             custoFixoPorAtendimento: Number(data.custo_fixo_por_atendimento) || 0,
             taxaMaquininhaPct: Number(data.taxa_maquininha_pct) || TAXA_MAQUININHA_PADRAO,
             prolaboreMensal: Number(data.prolabore_mensal) || 0,
+          });
+        } else {
+          // Nenhuma configuração encontrada — usar defaults
+          setConfig({
+            custoFixoPorAtendimento: 29.00,
+            taxaMaquininhaPct: TAXA_MAQUININHA_PADRAO,
           });
         }
       } catch (err) {

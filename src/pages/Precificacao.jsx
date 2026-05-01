@@ -7,7 +7,7 @@ import CatalogoProdutos from './CatalogoProdutos';
 import BaseCustos from '../components/BaseCustos';
 import ProdutosRelacionados from '../components/ProdutosRelacionados';
 import { CATEGORIAS, ORDEM_CATEGORIAS } from '../constants/categorias';
-import { Plus, Trash2, Calculator, AlertTriangle, Package, Landmark, Zap } from 'lucide-react';
+import { Plus, Trash2, Calculator, AlertTriangle, Package, Landmark, Zap, RefreshCw } from 'lucide-react';
 
 const fmt = (v) => Number(v || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
 const fmtPct = (v) => `${Number(v || 0).toFixed(1)}%`;
@@ -66,46 +66,41 @@ const TableRow = ({ proc, config, custoMaterial, isExpanded, onToggleExpand, sal
     const numGanho = Number(ganho) || 0;
     if (numGanho === Number(proc.ganho_liquido_desejado)) return; // nada mudou
 
-    const engine = new FinancialEngine({
-      custoFixoPorAtendimento: config.custo_fixo_por_atendimento
-    });
-
-    const calc = engine.calcularPrecoPMG({
-      custoFixo: config.custo_fixo_por_atendimento,
-      custoMaterial: custoMaterial,
-      ganhoLiquido: numGanho,
-    });
-
-    if (calc.erro) return;
-
-    // Atualiza estado local — sempre, não só se vazio
-    setPrecoP(calc.precoP);
-
-    const updates = {
-      ganho_liquido_desejado: numGanho,
-      preco_p: calc.precoP,
-    };
-
-    // M e G: sempre recalcula automaticamente se o serviço tiver comprimento
-    if (proc.requer_comprimento) {
-      setPrecoM(calc.precoM);
-      setPrecoG(calc.precoG);
-      updates.preco_m = calc.precoM;
-      updates.preco_g = calc.precoG;
-    }
-
     try {
       const { error } = await supabase
         .from('procedimentos')
-        .update(updates)
+        .update({ ganho_liquido_desejado: numGanho })
         .eq('id', proc.id)
         .eq('salao_id', salaoId);
 
       if (error) throw error;
-      showToast(`✓ P: ${fmt(calc.precoP)} | M: ${fmt(calc.precoM)} | G: ${fmt(calc.precoG)}`, 'success');
-      carregar();
+      showToast('✓ Ganho salvo', 'success');
     } catch (err) {
-      showToast('ERRO AO SALVAR PREÇOS', 'error');
+      showToast('ERRO AO SALVAR GANHO', 'error');
+    }
+  };
+
+  const recalcular = async () => {
+    const numGanho = Number(ganho) || 0;
+    const base = Number(config.custo_fixo_por_atendimento) + custoMaterial + numGanho;
+    const novoP = Number((base / 0.95).toFixed(2));
+    const novoM = Number((novoP * 1.20).toFixed(2));
+    const novoG = Number((novoP * 1.30).toFixed(2));
+
+    setPrecoP(novoP);
+    setPrecoM(novoM);
+    setPrecoG(novoG);
+
+    try {
+      const { error } = await supabase.from('procedimentos')
+        .update({ preco_p: novoP, preco_m: novoM, preco_g: novoG })
+        .eq('id', proc.id)
+        .eq('salao_id', salaoId);
+
+      if (error) throw error;
+      showToast(`✓ P: ${fmt(novoP)} | M: ${fmt(novoM)} | G: ${fmt(novoG)}`, 'success');
+    } catch (err) {
+      showToast('ERRO AO RECALCULAR', 'error');
     }
   };
 
@@ -149,6 +144,9 @@ const TableRow = ({ proc, config, custoMaterial, isExpanded, onToggleExpand, sal
           <div className="flex items-center justify-center gap-1">
             <button onClick={onToggleExpand} className={`p-1.5 rounded transition-colors ${isExpanded ? 'bg-indigo-100 text-indigo-600' : 'text-slate-400 hover:text-indigo-600 hover:bg-indigo-50'}`} title="Produtos Relacionados">
               <Package size={14} />
+            </button>
+            <button onClick={recalcular} className="p-1.5 text-blue-400 hover:text-blue-600 hover:bg-blue-50 rounded transition-colors" title="Recalcular P, M e G">
+              <RefreshCw size={14} />
             </button>
             <button onClick={() => deletarProc(proc.id)} className="p-1.5 text-red-400 hover:text-red-600 hover:bg-red-50 rounded transition-colors" title="REMOVER">
               <Trash2 size={14} />
@@ -208,7 +206,7 @@ export default function Precificacao({ salaoId }) {
     try {
       // Dispara todas as 4 queries simultaneamente para evitar "waterfall" na rede
       const [cfgRes, procRes, custoRes, catRes] = await Promise.all([
-        supabase.from('configuracoes').select('custo_fixo_por_atendimento, qtd_atendimentos_mes').eq('salao_id', salaoId).single(),
+        supabase.from('configuracoes').select('custo_fixo_por_atendimento, qtd_atendimentos_mes').eq('salao_id', salaoId).maybeSingle(),
         supabase.from('procedimentos').select('id, nome, categoria, requer_comprimento, preco_p, preco_m, preco_g, ganho_liquido_desejado, custo_variavel, ativo').eq('salao_id', salaoId).eq('ativo', true).order('nome'),
         supabase.from('custo_composto_procedimento').select('procedimento_id, custo_total_composicao, qtd_produtos').eq('salao_id', salaoId),
         supabase.from('produtos_catalogo').select('id, nome, preco_compra, qtd_aplicacoes, custo_por_uso, ativo').eq('salao_id', salaoId).eq('ativo', true).order('nome')

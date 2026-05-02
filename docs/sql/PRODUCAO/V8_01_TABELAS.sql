@@ -1,8 +1,7 @@
 -- ============================================================================
---  SCHEMA V8 — PARTE 1: TIPOS E TABELAS
---  Salão Secreto SaaS — Produção
---  Atualizado: 2026-05-01
---  ⚠️ NÃO RODE ESTE SCRIPT EM BANCO COM DADOS — use apenas para recriar do zero
+--  SCHEMA V8 — PARTE 1: DEFINIÇÃO DE TABELAS
+--  Finalidade: Criar as tabelas, enums e índices necessários para o sistema.
+--  Este script é a fundação da estrutura de dados do Salão Secreto.
 -- ============================================================================
 
 -- 1. EXTENSÕES
@@ -89,7 +88,8 @@ create table if not exists profissionais (
   ativo         boolean not null default true,
   criado_em     timestamptz default now(),
   atualizado_em timestamptz default now(),
-  constraint chk_prof_nome check (length(trim(nome)) > 0)
+  constraint chk_prof_nome check (length(trim(nome)) > 0),
+  unique(salao_id, nome)
 );
 
 create table if not exists procedimentos (

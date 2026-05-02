@@ -72,7 +72,10 @@ export default function Agenda({ salaoId, role }) {
 
   // ─── Carregar dados iniciais ───
   useEffect(() => {
-    if (!salaoId) return;
+    if (!salaoId) {
+      setLoading(false);
+      return;
+    }
     const carregar = async () => {
       setLoading(true);
       try {
@@ -121,13 +124,25 @@ export default function Agenda({ salaoId, role }) {
   }, [salaoId, dataSelecionada]);
 
   const carregarAtendimentos = async () => {
-    const { data } = await supabase
+    // 🛡️ FIX: FUNCIONARIO não recebe campos financeiros no response HTTP
+    const colunas = role === 'PROPRIETARIO'
+      ? 'id, data, horario, cliente, comprimento, valor_cobrado, valor_pago, valor_pendente, status, obs, profissional_id, procedimento_id, lucro_liquido, lucro_possivel, custo_fixo, custo_variavel, valor_maquininha, valor_profissional, profissionais(nome, cargo), procedimentos(nome, categoria)'
+      : 'id, data, horario, cliente, comprimento, valor_cobrado, valor_pago, valor_pendente, status, obs, profissional_id, procedimento_id, profissionais(nome, cargo), procedimentos(nome, categoria)';
+
+    const { data, error } = await supabase
       .from('atendimentos')
-      .select('*, profissionais(nome), procedimentos(nome, categoria)')
+      .select(colunas)
       .eq('salao_id', salaoId)
       .eq('data', dataSelecionada)
       .neq('status', 'CANCELADO')
       .order('horario');
+
+    if (error) {
+      console.error('[Agenda] Erro ao carregar:', error);
+      showToast('ERRO AO CARREGAR AGENDA', 'error');
+      return;
+    }
+
     setAgendamentos(data || []);
   };
 

@@ -1,6 +1,7 @@
 -- ============================================================================
 -- VIEWS OFICIAIS DO DASHBOARD (VERSÃO PRODUÇÃO)
--- Use este script para restaurar as views que o Dashboard.jsx consome.
+-- Finalidade: Este script consolida as métricas financeiras essenciais para o
+-- componente Dashboard.jsx. Ele calcula faturamento, lucro e saúde financeira.
 -- ============================================================================
 
 -- 1. CORREÇÃO DA VIEW rendimento_por_profissional

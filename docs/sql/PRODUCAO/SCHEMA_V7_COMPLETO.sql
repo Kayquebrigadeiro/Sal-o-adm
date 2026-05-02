@@ -1,7 +1,7 @@
 -- ========================================================================================
---  SCHEMA SAAS COMPLETO E DEFINITIVO V7 — PRODUÇÃO
---  Última atualização: 2026-05-01
---  ⚠️  Os aliases das views DEVEM coincidir com o que Dashboard.jsx busca via Supabase.
+--  ⚠️ SCRIPT LEGADO (VERSÃO V7)
+--  Finalidade: Referência histórica e backup. 
+--  Para novas instalações, use o SCHEMA_V8_COMPLETO.sql.
 -- ========================================================================================
 
 -- ========================================================================================

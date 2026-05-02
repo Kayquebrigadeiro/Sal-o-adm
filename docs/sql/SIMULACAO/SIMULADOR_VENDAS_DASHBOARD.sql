@@ -1,6 +1,7 @@
 -- ============================================================================
--- SCRIPT DE SIMULAÇÃO DE DADOS PARA TESTE DE DASHBOARD
--- Execute este script no SQL Editor do Supabase
+-- SIMULADOR DE VENDAS (Massa de Dados)
+-- Finalidade: Gerar massa de dados rápida e aleatória para visualizar gráficos
+-- e testar a performance do Dashboard com muitos atendimentos.
 -- ============================================================================
 
 DO $$

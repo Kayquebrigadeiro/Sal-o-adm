@@ -53,12 +53,12 @@ export default function Paralelos({ salaoId }) {
 
       const [paralelosRes, profsRes] = await Promise.all([
         supabase.from('procedimentos_paralelos')
-          .select('*, profissionais(nome)')
+          .select('id, data, cliente, descricao, valor, valor_pago, valor_pendente, valor_profissional, profissional_id, profissionais(nome)')
           .eq('salao_id', salaoId)
           .gte('data', inicioMes)
           .lte('data', fimMes)
           .order('data', { ascending: false }),
-        supabase.from('profissionais').select('*').eq('salao_id', salaoId).eq('ativo', true)
+        supabase.from('profissionais').select('id, nome').eq('salao_id', salaoId).eq('ativo', true)
       ]);
 
       setParalelos(paralelosRes.data || []);

@@ -53,7 +53,7 @@ export default function HomeCar({ salaoId }) {
 
       const { data } = await supabase
         .from('homecare')
-        .select('*')
+        .select('id, data, cliente, produto, custo_produto, valor_venda, valor_pago, valor_pendente, lucro, obs')
         .eq('salao_id', salaoId)
         .gte('data', inicioMes)
         .lte('data', fimMes)

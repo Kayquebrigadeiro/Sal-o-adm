@@ -39,8 +39,9 @@ export default function Login() {
 
       if (signInError) throw signInError;
 
-      // Sucesso! Recarrega a página para o App.jsx ler a sessão e redirecionar
-      window.location.reload();
+      // Sucesso! Não precisamos recarregar a página. 
+      // O App.jsx tem um listener (onAuthStateChange) que vai detectar o SIGNED_IN
+      // e atualizar a tela automaticamente.
 
     } catch (err) {
       console.error('Erro no login:', err);

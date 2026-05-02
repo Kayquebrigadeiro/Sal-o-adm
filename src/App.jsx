@@ -14,6 +14,7 @@ import Configuracoes from './pages/Configuracoes';
 import WizardBemVinda from './pages/WizardBemVinda';
 
 import VendedorApp from './vendedor/VendedorApp';
+import BannerOffline from './components/BannerOffline';
 
 export default function App() {
   const [sessao, setSessao] = useState(null);
@@ -22,51 +23,82 @@ export default function App() {
   const [carregando, setCarregando] = useState(true);
   const [erroCritico, setErroCritico] = useState(null);
 
-  useEffect(() => {
-    const init = async () => {
-      try {
-        const { data: { session } } = await supabase.auth.getSession();
+  // ─── Carregar perfil do Supabase (extraída para reutilização) ───
+  const carregarPerfil = async (userId) => {
+    try {
+      const controller = new AbortController();
+      const id = setTimeout(() => controller.abort(), 4000);
 
-        if (!session) {
+      const { data, error } = await supabase
+        .from('perfis_acesso')
+        .select(`salao_id, cargo, saloes(configurado, nome)`)
+        .eq('auth_user_id', userId)
+        .abortSignal(controller.signal)
+        .single();
+
+      clearTimeout(id);
+
+      if (error) {
+        console.error('Erro ao buscar perfil no Supabase:', error);
+        setErroCritico(`Erro de Base de Dados: ${error.message}`);
+        setCarregando(false);
+        return;
+      }
+
+      if (data) {
+        setPerfil({
+          salao_id: data.salao_id,
+          cargo: data.cargo,
+          configurado: data.saloes?.configurado
+        });
+        setSalaoNome(data.saloes?.nome || '');
+      } else {
+        setErroCritico('Perfil não encontrado na tabela perfis_acesso.');
+      }
+    } catch (err) {
+      console.error('Erro ao carregar perfil:', err);
+      setErroCritico(err.message || 'Ocorreu um erro desconhecido.');
+    } finally {
+      setCarregando(false);
+    }
+  };
+
+  useEffect(() => {
+    // 🛡️ Failsafe: Nunca travar na tela de loading por mais de 5 segundos
+    const failsafeTimeout = setTimeout(() => {
+      setCarregando(false);
+    }, 5000);
+
+    let perfilCarregadoLocalmente = false; // Flag para evitar chamadas duplas
+
+    // ── Listener centralizado de sessão (Evita o erro de Lock roubado) ──
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      async (event, session) => {
+        
+        if (event === 'SIGNED_OUT' || !session) {
+          setSessao(null);
+          setPerfil(null);
+          setSalaoNome('');
+          setErroCritico(null);
           setCarregando(false);
+          perfilCarregadoLocalmente = false;
           return;
         }
 
         setSessao(session);
 
-        // Busca o perfil
-        const { data, error } = await supabase
-          .from('perfis_acesso')
-          .select(`salao_id, cargo, saloes(configurado, nome)`)
-          .eq('auth_user_id', session.user.id)
-          .single();
-
-        if (error) {
-          console.error('Erro ao buscar perfil no Supabase:', error);
-          setErroCritico(`Erro de Base de Dados: ${error.message}`);
-          setCarregando(false);
-          return;
+        // Se tivermos sessão, mas ainda não buscamos o perfil
+        if (!perfilCarregadoLocalmente) {
+          perfilCarregadoLocalmente = true; // Trava imediata contra corrida
+          await carregarPerfil(session.user.id);
         }
-
-        if (data) {
-          setPerfil({
-            salao_id: data.salao_id,
-            cargo: data.cargo,
-            configurado: data.saloes?.configurado
-          });
-          setSalaoNome(data.saloes?.nome || '');
-        } else {
-          setErroCritico('Perfil não encontrado na tabela perfis_acesso.');
-        }
-      } catch (err) {
-        console.error('Erro geral no App:', err);
-        setErroCritico(err.message || 'Ocorreu um erro desconhecido.');
-      } finally {
-        setCarregando(false);
       }
-    };
+    );
 
-    init();
+    return () => {
+      clearTimeout(failsafeTimeout);
+      subscription.unsubscribe();
+    };
   }, []);
 
   // Ecrã de Erro Crítico
@@ -115,6 +147,7 @@ export default function App() {
   if (role === 'VENDEDOR') {
     return (
       <BrowserRouter>
+        <BannerOffline />
         <VendedorApp email={email} userId={sessao.user.id} />
       </BrowserRouter>
     );
@@ -122,11 +155,12 @@ export default function App() {
 
   // Wizard de primeiro acesso — tela cheia, sem sidebar
   if (role === 'PROPRIETARIO' && configurado === false) {
-    return <WizardBemVinda />;
+    return <><BannerOffline /><WizardBemVinda /></>;
   }
 
   return (
     <BrowserRouter>
+      <BannerOffline />
       <ToastProvider>
         <div className="flex flex-col md:flex-row min-h-screen bg-gradient-to-br from-slate-50 to-rose-50/20 pb-[72px] md:pb-0">
           <Sidebar role={role} email={email} salaoNome={salaoNome} />

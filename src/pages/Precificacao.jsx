@@ -461,7 +461,27 @@ export default function Precificacao({ salaoId }) {
               className="w-full bg-transparent outline-none text-lg font-black text-slate-800 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
               value={config.qtd_atendimentos_mes}
               onChange={e => updateConfig('qtd_atendimentos_mes', e.target.value)}
-              onBlur={async () => { try { await supabase.from('configuracoes').update({ qtd_atendimentos_mes: Number(config.qtd_atendimentos_mes) }).eq('salao_id', salaoId); showToast('✓', 'success'); } catch { } }}
+              onBlur={async () => {
+                try {
+                  const novaQtd = Number(config.qtd_atendimentos_mes) || 1;
+                  // Buscar total de custos fixos e recalcular rateio automaticamente
+                  const { data: custos } = await supabase
+                    .from('custos_fixos_itens')
+                    .select('valor')
+                    .eq('salao_id', salaoId);
+                  const totalCustos = (custos || []).reduce((a, c) => a + Number(c.valor || 0), 0);
+                  const novoRateado = novaQtd > 0
+                    ? Number((totalCustos / novaQtd).toFixed(2))
+                    : 0;
+                  // Atualizar ambos no banco e no state local
+                  await supabase.from('configuracoes').update({
+                    qtd_atendimentos_mes: novaQtd,
+                    custo_fixo_por_atendimento: novoRateado
+                  }).eq('salao_id', salaoId);
+                  updateConfig('custo_fixo_por_atendimento', novoRateado);
+                  showToast(`✓ Custo por atendimento: R$ ${novoRateado.toFixed(2)}`, 'success');
+                } catch { showToast('Erro ao salvar', 'error'); }
+              }}
             />
           </div>
         </div>

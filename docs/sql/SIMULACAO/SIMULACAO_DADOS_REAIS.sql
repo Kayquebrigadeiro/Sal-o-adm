@@ -1,6 +1,7 @@
 -- ============================================================================
--- SCRIPT DE SIMULAÇÃO COM DADOS REAIS DO SALÃO (VERSÃO CORRIGIDA)
--- Alvo: ~R$ 11.984,56 faturamento | ~R$ 6.200,00 lucro
+-- SCRIPT DE SIMULAÇÃO COM DADOS REAIS
+-- Finalidade: Popular o banco com dados realistas (atendimentos, despesas e vendas)
+-- para validar o comportamento do Dashboard e das views financeiras.
 -- ============================================================================
 
 DO $$

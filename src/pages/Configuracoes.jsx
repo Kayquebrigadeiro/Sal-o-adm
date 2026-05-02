@@ -28,7 +28,7 @@ export default function Configuracoes({ salaoId }) {
     if (isInitial) setLoading(true);
     const { data } = await supabase
       .from('profissionais')
-      .select('*')
+      .select('id, nome, cargo, salario_fixo')
       .eq('salao_id', salaoId)
       .eq('ativo', true)
       .order('nome');

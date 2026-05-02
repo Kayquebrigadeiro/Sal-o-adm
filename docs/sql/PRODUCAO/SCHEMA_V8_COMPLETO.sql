@@ -1,8 +1,9 @@
 -- ============================================================================
---  SCHEMA V8 — PARTE 1: TIPOS E TABELAS
---  Salão Secreto SaaS — Produção
---  Atualizado: 2026-05-01
---  ⚠️ NÃO RODE ESTE SCRIPT EM BANCO COM DADOS — use apenas para recriar do zero
+--  SCHEMA V8 — SCRIPT MESTRE DE RECONSTRUÇÃO
+--  Salão Secreto SaaS — Ambiente de Produção
+--  Finalidade: Este script reconstrói todo o banco de dados (V8). 
+--  Contém: Tabelas, Enums, Funções, Triggers, Views e RLS.
+--  ⚠️ ATENÇÃO: NÃO RODE ESTE SCRIPT EM BANCO COM DADOS — use para recriar do zero.
 -- ============================================================================
 
 -- 1. EXTENSÕES
@@ -39,7 +40,8 @@ exception when duplicate_object then null;
 end $$;
 
 -- ============================================================================
--- 3. TABELAS NÚCLEO
+-- 3. TABELAS NÚCLEO (Core)
+-- Estrutura básica para gerenciar os Salões, Usuários e Configurações Gerais.
 -- ============================================================================
 create table if not exists saloes (
   id                uuid primary key default uuid_generate_v4(),
@@ -78,7 +80,8 @@ create table if not exists configuracoes (
 );
 
 -- ============================================================================
--- 4. TABELAS OPERACIONAIS
+-- 4. TABELAS OPERACIONAIS (Dia-a-dia)
+-- Gerenciamento de atendimentos, profissionais, despesas e vendas de produtos.
 -- ============================================================================
 create table if not exists profissionais (
   id            uuid primary key default uuid_generate_v4(),
@@ -220,6 +223,7 @@ create table if not exists logins_gerados (
 
 -- ============================================================================
 -- 5. CATÁLOGO, COMPOSIÇÃO E CUSTOS FIXOS
+-- Módulo avançado para precificação automatizada baseada em insumos.
 -- ============================================================================
 create table if not exists produtos_catalogo (
   id             uuid primary key default uuid_generate_v4(),
@@ -324,8 +328,9 @@ create table if not exists pagamentos_assinatura (
 create index if not exists idx_pgto_assinatura on pagamentos_assinatura(assinatura_id);
 create index if not exists idx_pgto_salao on pagamentos_assinatura(salao_id);
 -- ============================================================================
---  SCHEMA V8 — PARTE 2: FUNÇÕES, TRIGGERS E VIEWS
---  ⚠️ Os aliases das VIEWS devem coincidir com Dashboard.jsx
+--  SCHEMA V8 — PARTE 2: LÓGICA DE NEGÓCIO (FUNÇÕES, TRIGGERS E VIEWS)
+--  Finalidade: Automatizar cálculos financeiros e consolidar dados para o Dashboard.
+--  ⚠️ IMPORTANTE: Os aliases das VIEWS devem coincidir com o frontend (Dashboard.jsx).
 -- ============================================================================
 
 -- ════════════════════════════════════════════════════════
@@ -404,6 +409,7 @@ create trigger trg_calc_produto_aplicado before insert or update on procedimento
 
 -- ════════════════════════════════════════════════════════
 -- TRIGGER: CÁLCULO FINANCEIRO DO ATENDIMENTO
+-- Esta é a alma do sistema. Calcula lucro líquido, impostos e taxas automaticamente.
 -- ════════════════════════════════════════════════════════
 create or replace function fn_calcular_atendimento() returns trigger language plpgsql as $$
 declare
@@ -633,7 +639,8 @@ select
 from gastos_pessoais g
 group by g.salao_id, date_trunc('month', g.criado_em)::date order by g.salao_id, mes desc;
 -- ============================================================================
---  SCHEMA V8 — PARTE 3: SEGURANÇA (RLS + POLICIES)
+--  SCHEMA V8 — PARTE 3: SEGURANÇA E PRIVACIDADE (RLS)
+--  Finalidade: Garante que um salão nunca veja os dados de outro salão.
 -- ============================================================================
 
 -- Ativar RLS em todas as tabelas

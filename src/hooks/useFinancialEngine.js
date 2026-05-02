@@ -44,7 +44,7 @@ export function useFinancialEngine(salaoId) {
       try {
         const { data, error: dbError } = await supabase
           .from('configuracoes')
-          .select('*')
+          .select('custo_fixo_por_atendimento, taxa_maquininha_pct, prolabore_mensal')
           .eq('salao_id', salaoId)
           .maybeSingle();
 

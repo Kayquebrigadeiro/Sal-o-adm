@@ -22,7 +22,7 @@ export default function CatalogoProdutos({ salaoId }) {
 
   const carregar = async () => {
     setLoading(true);
-    const { data } = await supabase.from('produtos_catalogo').select('*').eq('salao_id', salaoId).eq('ativo', true).order('nome');
+    const { data } = await supabase.from('produtos_catalogo').select('id, nome, preco_compra, qtd_aplicacoes, custo_por_uso, ativo').eq('salao_id', salaoId).eq('ativo', true).order('nome');
     setProdutos(data || []);
     setLoading(false);
   };

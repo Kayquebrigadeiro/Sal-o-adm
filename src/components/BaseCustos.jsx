@@ -22,7 +22,7 @@ export default function BaseCustos({ salaoId, qtdAtendimentos, onCustoFixoChange
 
   const carregar = async () => {
     setLoading(true);
-    const { data } = await supabase.from('custos_fixos_itens').select('*').eq('salao_id', salaoId).order('descricao');
+    const { data } = await supabase.from('custos_fixos_itens').select('id, descricao, tipo, valor').eq('salao_id', salaoId).order('descricao');
     setItens(data || []);
     setLoading(false);
     recalcularRateio(data || []);

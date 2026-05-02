@@ -1,6 +1,7 @@
 -- ============================================================================
---  SCHEMA V8 — PARTE 2: FUNÇÕES, TRIGGERS E VIEWS
---  ⚠️ Os aliases das VIEWS devem coincidir com Dashboard.jsx
+--  SCHEMA V8 — PARTE 2: LÓGICA E RELATÓRIOS
+--  Finalidade: Implementar a inteligência do banco (Cálculos automáticos e Relatórios).
+--  ⚠️ IMPORTANTE: As views aqui devem refletir os nomes usados no Dashboard.jsx.
 -- ============================================================================
 
 -- ════════════════════════════════════════════════════════
@@ -217,17 +218,19 @@ with base as (
   union select salao_id, date_trunc('month', data)::date from despesas
 ),
 atend as (
+  -- ⚠️ FIX 02/05/2026: Apenas EXECUTADOS contam como receita real.
+  -- Antes usava status <> 'CANCELADO', o que incluía AGENDADOS nos totais.
   select salao_id, date_trunc('month', data)::date as mes,
-    sum(valor_cobrado) filter (where status <> 'CANCELADO') as faturamento_bruto,
-    sum(valor_pago) filter (where status <> 'CANCELADO') as receita_recebida,
+    sum(valor_cobrado) filter (where status = 'EXECUTADO') as faturamento_bruto,
+    sum(valor_pago) filter (where status = 'EXECUTADO') as receita_recebida,
     sum(valor_cobrado - valor_pago) filter (where status = 'EXECUTADO') as total_pendente,
-    sum(valor_maquininha) filter (where status <> 'CANCELADO') as total_maquininha,
-    sum(valor_profissional) filter (where status <> 'CANCELADO') as total_profissionais,
-    sum(custo_fixo) filter (where status <> 'CANCELADO') as total_custo_fixo,
-    sum(custo_variavel) filter (where status <> 'CANCELADO') as total_custo_variavel,
-    sum(lucro_liquido) filter (where status <> 'CANCELADO') as lucro_real,
-    sum(lucro_possivel) filter (where status <> 'CANCELADO') as lucro_possivel,
-    count(*) filter (where status <> 'CANCELADO') as total_atendimentos,
+    sum(valor_maquininha) filter (where status = 'EXECUTADO') as total_maquininha,
+    sum(valor_profissional) filter (where status = 'EXECUTADO') as total_profissionais,
+    sum(custo_fixo) filter (where status = 'EXECUTADO') as total_custo_fixo,
+    sum(custo_variavel) filter (where status = 'EXECUTADO') as total_custo_variavel,
+    sum(lucro_liquido) filter (where status = 'EXECUTADO') as lucro_real,
+    sum(lucro_possivel) filter (where status = 'EXECUTADO') as lucro_possivel,
+    count(*) filter (where status = 'EXECUTADO') as total_atendimentos,
     count(*) filter (where status = 'CANCELADO') as total_cancelamentos
   from atendimentos group by 1,2
 ),

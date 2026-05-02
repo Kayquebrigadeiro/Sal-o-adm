@@ -25,8 +25,8 @@ export default function ProdutosRelacionados({ salaoId, servicoId, onUpdate }) {
     try {
       // Dispara as buscas de Catálogo e Vínculos AO MESMO TEMPO (Paralelo)
       const [catRes, vincRes] = await Promise.all([
-        supabase.from('produtos_catalogo').select('*').eq('salao_id', salaoId).eq('ativo', true).order('nome'),
-        supabase.from('procedimento_produtos').select('*').eq('procedimento_id', servicoId)
+        supabase.from('produtos_catalogo').select('id, nome, preco_compra, qtd_aplicacoes, custo_por_uso').eq('salao_id', salaoId).eq('ativo', true).order('nome'),
+        supabase.from('procedimento_produtos').select('procedimento_id, produto_id, qtd_usada').eq('procedimento_id', servicoId)
       ]);
 
       if (catRes.error) throw catRes.error;

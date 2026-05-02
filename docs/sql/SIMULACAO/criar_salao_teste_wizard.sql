@@ -1,6 +1,7 @@
 -- ============================================================================
--- Script para criar um salão de teste e testar o Wizard
--- Execute este script no SQL Editor do Supabase
+-- SCRIPT: CRIAR SALÃO DE TESTE (Fluxo Wizard)
+-- Finalidade: Criar um salão com status 'não configurado' (configurado = false)
+-- para testar o passo-a-passo de configuração inicial do sistema.
 -- ============================================================================
 
 -- PASSO 1: Criar o salão (configurado = false para abrir o wizard)

@@ -1,5 +1,7 @@
 -- ============================================================================
---  SCHEMA V8 — PARTE 3: SEGURANÇA (RLS + POLICIES)
+--  SCHEMA V8 — PARTE 3: SEGURANÇA E PRIVACIDADE
+--  Finalidade: Configurar a segurança (RLS) para isolar dados entre salões.
+--  Este script garante que um usuário só veja dados do seu próprio salão.
 -- ============================================================================
 
 -- Ativar RLS em todas as tabelas
@@ -72,9 +74,11 @@ begin
     ('assinaturas', 'Isolar assinaturas'),
     ('pagamentos_assinatura', 'Isolar pagamentos')
   ) as t(a,b) loop
-    execute format('drop policy if exists %L on %I', pol, tbl);
+    execute format('drop policy if exists %I on %I', pol, tbl);
     execute format(
-      'create policy %L on %I for all to authenticated using (salao_id in (select salao_id from perfis_acesso where auth_user_id = auth.uid()))',
+      'create policy %I on %I for all to authenticated 
+       using (salao_id in (select salao_id from perfis_acesso where auth_user_id = auth.uid()))
+       with check (salao_id in (select salao_id from perfis_acesso where auth_user_id = auth.uid()))',
       pol, tbl
     );
   end loop;

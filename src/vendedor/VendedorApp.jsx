@@ -3,6 +3,7 @@ import VendedorSidebar from './VendedorSidebar';
 import MeusSaloes from './MeusSaloes';
 import NovoSalao from './NovoSalao';
 import GerenciarAdmins from './GerenciarAdmins';
+import Assinaturas from './Assinaturas';
 
 export default function VendedorApp({ email, userId }) {
   return (
@@ -13,6 +14,7 @@ export default function VendedorApp({ email, userId }) {
           <Route path="/admin/saloes" element={<MeusSaloes userId={userId} />} />
           <Route path="/admin/novo-salao" element={<NovoSalao userId={userId} />} />
           <Route path="/admin/admins" element={<GerenciarAdmins />} />
+          <Route path="/admin/assinaturas" element={<Assinaturas />} />
           <Route path="*" element={<Navigate to="/admin/saloes" />} />
         </Routes>
       </main>

@@ -15,6 +15,8 @@ import WizardBemVinda from './pages/WizardBemVinda';
 
 import VendedorApp from './vendedor/VendedorApp';
 import BannerOffline from './components/BannerOffline';
+import TelaAssinaturaVencida from './pages/TelaAssinaturaVencida';
+import BannerRenovacao from './components/BannerRenovacao';
 
 export default function App() {
   const [sessao, setSessao] = useState(null);
@@ -22,6 +24,7 @@ export default function App() {
   const [salaoNome, setSalaoNome] = useState('');
   const [carregando, setCarregando] = useState(true);
   const [erroCritico, setErroCritico] = useState(null);
+  const [assinatura, setAssinatura] = useState(null);
 
   // ─── Carregar perfil do Supabase (extraída para reutilização) ───
   const carregarPerfil = async (userId) => {
@@ -52,6 +55,14 @@ export default function App() {
           configurado: data.saloes?.configurado
         });
         setSalaoNome(data.saloes?.nome || '');
+
+        if (data.cargo === 'PROPRIETARIO' && data.salao_id) {
+          const { data: acesso, error: acessoErr } = await supabase
+            .rpc('verificar_acesso_salao', { p_salao_id: data.salao_id });
+          if (!acessoErr && acesso) {
+            setAssinatura(acesso);
+          }
+        }
       } else {
         setErroCritico('Perfil não encontrado na tabela perfis_acesso.');
       }
@@ -69,33 +80,62 @@ export default function App() {
       setCarregando(false);
     }, 5000);
 
-    let perfilCarregadoLocalmente = false; // Flag para evitar chamadas duplas
+    let mounted = true;
+    let perfilBuscado = false; // Flag local para evitar múltiplas chamadas na mesma renderização
 
-    // ── Listener centralizado de sessão (Evita o erro de Lock roubado) ──
+    const initSession = async () => {
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        
+        if (mounted) {
+          if (session) {
+            setSessao(session);
+            if (!perfilBuscado) {
+              perfilBuscado = true;
+              await carregarPerfil(session.user.id);
+            }
+          } else {
+            setSessao(null);
+            setPerfil(null);
+            setCarregando(false);
+          }
+        }
+      } catch (err) {
+        console.error("Erro ao buscar sessão:", err);
+        if (mounted) setCarregando(false);
+      }
+    };
+
+    initSession();
+
+    // ── Listener centralizado de sessão ──
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
-        
+        if (!mounted) return;
+
         if (event === 'SIGNED_OUT' || !session) {
           setSessao(null);
           setPerfil(null);
           setSalaoNome('');
           setErroCritico(null);
           setCarregando(false);
-          perfilCarregadoLocalmente = false;
+          perfilBuscado = false;
           return;
         }
 
         setSessao(session);
 
-        // Se tivermos sessão, mas ainda não buscamos o perfil
-        if (!perfilCarregadoLocalmente) {
-          perfilCarregadoLocalmente = true; // Trava imediata contra corrida
+        // Se a sessão mudou/atualizou e ainda não temos o perfil carregado
+        if (session && !perfilBuscado) {
+          perfilBuscado = true;
+          setCarregando(true);
           await carregarPerfil(session.user.id);
         }
       }
     );
 
     return () => {
+      mounted = false;
       clearTimeout(failsafeTimeout);
       subscription.unsubscribe();
     };
@@ -158,9 +198,28 @@ export default function App() {
     return <><BannerOffline /><WizardBemVinda /></>;
   }
 
+  // Se proprietária com assinatura vencida → tela de bloqueio
+  if (role === 'PROPRIETARIO' && assinatura && !assinatura.tem_acesso) {
+    return (
+      <BrowserRouter>
+        <ToastProvider>
+          <TelaAssinaturaVencida
+            salaoNome={salaoNome}
+            dataVencimento={assinatura.data_vencimento}
+            diasRestantes={assinatura.dias_restantes}
+            valorPlano={assinatura.valor_plano}
+          />
+        </ToastProvider>
+      </BrowserRouter>
+    );
+  }
+
   return (
     <BrowserRouter>
       <BannerOffline />
+      {role === 'PROPRIETARIO' && assinatura && assinatura.tem_acesso && (
+        <BannerRenovacao diasRestantes={assinatura.dias_restantes} />
+      )}
       <ToastProvider>
         <div className="flex flex-col md:flex-row min-h-screen bg-gradient-to-br from-slate-50 to-rose-50/20 pb-[72px] md:pb-0">
           <Sidebar role={role} email={email} salaoNome={salaoNome} />

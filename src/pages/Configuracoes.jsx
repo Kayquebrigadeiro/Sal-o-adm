@@ -35,6 +35,7 @@ export default function Configuracoes({ salaoId, role }) {
   const chavePix = import.meta.env.VITE_PIX_CHAVE;
   const nomePix  = import.meta.env.VITE_PIX_NOME;
   const wpp      = import.meta.env.VITE_WHATSAPP_SUPORTE;
+  const pixCopiaCola = import.meta.env.VITE_PIX_COPIA_COLA;
 
   useEffect(() => {
     if (salaoId) carregarProfissionais(true);
@@ -62,7 +63,7 @@ export default function Configuracoes({ salaoId, role }) {
   };
 
   const copiarChave = () => {
-    navigator.clipboard.writeText(chavePix);
+    navigator.clipboard.writeText(pixCopiaCola || chavePix);
     setCopiado(true);
     setTimeout(() => setCopiado(false), 2000);
   };
@@ -277,7 +278,7 @@ export default function Configuracoes({ salaoId, role }) {
                   </div>
                   <div className="bg-slate-50 p-5 rounded-2xl border border-slate-100">
                     <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Valor do Plano</p>
-                    <p className="font-black text-slate-800 text-lg">{fmt(assinatura.valor_plano)} <span className="text-xs font-bold text-slate-400 uppercase">/ mês</span></p>
+                    <p className="font-black text-slate-800 text-lg">{fmt(100)} <span className="text-xs font-bold text-slate-400 uppercase">/ mês</span></p>
                   </div>
                   <div className="bg-slate-50 p-5 rounded-2xl border border-slate-100">
                     <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Vencimento</p>
@@ -309,22 +310,36 @@ export default function Configuracoes({ salaoId, role }) {
         <div className="space-y-6">
            <div className="text-center p-6 bg-slate-50 rounded-2xl border border-slate-100">
              <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Assinatura Mensal</p>
-             <p className="text-4xl font-black text-emerald-600">{fmt(assinatura?.valor_plano || 100)}</p>
+             <p className="text-4xl font-black text-emerald-600">{fmt(100)}</p>
            </div>
            
            <div>
              <p className="text-xs font-black text-slate-600 uppercase tracking-widest mb-3">Pague via PIX:</p>
+             
+             {pixCopiaCola && (
+               <div className="flex flex-col items-center justify-center p-4 bg-white rounded-2xl border-2 border-slate-200 mb-4 shadow-sm animate-fadeIn">
+                 <img 
+                   src={`https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(pixCopiaCola)}`}
+                   alt="QR Code PIX"
+                   className="w-40 h-40 sm:w-48 sm:h-48 rounded-xl shadow-sm border border-slate-100"
+                 />
+                 <p className="text-[10px] font-black text-slate-400 uppercase mt-4 tracking-widest">Escaneie com o app do banco</p>
+               </div>
+             )}
+
              <div className="bg-white border-2 border-slate-200 rounded-2xl p-4 flex flex-col sm:flex-row gap-4 items-center justify-between">
-               <div className="text-center sm:text-left">
-                 <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Chave PIX</p>
-                 <p className="font-bold text-slate-900 text-lg tracking-wider">{chavePix}</p>
+               <div className="text-center sm:text-left overflow-hidden w-full">
+                 <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{pixCopiaCola ? 'PIX Copia e Cola' : 'Chave PIX'}</p>
+                 <p className="font-bold text-slate-900 text-sm tracking-wider truncate w-full" title={pixCopiaCola || chavePix}>
+                   {pixCopiaCola || chavePix}
+                 </p>
                  {nomePix && <p className="text-xs font-bold text-slate-500 uppercase mt-0.5">{nomePix}</p>}
                </div>
                <button 
                  onClick={copiarChave}
-                 className="w-full sm:w-auto bg-slate-100 text-slate-700 px-5 py-3 rounded-xl text-xs font-black uppercase hover:bg-slate-200 transition-colors flex items-center justify-center gap-2 whitespace-nowrap"
+                 className="w-full sm:w-auto bg-slate-100 text-slate-700 px-5 py-3 rounded-xl text-xs font-black uppercase hover:bg-slate-200 transition-colors flex items-center justify-center gap-2 whitespace-nowrap flex-shrink-0"
                >
-                 <Copy size={14} /> {copiado ? 'COPIADO!' : 'COPIAR CHAVE'}
+                 <Copy size={14} /> {copiado ? 'COPIADO!' : 'COPIAR CÓDIGO'}
                </button>
              </div>
            </div>

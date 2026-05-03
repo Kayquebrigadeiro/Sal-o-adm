@@ -27,7 +27,7 @@ export default function Clientes({ salaoId }) {
     setLoading(true);
     const { data } = await supabase
       .from('clientes')
-      .select('id, nome, telefone, total_gasto, ultima_visita')
+      .select('id, nome, telefone')
       .eq('salao_id', salaoId)
       .order('nome');
     setClientes(data || []);

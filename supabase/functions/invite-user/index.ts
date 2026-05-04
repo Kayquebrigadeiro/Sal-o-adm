@@ -8,29 +8,40 @@ interface InviteBody {
   nome: string
 }
 
+const corsHeaders = {
+  'Access-Control-Allow-Origin': 'https://adiministrador.netlify.app',
+  'Access-Control-Allow-Methods': 'POST, OPTIONS',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+}
+
 serve(async (req) => {
   // CORS headers
   if (req.method === "OPTIONS") {
-    return new Response("ok", {
-      headers: {
-        "Access-Control-Allow-Origin": "*",
-        "Access-Control-Allow-Methods": "POST, OPTIONS",
-        "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
-      },
-    })
+    return new Response("ok", { headers: corsHeaders })
   }
 
   try {
-    const { email, salao_id, role, nome } = (await req.json()) as InviteBody
-
-    // Validações
-    if (!email || !salao_id || !role) {
+    // 🛡️ SEGURANÇA: Validar token de autorização
+    const authHeader = req.headers.get('Authorization')
+    if (!authHeader) {
       return new Response(
-        JSON.stringify({ error: "email, salao_id e role são obrigatórios" }),
-        {
-          status: 400,
-          headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" },
-        }
+        JSON.stringify({ error: 'Token de autorização não fornecido' }),
+        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      )
+    }
+
+    // Validar sessão do chamador
+    const supabaseClient = createClient(
+      Deno.env.get("SUPABASE_URL")!,
+      Deno.env.get("SUPABASE_ANON_KEY") ?? '',
+      { global: { headers: { Authorization: authHeader } } }
+    )
+
+    const { data: { user: caller }, error: callerError } = await supabaseClient.auth.getUser()
+    if (callerError || !caller) {
+      return new Response(
+        JSON.stringify({ error: 'Token inválido ou sessão expirada' }),
+        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       )
     }
 
@@ -39,6 +50,33 @@ serve(async (req) => {
       Deno.env.get("SUPABASE_URL")!,
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
     )
+
+    // Verificar que o chamador é PROPRIETARIO ou VENDEDOR
+    const { data: callerPerfil, error: perfilError } = await supabaseAdmin
+      .from('perfis_acesso')
+      .select('cargo')
+      .eq('auth_user_id', caller.id)
+      .single()
+
+    if (perfilError || !callerPerfil || !['PROPRIETARIO', 'VENDEDOR'].includes(callerPerfil.cargo)) {
+      return new Response(
+        JSON.stringify({ error: 'Apenas proprietários ou vendedores podem enviar convites' }),
+        { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      )
+    }
+
+    const { email, salao_id, role, nome } = (await req.json()) as InviteBody
+
+    // Validações
+    if (!email || !salao_id || !role) {
+      return new Response(
+        JSON.stringify({ error: "email, salao_id e role são obrigatórios" }),
+        {
+          status: 400,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        }
+      )
+    }
 
     // Enviar convite para o email
     const { data: inviteData, error: inviteError } = await supabaseAdmin.auth.admin.inviteUserByEmail(
@@ -58,7 +96,7 @@ serve(async (req) => {
         JSON.stringify({ error: `Erro ao enviar convite: ${inviteError.message}` }),
         {
           status: 400,
-          headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" },
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
         }
       )
     }
@@ -79,7 +117,7 @@ serve(async (req) => {
           JSON.stringify({ error: `Erro ao criar perfil: ${profileError.message}` }),
           {
             status: 400,
-            headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" },
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
           }
         )
       }
@@ -103,7 +141,7 @@ serve(async (req) => {
       }),
       {
         status: 200,
-        headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" },
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
       }
     )
   } catch (error) {
@@ -112,8 +150,9 @@ serve(async (req) => {
       JSON.stringify({ error: `Erro interno do servidor: ${error.message}` }),
       {
         status: 500,
-        headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" },
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
       }
     )
   }
 })
+

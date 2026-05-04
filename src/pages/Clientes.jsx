@@ -25,13 +25,49 @@ export default function Clientes({ salaoId }) {
 
   const carregarClientes = async () => {
     setLoading(true);
-    const { data } = await supabase
-      .from('clientes')
-      .select('id, nome, telefone')
-      .eq('salao_id', salaoId)
-      .order('nome');
-    setClientes(data || []);
-    setLoading(false);
+    try {
+      // 1. Carregar clientes
+      const { data: clientesData } = await supabase
+        .from('clientes')
+        .select('id, nome, telefone')
+        .eq('salao_id', salaoId)
+        .order('nome');
+
+      // 2. Carregar resumo financeiro agregado por nome de cliente (atendimentos EXECUTADOS)
+      const { data: resumoData } = await supabase
+        .from('atendimentos')
+        .select('cliente, valor_cobrado, data')
+        .eq('salao_id', salaoId)
+        .eq('status', 'EXECUTADO');
+
+      // 3. Agregar por nome de cliente
+      const resumoMap = {};
+      (resumoData || []).forEach(a => {
+        const nome = a.cliente;
+        if (!resumoMap[nome]) {
+          resumoMap[nome] = { total_gasto: 0, ultima_visita: null, total_atendimentos: 0 };
+        }
+        resumoMap[nome].total_gasto += Number(a.valor_cobrado || 0);
+        resumoMap[nome].total_atendimentos += 1;
+        if (!resumoMap[nome].ultima_visita || a.data > resumoMap[nome].ultima_visita) {
+          resumoMap[nome].ultima_visita = a.data;
+        }
+      });
+
+      // 4. Mesclar dados
+      const clientesMerged = (clientesData || []).map(c => ({
+        ...c,
+        total_gasto: resumoMap[c.nome]?.total_gasto || 0,
+        ultima_visita: resumoMap[c.nome]?.ultima_visita || null,
+        total_atendimentos: resumoMap[c.nome]?.total_atendimentos || 0,
+      }));
+
+      setClientes(clientesMerged);
+    } catch (err) {
+      showToast('Erro ao carregar clientes', 'error');
+    } finally {
+      setLoading(false);
+    }
   };
 
   const salvarCliente = async () => {
@@ -57,15 +93,17 @@ export default function Clientes({ salaoId }) {
   const abrirFicha = async (cliente) => {
     setClienteSelecionado(cliente);
 
+    // Busca por nome (campo texto no atendimentos) — filtra por salao_id para isolamento
     const { data } = await supabase
       .from('atendimentos')
-      .select('data, horario, valor_cobrado, procedimentos(nome)')
+      .select('data, horario, valor_cobrado, status, procedimentos(nome)')
       .eq('salao_id', salaoId)
       .eq('cliente', cliente.nome)
       .order('data', { ascending: false });
 
     setHistorico(data || []);
-    setTotalGasto((data || []).reduce((acc, curr) => acc + Number(curr.valor_cobrado || 0), 0));
+    // Usar o total pré-computado (apenas EXECUTADOS) para consistência
+    setTotalGasto(cliente.total_gasto || 0);
   };
 
   const abrirWhatsApp = (telefone) => {
@@ -127,7 +165,7 @@ export default function Clientes({ salaoId }) {
                 </td>
                 <td className="p-4 text-center text-slate-400 text-xs font-bold">
                   {cliente.ultima_visita
-                    ? new Date(cliente.ultima_visita).toLocaleDateString('pt-BR')
+                    ? new Date(cliente.ultima_visita + 'T12:00:00').toLocaleDateString('pt-BR')
                     : '—'}
                 </td>
                 <td className="p-4">

@@ -4,7 +4,7 @@ import { useToast } from '../components/Toast';
 import { Search, CreditCard, ShieldAlert, CalendarClock, CheckCircle } from 'lucide-react';
 
 export default function Assinaturas() {
-  const { addToast } = useToast();
+  const { showToast } = useToast();
   const [saloes, setSaloes] = useState([]);
   const [carregando, setCarregando] = useState(true);
   const [busca, setBusca] = useState('');
@@ -65,7 +65,7 @@ export default function Assinaturas() {
 
       setSaloes(formatado);
     } catch (err) {
-      addToast(err.message, 'error');
+      showToast(err.message, 'error');
     } finally {
       setCarregando(false);
     }
@@ -118,12 +118,12 @@ export default function Assinaturas() {
 
       if (assError) throw assError;
 
-      addToast('Assinatura renovada com sucesso!', 'success');
+      showToast('Assinatura renovada com sucesso!', 'success');
       setModalAberto(false);
       carregarAssinaturas();
 
     } catch (err) {
-      addToast(err.message, 'error');
+      showToast(err.message, 'error');
     } finally {
       setSalvando(false);
     }

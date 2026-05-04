@@ -3,7 +3,7 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 import { jwtDecode } from 'https://deno.land/x/jwt@v1.1.2/mod.ts'
 
 const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Origin': 'https://adiministrador.netlify.app',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
 

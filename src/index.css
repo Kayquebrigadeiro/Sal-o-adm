@@ -2,10 +2,32 @@
 @tailwind components;
 @tailwind utilities;
 
+@layer base {
+  body {
+    @apply bg-[#FAFAFA] text-zinc-800 antialiased selection:bg-rose-200;
+  }
+}
+
 html, body {
   overflow-x: hidden;
   max-width: 100vw;
   -webkit-tap-highlight-color: transparent;
+}
+
+/* ── Scrollbar premium ───────────────────────────────────── */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  @apply bg-zinc-300 rounded-full hover:bg-zinc-400;
+}
+* {
+  scrollbar-width: thin;
+  scrollbar-color: #d4d4d8 transparent;
 }
 
 /* ── Animações base do sistema ───────────────────────────── */

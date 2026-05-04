@@ -3,7 +3,7 @@ import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
 const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Origin': 'https://adiministrador.netlify.app',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
 
@@ -13,9 +13,7 @@ serve(async (req) => {
     return new Response('ok', { headers: corsHeaders })
   }
 
-  // LOG TEMPORÁRIO: Ver o que está chegando
   const body = await req.json()
-  console.log('BODY RECEBIDO:', JSON.stringify(body))
 
   // Cria cliente admin no escopo externo para usar no rollback
   const supabaseAdmin = createClient(
@@ -57,7 +55,7 @@ serve(async (req) => {
       .select('id')
       .single()
 
-    console.log('SALAO ERROR:', salaoError)
+
     if (salaoError) throw salaoError
     if (!salao) throw new Error('Falha ao criar salão')
 
@@ -66,7 +64,7 @@ serve(async (req) => {
       .from('configuracoes')
       .insert([{ salao_id: salao.id, custo_fixo_por_atendimento: 10.65, taxa_maquininha_pct: 5 }])
 
-    console.log('CONFIG ERROR:', configError)
+
     if (configError) throw configError
 
     // 2. Cria a proprietária com e-mail real (email_confirm: false para enviar e-mail de ativação)
@@ -83,7 +81,7 @@ serve(async (req) => {
       // options: { emailRedirectTo: redirectTo }
     })
 
-    console.log('AUTH ERROR:', authError)
+
     if (authError) throw authError
     if (!authData.user) throw new Error('Falha ao criar usuário de auth')
 
@@ -102,7 +100,7 @@ serve(async (req) => {
         { onConflict: 'auth_user_id' }
       )
 
-    console.log('PERFIL ERROR:', perfilError)
+
     if (perfilError) {
       await rollback()
       throw perfilError
@@ -116,7 +114,7 @@ serve(async (req) => {
       senha_temporaria: senha,
     })
 
-    console.log('LOGIN ERROR:', loginError)
+
     if (loginError) {
       await rollback()
       throw loginError

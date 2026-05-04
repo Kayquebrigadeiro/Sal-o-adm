@@ -287,10 +287,10 @@ order by b.mes desc;
 create or replace view ranking_procedimentos with (security_invoker = true) as
 select
   a.salao_id, date_trunc('month', a.data)::date as mes, pr.nome as procedimento, pr.categoria,
-  count(*) filter (where a.status <> 'CANCELADO') as quantidade,
-  sum(a.valor_cobrado) filter (where a.status <> 'CANCELADO') as receita_total,
-  sum(a.lucro_liquido) filter (where a.status <> 'CANCELADO') as lucro_total,
-  round(sum(a.valor_cobrado) filter (where a.status <> 'CANCELADO') / nullif(count(*) filter (where a.status <> 'CANCELADO'), 0), 2) as ticket_medio
+  count(*) filter (where a.status = 'EXECUTADO') as quantidade,
+  sum(a.valor_cobrado) filter (where a.status = 'EXECUTADO') as receita_total,
+  sum(a.lucro_liquido) filter (where a.status = 'EXECUTADO') as lucro_total,
+  round(sum(a.valor_cobrado) filter (where a.status = 'EXECUTADO') / nullif(count(*) filter (where a.status = 'EXECUTADO'), 0), 2) as ticket_medio
 from atendimentos a join procedimentos pr on pr.id = a.procedimento_id
 group by a.salao_id, date_trunc('month', a.data)::date, pr.nome, pr.categoria;
 

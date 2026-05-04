@@ -549,16 +549,16 @@ with base as (
 ),
 atend as (
   select salao_id, date_trunc('month', data)::date as mes,
-    sum(valor_cobrado) filter (where status <> 'CANCELADO') as faturamento_bruto,
-    sum(valor_pago) filter (where status <> 'CANCELADO') as receita_recebida,
+    sum(valor_cobrado) filter (where status = 'EXECUTADO') as faturamento_bruto,
+    sum(valor_pago) filter (where status = 'EXECUTADO') as receita_recebida,
     sum(valor_cobrado - valor_pago) filter (where status = 'EXECUTADO') as total_pendente,
-    sum(valor_maquininha) filter (where status <> 'CANCELADO') as total_maquininha,
-    sum(valor_profissional) filter (where status <> 'CANCELADO') as total_profissionais,
-    sum(custo_fixo) filter (where status <> 'CANCELADO') as total_custo_fixo,
-    sum(custo_variavel) filter (where status <> 'CANCELADO') as total_custo_variavel,
-    sum(lucro_liquido) filter (where status <> 'CANCELADO') as lucro_real,
-    sum(lucro_possivel) filter (where status <> 'CANCELADO') as lucro_possivel,
-    count(*) filter (where status <> 'CANCELADO') as total_atendimentos,
+    sum(valor_maquininha) filter (where status = 'EXECUTADO') as total_maquininha,
+    sum(valor_profissional) filter (where status = 'EXECUTADO') as total_profissionais,
+    sum(custo_fixo) filter (where status = 'EXECUTADO') as total_custo_fixo,
+    sum(custo_variavel) filter (where status = 'EXECUTADO') as total_custo_variavel,
+    sum(lucro_liquido) filter (where status = 'EXECUTADO') as lucro_real,
+    sum(lucro_possivel) filter (where status = 'EXECUTADO') as lucro_possivel,
+    count(*) filter (where status = 'EXECUTADO') as total_atendimentos,
     count(*) filter (where status = 'CANCELADO') as total_cancelamentos
   from atendimentos group by 1,2
 ),
@@ -615,10 +615,10 @@ order by b.mes desc;
 create or replace view ranking_procedimentos with (security_invoker = true) as
 select
   a.salao_id, date_trunc('month', a.data)::date as mes, pr.nome as procedimento, pr.categoria,
-  count(*) filter (where a.status <> 'CANCELADO') as quantidade,
-  sum(a.valor_cobrado) filter (where a.status <> 'CANCELADO') as receita_total,
-  sum(a.lucro_liquido) filter (where a.status <> 'CANCELADO') as lucro_total,
-  round(sum(a.valor_cobrado) filter (where a.status <> 'CANCELADO') / nullif(count(*) filter (where a.status <> 'CANCELADO'), 0), 2) as ticket_medio
+  count(*) filter (where a.status = 'EXECUTADO') as quantidade,
+  sum(a.valor_cobrado) filter (where a.status = 'EXECUTADO') as receita_total,
+  sum(a.lucro_liquido) filter (where a.status = 'EXECUTADO') as lucro_total,
+  round(sum(a.valor_cobrado) filter (where a.status = 'EXECUTADO') / nullif(count(*) filter (where a.status = 'EXECUTADO'), 0), 2) as ticket_medio
 from atendimentos a join procedimentos pr on pr.id = a.procedimento_id
 group by a.salao_id, date_trunc('month', a.data)::date, pr.nome, pr.categoria;
 

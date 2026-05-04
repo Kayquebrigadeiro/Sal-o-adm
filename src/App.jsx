@@ -15,8 +15,9 @@ import WizardBemVinda from './pages/WizardBemVinda';
 
 import VendedorApp from './vendedor/VendedorApp';
 import BannerOffline from './components/BannerOffline';
-import TelaAssinaturaVencida from './pages/TelaAssinaturaVencida';
-import BannerRenovacao from './components/BannerRenovacao';
+// DESATIVADO TEMPORARIAMENTE
+// import TelaAssinaturaVencida from './pages/TelaAssinaturaVencida';
+// import BannerRenovacao from './components/BannerRenovacao';
 
 export default function App() {
   const [sessao, setSessao] = useState(null);
@@ -199,6 +200,8 @@ export default function App() {
   }
 
   // Se proprietária com assinatura vencida → tela de bloqueio
+  // DESATIVADO TEMPORARIAMENTE
+  /*
   if (role === 'PROPRIETARIO' && assinatura && !assinatura.tem_acesso) {
     return (
       <BrowserRouter>
@@ -213,13 +216,16 @@ export default function App() {
       </BrowserRouter>
     );
   }
+  */
 
   return (
     <BrowserRouter>
       <BannerOffline />
+      {/* DESATIVADO TEMPORARIAMENTE
       {role === 'PROPRIETARIO' && assinatura && assinatura.tem_acesso && (
         <BannerRenovacao diasRestantes={assinatura.dias_restantes} />
       )}
+      */}
       <ToastProvider>
         <div className="flex flex-col md:flex-row min-h-screen bg-gradient-to-br from-slate-50 to-rose-50/20 pb-[72px] md:pb-0">
           <Sidebar role={role} email={email} salaoNome={salaoNome} />

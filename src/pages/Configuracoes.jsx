@@ -143,12 +143,14 @@ export default function Configuracoes({ salaoId, role }) {
           >
             Equipe & Parceiros
           </button>
+          {/* DESATIVADO TEMPORARIAMENTE
           <button
             onClick={() => setAbaAtiva('plano')}
             className={`px-4 py-3 font-bold uppercase transition-all whitespace-nowrap border-b-2 text-sm ${abaAtiva === 'plano' ? 'border-slate-900 text-slate-900' : 'border-transparent text-slate-400 hover:text-slate-600 hover:bg-slate-50'}`}
           >
             Meu Plano
           </button>
+          */}
         </div>
       )}
 

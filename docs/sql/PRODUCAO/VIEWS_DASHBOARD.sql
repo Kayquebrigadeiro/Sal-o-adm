@@ -34,16 +34,16 @@ WITH base AS (
 atend AS (
   SELECT
     salao_id, DATE_TRUNC('month', data)::date AS mes,
-    SUM(valor_cobrado) FILTER (WHERE status <> 'CANCELADO') AS faturamento_bruto,
-    SUM(valor_pago) FILTER (WHERE status <> 'CANCELADO') AS receita_recebida,
+    SUM(valor_cobrado) FILTER (WHERE status = 'EXECUTADO') AS faturamento_bruto,
+    SUM(valor_pago) FILTER (WHERE status = 'EXECUTADO') AS receita_recebida,
     SUM(valor_cobrado - valor_pago) FILTER (WHERE status = 'EXECUTADO') AS total_pendente,
-    SUM(valor_maquininha) FILTER (WHERE status <> 'CANCELADO') AS total_maquininha,
-    SUM(valor_profissional) FILTER (WHERE status <> 'CANCELADO') AS total_profissionais,
-    SUM(custo_fixo) FILTER (WHERE status <> 'CANCELADO') AS total_custo_fixo,
-    SUM(custo_variavel) FILTER (WHERE status <> 'CANCELADO') AS total_custo_variavel,
-    SUM(lucro_liquido) FILTER (WHERE status <> 'CANCELADO') AS lucro_real,
-    SUM(lucro_possivel) FILTER (WHERE status <> 'CANCELADO') AS lucro_possivel,
-    COUNT(*) FILTER (WHERE status <> 'CANCELADO') AS total_atendimentos,
+    SUM(valor_maquininha) FILTER (WHERE status = 'EXECUTADO') AS total_maquininha,
+    SUM(valor_profissional) FILTER (WHERE status = 'EXECUTADO') AS total_profissionais,
+    SUM(custo_fixo) FILTER (WHERE status = 'EXECUTADO') AS total_custo_fixo,
+    SUM(custo_variavel) FILTER (WHERE status = 'EXECUTADO') AS total_custo_variavel,
+    SUM(lucro_liquido) FILTER (WHERE status = 'EXECUTADO') AS lucro_real,
+    SUM(lucro_possivel) FILTER (WHERE status = 'EXECUTADO') AS lucro_possivel,
+    COUNT(*) FILTER (WHERE status = 'EXECUTADO') AS total_atendimentos,
     COUNT(*) FILTER (WHERE status = 'CANCELADO') AS total_cancelamentos
   FROM atendimentos GROUP BY 1,2
 ),

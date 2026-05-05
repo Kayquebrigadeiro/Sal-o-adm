@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { supabase } from './supabaseClient';
 import { ToastProvider } from './components/Toast';
@@ -27,11 +27,15 @@ export default function App() {
   const [erroCritico, setErroCritico] = useState(null);
   const [assinatura, setAssinatura] = useState(null);
 
+  // 🛡️ useRef para evitar race conditions entre initSession e onAuthStateChange
+  const perfilBuscadoRef = useRef(false);
+  const mountedRef = useRef(true);
+
   // ─── Carregar perfil do Supabase (extraída para reutilização) ───
   const carregarPerfil = async (userId) => {
     try {
       const controller = new AbortController();
-      const id = setTimeout(() => controller.abort(), 4000);
+      const id = setTimeout(() => controller.abort(), 6000);
 
       const { data, error } = await supabase
         .from('perfis_acesso')
@@ -41,6 +45,8 @@ export default function App() {
         .single();
 
       clearTimeout(id);
+
+      if (!mountedRef.current) return;
 
       if (error) {
         console.error('Erro ao buscar perfil no Supabase:', error);
@@ -68,42 +74,46 @@ export default function App() {
         setErroCritico('Perfil não encontrado na tabela perfis_acesso.');
       }
     } catch (err) {
+      if (!mountedRef.current) return;
       console.error('Erro ao carregar perfil:', err);
       setErroCritico(err.message || 'Ocorreu um erro desconhecido.');
     } finally {
-      setCarregando(false);
+      if (mountedRef.current) setCarregando(false);
     }
   };
 
   useEffect(() => {
-    // 🛡️ Failsafe: Nunca travar na tela de loading por mais de 5 segundos
-    const failsafeTimeout = setTimeout(() => {
-      setCarregando(false);
-    }, 5000);
+    mountedRef.current = true;
+    perfilBuscadoRef.current = false;
 
-    let mounted = true;
-    let perfilBuscado = false; // Flag local para evitar múltiplas chamadas na mesma renderização
+    // 🛡️ Failsafe: Nunca travar na tela de loading por mais de 10 segundos
+    const failsafeTimeout = setTimeout(() => {
+      if (mountedRef.current && carregando) {
+        console.warn('[Auth] Failsafe: Forçando fim do loading após 10s');
+        setCarregando(false);
+      }
+    }, 10000);
 
     const initSession = async () => {
       try {
         const { data: { session } } = await supabase.auth.getSession();
         
-        if (mounted) {
-          if (session) {
-            setSessao(session);
-            if (!perfilBuscado) {
-              perfilBuscado = true;
-              await carregarPerfil(session.user.id);
-            }
-          } else {
-            setSessao(null);
-            setPerfil(null);
-            setCarregando(false);
+        if (!mountedRef.current) return;
+
+        if (session) {
+          setSessao(session);
+          if (!perfilBuscadoRef.current) {
+            perfilBuscadoRef.current = true;
+            await carregarPerfil(session.user.id);
           }
+        } else {
+          setSessao(null);
+          setPerfil(null);
+          setCarregando(false);
         }
       } catch (err) {
         console.error("Erro ao buscar sessão:", err);
-        if (mounted) setCarregando(false);
+        if (mountedRef.current) setCarregando(false);
       }
     };
 
@@ -112,7 +122,7 @@ export default function App() {
     // ── Listener centralizado de sessão ──
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
-        if (!mounted) return;
+        if (!mountedRef.current) return;
 
         if (event === 'SIGNED_OUT' || !session) {
           setSessao(null);
@@ -120,15 +130,15 @@ export default function App() {
           setSalaoNome('');
           setErroCritico(null);
           setCarregando(false);
-          perfilBuscado = false;
+          perfilBuscadoRef.current = false;
           return;
         }
 
         setSessao(session);
 
         // Se a sessão mudou/atualizou e ainda não temos o perfil carregado
-        if (session && !perfilBuscado) {
-          perfilBuscado = true;
+        if (session && !perfilBuscadoRef.current) {
+          perfilBuscadoRef.current = true;
           setCarregando(true);
           await carregarPerfil(session.user.id);
         }
@@ -136,7 +146,7 @@ export default function App() {
     );
 
     return () => {
-      mounted = false;
+      mountedRef.current = false;
       clearTimeout(failsafeTimeout);
       subscription.unsubscribe();
     };
@@ -145,16 +155,16 @@ export default function App() {
   // Ecrã de Erro Crítico
   if (erroCritico) {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-blue-900 via-blue-800 to-blue-900 p-6">
-        <div className="bg-white/[0.07] backdrop-blur-xl p-8 rounded-2xl shadow-2xl max-w-lg w-full border border-red-500/20">
-          <div className="w-14 h-14 bg-red-500/20 rounded-xl flex items-center justify-center mx-auto mb-4">
-            <span className="text-red-400 text-2xl">⚠️</span>
+      <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-sky-50 to-white p-6">
+        <div className="bg-white p-8 rounded-2xl shadow-xl max-w-lg w-full border border-red-200">
+          <div className="w-14 h-14 bg-red-50 rounded-xl flex items-center justify-center mx-auto mb-4">
+            <span className="text-red-500 text-2xl">⚠️</span>
           </div>
-          <h1 className="text-xl font-bold text-red-400 mb-2 text-center">Erro de Acesso Detectado</h1>
-          <p className="text-sm text-blue-400 mb-6 text-center">{erroCritico}</p>
+          <h1 className="text-xl font-bold text-red-600 mb-2 text-center">Erro de Acesso Detectado</h1>
+          <p className="text-sm text-gray-500 mb-6 text-center">{erroCritico}</p>
           <button
             onClick={async () => { await supabase.auth.signOut(); window.location.reload(); }}
-            className="w-full bg-gradient-to-r from-blue-500 to-blue-500 text-white px-4 py-3 rounded-xl text-sm font-bold hover:from-blue-600 hover:to-blue-600 transition-all shadow-lg"
+            className="w-full bg-sky-500 text-white px-4 py-3 rounded-xl text-sm font-bold hover:bg-sky-600 transition-all shadow-lg"
           >
             Sair e Voltar ao Login
           </button>
@@ -165,10 +175,10 @@ export default function App() {
 
   if (carregando) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-900 via-blue-800 to-blue-900">
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-sky-50 to-white">
         <div className="flex flex-col items-center gap-4">
-          <div className="w-10 h-10 border-3 border-blue-500 border-t-transparent rounded-full animate-spin" />
-          <p className="text-blue-400 text-sm font-medium">Carregando o sistema...</p>
+          <div className="w-10 h-10 border-3 border-sky-500 border-t-transparent rounded-full animate-spin" />
+          <p className="text-gray-500 text-sm font-medium">Carregando o sistema...</p>
         </div>
       </div>
     );
@@ -227,7 +237,7 @@ export default function App() {
       )}
       */}
       <ToastProvider>
-        <div className="flex flex-col md:flex-row min-h-screen bg-gradient-to-br from-blue-950 to-blue-50/20 pb-[72px] md:pb-0">
+        <div className="flex flex-col md:flex-row min-h-screen bg-gray-50 pb-[72px] md:pb-0">
           <Sidebar role={role} email={email} salaoNome={salaoNome} />
           <main className="flex-1 min-w-0 overflow-x-hidden overflow-y-auto flex flex-col w-full relative">
             <div className="animate-fadeIn flex-1">

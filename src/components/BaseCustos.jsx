@@ -64,19 +64,19 @@ export default function BaseCustos({ salaoId, qtdAtendimentos, onCustoFixoChange
   const qtd = Math.max(Number(qtdAtendimentos) || 1, 1);
   const rateado = Math.round((total / qtd) * 100) / 100;
 
-  if (loading) return <div className="py-12 text-center text-blue-400 animate-pulse">Carregando base de custos...</div>;
+  if (loading) return <div className="py-12 text-center text-gray-500 animate-pulse">Carregando base de custos...</div>;
 
   return (
     <div className="space-y-6 max-w-3xl">
       {/* Resumo */}
       <div className="grid grid-cols-3 gap-4">
-        <div className="bg-blue-900 rounded-2xl border border-blue-700 p-5">
-          <p className="text-[10px] font-bold text-blue-400 uppercase">Total Mensal</p>
-          <p className="text-2xl font-black text-white">{fmt(total)}</p>
+        <div className="bg-white rounded-2xl border border-gray-200 p-5">
+          <p className="text-[10px] font-bold text-gray-500 uppercase">Total Mensal</p>
+          <p className="text-2xl font-black text-gray-800">{fmt(total)}</p>
         </div>
-        <div className="bg-blue-900 rounded-2xl border border-blue-700 p-5">
-          <p className="text-[10px] font-bold text-blue-400 uppercase">Atendimentos/Mês</p>
-          <p className="text-2xl font-black text-blue-600">{qtd}</p>
+        <div className="bg-white rounded-2xl border border-gray-200 p-5">
+          <p className="text-[10px] font-bold text-gray-500 uppercase">Atendimentos/Mês</p>
+          <p className="text-2xl font-black text-sky-600">{qtd}</p>
         </div>
         <div className="bg-emerald-50 rounded-2xl border border-emerald-200 p-5">
           <p className="text-[10px] font-bold text-emerald-600 uppercase">Custo Fixo Rateado</p>
@@ -86,9 +86,9 @@ export default function BaseCustos({ salaoId, qtdAtendimentos, onCustoFixoChange
       </div>
 
       {/* Tabela editável */}
-      <div className="bg-blue-900 rounded-2xl border border-blue-700 overflow-hidden">
+      <div className="bg-white rounded-2xl border border-gray-200 overflow-hidden">
         <table className="w-full text-sm">
-          <thead className="bg-blue-900 text-white text-[10px] uppercase tracking-wider">
+          <thead className="bg-white text-gray-800 text-[10px] uppercase tracking-wider">
             <tr>
               <th className="text-left px-4 py-3">Descrição</th>
               <th className="text-left px-4 py-3">Tipo</th>
@@ -98,27 +98,27 @@ export default function BaseCustos({ salaoId, qtdAtendimentos, onCustoFixoChange
           </thead>
           <tbody>
             {itens.length === 0 ? (
-              <tr><td colSpan={4} className="text-center py-10 text-blue-400">Nenhum custo fixo cadastrado</td></tr>
+              <tr><td colSpan={4} className="text-center py-10 text-gray-500">Nenhum custo fixo cadastrado</td></tr>
             ) : itens.map(item => {
               const Icon = ICONES[item.tipo] || Wrench;
               return (
-                <tr key={item.id} className="border-b border-blue-800 hover:bg-blue-950">
+                <tr key={item.id} className="border-b border-gray-200 hover:bg-gray-50">
                   <td className="px-4 py-2">
                     <div className="flex items-center gap-2">
-                      <Icon size={14} className="text-blue-400 flex-shrink-0" />
-                      <input type="text" className="w-full bg-transparent border-0 outline-none font-bold text-white focus:bg-blue-950 px-1 rounded"
+                      <Icon size={14} className="text-gray-500 flex-shrink-0" />
+                      <input type="text" className="w-full bg-transparent border-0 outline-none font-bold text-gray-800 focus:bg-gray-50 px-1 rounded"
                         value={item.descricao} onChange={e => updateItem(item.id, 'descricao', e.target.value.toUpperCase())}
                         onBlur={() => salvarItem(item)} placeholder="Ex: ALUGUEL" />
                     </div>
                   </td>
                   <td className="px-4 py-2">
-                    <select className="bg-transparent border border-blue-700 rounded-lg px-2 py-1 text-xs outline-none"
+                    <select className="bg-transparent border border-gray-200 rounded-lg px-2 py-1 text-xs outline-none"
                       value={item.tipo} onChange={e => { updateItem(item.id, 'tipo', e.target.value); setTimeout(() => salvarItem({...item, tipo: e.target.value}), 0); }}>
                       {TIPOS.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}
                     </select>
                   </td>
                   <td className="px-4 py-2">
-                    <input type="number" step="0.01" className="w-full bg-transparent border-0 outline-none font-black text-right text-white focus:bg-blue-950 px-1 rounded"
+                    <input type="number" step="0.01" className="w-full bg-transparent border-0 outline-none font-black text-right text-gray-800 focus:bg-gray-50 px-1 rounded"
                       value={item.valor} onChange={e => updateItem(item.id, 'valor', e.target.value)}
                       onBlur={() => salvarItem(item)} />
                   </td>

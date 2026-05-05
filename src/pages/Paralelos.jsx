@@ -152,7 +152,7 @@ export default function Paralelos({ salaoId }) {
             <select
               value={mesSelecionado}
               onChange={e => setMesSelecionado(e.target.value)}
-              className="border border-blue-300 rounded-lg px-4 py-2 text-sm bg-blue-900 outline-none"
+              className="border border-gray-200 rounded-lg px-4 py-2 text-sm bg-white outline-none"
             >
               {meses.map(m => (
                 <option key={m} value={m}>
@@ -172,59 +172,59 @@ export default function Paralelos({ salaoId }) {
 
       {/* Cards de Resumo */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-        <div className="bg-blue-900 rounded-xl border border-blue-700 p-4">
-          <p className="text-xs text-blue-500 mb-1">Total Faturado</p>
-          <p className="text-2xl font-bold text-white">{fmt(totalFaturado)}</p>
+        <div className="bg-white rounded-xl border border-gray-200 p-4">
+          <p className="text-xs text-gray-500 mb-1">Total Faturado</p>
+          <p className="text-2xl font-bold text-gray-800">{fmt(totalFaturado)}</p>
         </div>
-        <div className="bg-blue-900 rounded-xl border border-blue-700 p-4">
-          <p className="text-xs text-blue-500 mb-1">Total Recebido</p>
+        <div className="bg-white rounded-xl border border-gray-200 p-4">
+          <p className="text-xs text-gray-500 mb-1">Total Recebido</p>
           <p className="text-2xl font-bold text-emerald-600">{fmt(totalRecebido)}</p>
         </div>
-        <div className="bg-blue-900 rounded-xl border border-blue-700 p-4">
-          <p className="text-xs text-blue-500 mb-1">A Receber</p>
-          <p className="text-2xl font-bold text-blue-600">{fmt(totalPendente)}</p>
+        <div className="bg-white rounded-xl border border-gray-200 p-4">
+          <p className="text-xs text-gray-500 mb-1">A Receber</p>
+          <p className="text-2xl font-bold text-sky-600">{fmt(totalPendente)}</p>
         </div>
-        <div className="bg-blue-900 rounded-xl border border-blue-700 p-4">
-          <p className="text-xs text-blue-500 mb-1">Total Comissões</p>
-          <p className="text-2xl font-bold text-blue-600">{fmt(totalComissoes)}</p>
+        <div className="bg-white rounded-xl border border-gray-200 p-4">
+          <p className="text-xs text-gray-500 mb-1">Total Comissões</p>
+          <p className="text-2xl font-bold text-sky-600">{fmt(totalComissoes)}</p>
         </div>
       </div>
 
       {/* Tabela */}
-      <div className="bg-blue-900 rounded-xl border border-blue-700 overflow-x-auto">
+      <div className="bg-white rounded-xl border border-gray-200 overflow-x-auto">
         <table className="w-full text-sm min-w-[600px]">
-          <thead className="bg-blue-950 border-b border-blue-700">
+          <thead className="bg-gray-50 border-b border-gray-200">
             <tr>
-              <th className="text-left px-4 py-3 font-medium text-blue-100">Data</th>
-              <th className="text-left px-4 py-3 font-medium text-blue-100">Cliente</th>
-              <th className="text-left px-4 py-3 font-medium text-blue-100">Descrição</th>
-              <th className="text-left px-4 py-3 font-medium text-blue-100">Profissional</th>
-              <th className="text-right px-4 py-3 font-medium text-blue-100">Valor</th>
-              <th className="text-right px-4 py-3 font-medium text-blue-100">Pago</th>
-              <th className="text-right px-4 py-3 font-medium text-blue-100">Comissão</th>
-              <th className="text-right px-4 py-3 font-medium text-blue-100">Pendente</th>
-              <th className="text-center px-4 py-3 font-medium text-blue-100">Ações</th>
+              <th className="text-left px-4 py-3 font-medium text-gray-600">Data</th>
+              <th className="text-left px-4 py-3 font-medium text-gray-600">Cliente</th>
+              <th className="text-left px-4 py-3 font-medium text-gray-600">Descrição</th>
+              <th className="text-left px-4 py-3 font-medium text-gray-600">Profissional</th>
+              <th className="text-right px-4 py-3 font-medium text-gray-600">Valor</th>
+              <th className="text-right px-4 py-3 font-medium text-gray-600">Pago</th>
+              <th className="text-right px-4 py-3 font-medium text-gray-600">Comissão</th>
+              <th className="text-right px-4 py-3 font-medium text-gray-600">Pendente</th>
+              <th className="text-center px-4 py-3 font-medium text-gray-600">Ações</th>
             </tr>
           </thead>
           <tbody>
             {paralelos.length === 0 ? (
               <tr>
-                <td colSpan="9" className="text-center py-8 text-blue-400">Nenhum registro neste mês</td>
+                <td colSpan="9" className="text-center py-8 text-gray-500">Nenhum registro neste mês</td>
               </tr>
             ) : (
               paralelos.map(par => (
-                <tr key={par.id} className="border-b border-blue-800 hover:bg-blue-950">
+                <tr key={par.id} className="border-b border-gray-200 hover:bg-gray-50">
                   <td className="px-4 py-3">{fmtData(par.data)}</td>
                   <td className="px-4 py-3 font-medium">{par.cliente}</td>
                   <td className="px-4 py-3">{par.descricao}</td>
-                  <td className="px-4 py-3 text-blue-200">{par.profissionais?.nome || '-'}</td>
+                  <td className="px-4 py-3 text-gray-500">{par.profissionais?.nome || '-'}</td>
                   <td className="px-4 py-3 text-right">{fmt(par.valor)}</td>
                   <td className="px-4 py-3 text-right text-emerald-600">{fmt(par.valor_pago)}</td>
-                  <td className="px-4 py-3 text-right text-blue-600">{fmt(par.valor_profissional)}</td>
-                  <td className="px-4 py-3 text-right text-blue-600">{fmt(par.valor_pendente)}</td>
+                  <td className="px-4 py-3 text-right text-sky-600">{fmt(par.valor_profissional)}</td>
+                  <td className="px-4 py-3 text-right text-sky-600">{fmt(par.valor_pendente)}</td>
                   <td className="px-4 py-3">
                     <div className="flex items-center justify-center gap-2">
-                      <button onClick={() => abrirModal(par)} className="text-blue-500 hover:text-blue-700">
+                      <button onClick={() => abrirModal(par)} className="text-gray-500 hover:text-sky-600">
                         <Pencil size={16} />
                       </button>
                       <button onClick={() => deletar(par.id)} className="text-red-500 hover:text-red-700">
@@ -243,43 +243,43 @@ export default function Paralelos({ salaoId }) {
       <Modal open={modalAberto} onClose={() => setModalAberto(false)} title={paraleloEditando ? 'Editar Paralelo' : 'Novo Paralelo'}>
         <div className="space-y-4">
           <div>
-            <label className="block text-sm font-medium text-blue-100 mb-1">Data</label>
+            <label className="block text-sm font-medium text-gray-600 mb-1">Data</label>
             <input
               type="date"
               value={form.data}
               onChange={e => setForm({ ...form, data: e.target.value })}
-              className="w-full border border-blue-300 rounded-lg px-3 py-2 outline-none focus:ring-2 focus:ring-emerald-500"
+              className="w-full border border-gray-200 rounded-lg px-3 py-2 outline-none focus:ring-2 focus:ring-emerald-500"
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-blue-100 mb-1">Cliente</label>
+            <label className="block text-sm font-medium text-gray-600 mb-1">Cliente</label>
             <input
               type="text"
               value={form.cliente}
               onChange={e => setForm({ ...form, cliente: e.target.value.toUpperCase() })}
               placeholder="Nome do cliente"
-              className="w-full border border-blue-300 rounded-lg px-3 py-2 outline-none focus:ring-2 focus:ring-emerald-500"
+              className="w-full border border-gray-200 rounded-lg px-3 py-2 outline-none focus:ring-2 focus:ring-emerald-500"
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-blue-100 mb-1">Descrição do Serviço</label>
+            <label className="block text-sm font-medium text-gray-600 mb-1">Descrição do Serviço</label>
             <input
               type="text"
               value={form.descricao}
               onChange={e => setForm({ ...form, descricao: e.target.value.toUpperCase() })}
               placeholder="Ex: Unhas em gel"
-              className="w-full border border-blue-300 rounded-lg px-3 py-2 outline-none focus:ring-2 focus:ring-emerald-500"
+              className="w-full border border-gray-200 rounded-lg px-3 py-2 outline-none focus:ring-2 focus:ring-emerald-500"
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-blue-100 mb-1">Profissional (opcional)</label>
+            <label className="block text-sm font-medium text-gray-600 mb-1">Profissional (opcional)</label>
             <select
               value={form.profissional_id}
               onChange={e => setForm({ ...form, profissional_id: e.target.value })}
-              className="w-full border border-blue-300 rounded-lg px-3 py-2 bg-blue-900 outline-none focus:ring-2 focus:ring-emerald-500"
+              className="w-full border border-gray-200 rounded-lg px-3 py-2 bg-white outline-none focus:ring-2 focus:ring-emerald-500"
             >
               <option value="">Nenhum</option>
               {profissionais.map(p => (
@@ -290,35 +290,35 @@ export default function Paralelos({ salaoId }) {
 
           <div className="grid grid-cols-3 gap-4">
             <div>
-              <label className="block text-sm font-medium text-blue-100 mb-1">Valor Cobrado (R$)</label>
+              <label className="block text-sm font-medium text-gray-600 mb-1">Valor Cobrado (R$)</label>
               <input
                 type="number"
                 step="0.01"
                 value={form.valor}
                 onChange={e => setForm({ ...form, valor: e.target.value })}
-                className="w-full border border-blue-300 rounded-lg px-3 py-2 outline-none focus:ring-2 focus:ring-emerald-500"
+                className="w-full border border-gray-200 rounded-lg px-3 py-2 outline-none focus:ring-2 focus:ring-emerald-500"
               />
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-blue-100 mb-1">Valor Pago (R$)</label>
+              <label className="block text-sm font-medium text-gray-600 mb-1">Valor Pago (R$)</label>
               <input
                 type="number"
                 step="0.01"
                 value={form.valor_pago}
                 onChange={e => setForm({ ...form, valor_pago: e.target.value })}
-                className="w-full border border-blue-300 rounded-lg px-3 py-2 outline-none focus:ring-2 focus:ring-emerald-500"
+                className="w-full border border-gray-200 rounded-lg px-3 py-2 outline-none focus:ring-2 focus:ring-emerald-500"
               />
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-blue-100 mb-1">Comissão Prof. (R$)</label>
+              <label className="block text-sm font-medium text-gray-600 mb-1">Comissão Prof. (R$)</label>
               <input
                 type="number"
                 step="0.01"
                 value={form.valor_profissional}
                 onChange={e => setForm({ ...form, valor_profissional: e.target.value })}
-                className="w-full border border-blue-300 rounded-lg px-3 py-2 outline-none focus:ring-2 focus:ring-emerald-500"
+                className="w-full border border-gray-200 rounded-lg px-3 py-2 outline-none focus:ring-2 focus:ring-emerald-500"
               />
             </div>
           </div>
@@ -326,7 +326,7 @@ export default function Paralelos({ salaoId }) {
           <div className="flex justify-end gap-3 pt-4">
             <button
               onClick={() => setModalAberto(false)}
-              className="px-4 py-2 text-blue-200 hover:bg-blue-800 rounded-lg transition-colors"
+              className="px-4 py-2 text-gray-500 hover:bg-sky-500 rounded-lg transition-colors"
             >
               Cancelar
             </button>

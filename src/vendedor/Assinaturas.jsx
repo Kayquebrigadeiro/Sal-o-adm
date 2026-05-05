@@ -150,51 +150,51 @@ export default function Assinaturas() {
     <div className="p-8 max-w-7xl mx-auto animate-fadeIn">
       <div className="flex justify-between items-end mb-8">
         <div>
-          <h1 className="text-2xl font-bold text-white">Gestão de Assinaturas</h1>
-          <p className="text-blue-500 mt-1">Controle de pagamentos e acessos dos seus salões.</p>
+          <h1 className="text-2xl font-bold text-gray-800">Gestão de Assinaturas</h1>
+          <p className="text-gray-500 mt-1">Controle de pagamentos e acessos dos seus salões.</p>
         </div>
       </div>
 
       <div className="grid grid-cols-3 gap-4 mb-8">
-        <div className="bg-blue-900 p-5 rounded-xl border border-blue-700 shadow-sm flex items-center gap-4">
+        <div className="bg-white p-5 rounded-xl border border-gray-200 shadow-sm flex items-center gap-4">
           <div className="w-12 h-12 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center">
             <CheckCircle className="w-6 h-6" />
           </div>
           <div>
-            <p className="text-sm font-medium text-blue-500">Ativos</p>
-            <p className="text-2xl font-bold text-white">{qtAtivos}</p>
+            <p className="text-sm font-medium text-gray-500">Ativos</p>
+            <p className="text-2xl font-bold text-gray-800">{qtAtivos}</p>
           </div>
         </div>
-        <div className="bg-blue-900 p-5 rounded-xl border border-blue-700 shadow-sm flex items-center gap-4">
-          <div className="w-12 h-12 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center">
+        <div className="bg-white p-5 rounded-xl border border-gray-200 shadow-sm flex items-center gap-4">
+          <div className="w-12 h-12 bg-sky-50 text-sky-600 rounded-full flex items-center justify-center">
             <ShieldAlert className="w-6 h-6" />
           </div>
           <div>
-            <p className="text-sm font-medium text-blue-500">Vencidos / Bloqueados</p>
-            <p className="text-2xl font-bold text-white">{qtVencidos}</p>
+            <p className="text-sm font-medium text-gray-500">Vencidos / Bloqueados</p>
+            <p className="text-2xl font-bold text-gray-800">{qtVencidos}</p>
           </div>
         </div>
-        <div className="bg-blue-900 p-5 rounded-xl border border-blue-700 shadow-sm flex items-center gap-4">
-          <div className="w-12 h-12 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center">
+        <div className="bg-white p-5 rounded-xl border border-gray-200 shadow-sm flex items-center gap-4">
+          <div className="w-12 h-12 bg-sky-50 text-sky-600 rounded-full flex items-center justify-center">
             <CalendarClock className="w-6 h-6" />
           </div>
           <div>
-            <p className="text-sm font-medium text-blue-500">Em Trial (Teste)</p>
-            <p className="text-2xl font-bold text-white">{qtTrial}</p>
+            <p className="text-sm font-medium text-gray-500">Em Trial (Teste)</p>
+            <p className="text-2xl font-bold text-gray-800">{qtTrial}</p>
           </div>
         </div>
       </div>
 
-      <div className="bg-blue-900 rounded-2xl border border-blue-700 shadow-sm overflow-hidden">
-        <div className="p-4 border-b border-blue-800 flex gap-4 bg-blue-950">
+      <div className="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
+        <div className="p-4 border-b border-gray-200 flex gap-4 bg-gray-50">
           <div className="relative flex-1 max-w-md">
-            <Search className="absolute left-3 top-2.5 w-5 h-5 text-blue-400" />
+            <Search className="absolute left-3 top-2.5 w-5 h-5 text-gray-500" />
             <input
               type="text"
               placeholder="Buscar salão..."
               value={busca}
               onChange={(e) => setBusca(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 bg-blue-900 border border-blue-300 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none transition-all"
+              className="w-full pl-10 pr-4 py-2 bg-white border border-gray-200 rounded-xl focus:ring-2 focus:ring-sky-500 outline-none transition-all"
             />
           </div>
         </div>
@@ -202,7 +202,7 @@ export default function Assinaturas() {
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse">
             <thead>
-              <tr className="bg-blue-950/50 text-blue-500 text-sm border-b border-blue-700">
+              <tr className="bg-gray-50/50 text-gray-500 text-sm border-b border-gray-200">
                 <th className="py-4 px-6 font-semibold">Salão</th>
                 <th className="py-4 px-6 font-semibold">Status</th>
                 <th className="py-4 px-6 font-semibold">Vencimento</th>
@@ -213,11 +213,11 @@ export default function Assinaturas() {
             <tbody className="divide-y divide-blue-100">
               {carregando ? (
                 <tr>
-                  <td colSpan="5" className="py-12 text-center text-blue-400">Carregando assinaturas...</td>
+                  <td colSpan="5" className="py-12 text-center text-gray-500">Carregando assinaturas...</td>
                 </tr>
               ) : filtered.length === 0 ? (
                 <tr>
-                  <td colSpan="5" className="py-12 text-center text-blue-400">Nenhum salão encontrado.</td>
+                  <td colSpan="5" className="py-12 text-center text-gray-500">Nenhum salão encontrado.</td>
                 </tr>
               ) : (
                 filtered.map((s) => {
@@ -228,24 +228,24 @@ export default function Assinaturas() {
                   const dVenc = new Date(ass.proximo_vencimento + 'T00:00:00').toLocaleDateString('pt-BR');
 
                   return (
-                    <tr key={s.id} className="hover:bg-blue-950 transition-colors">
-                      <td className="py-4 px-6 font-medium text-white">{s.nome}</td>
+                    <tr key={s.id} className="hover:bg-gray-50 transition-colors">
+                      <td className="py-4 px-6 font-medium text-gray-800">{s.nome}</td>
                       <td className="py-4 px-6">
                         <span className={`px-2.5 py-1 rounded-md text-xs font-bold border ${
-                          isVencido ? 'bg-blue-50 text-blue-600 border-blue-200' :
+                          isVencido ? 'bg-sky-50 text-sky-600 border-sky-200' :
                           ass.status === 'ATIVA' ? 'bg-emerald-50 text-emerald-600 border-emerald-200' :
-                          'bg-blue-50 text-blue-600 border-blue-200'
+                          'bg-sky-50 text-sky-600 border-sky-200'
                         }`}>
                           {isVencido ? 'VENCIDA' : ass.status}
                         </span>
                       </td>
                       <td className="py-4 px-6 text-sm">
-                        <span className="block text-blue-100">{dVenc}</span>
-                        <span className={`text-xs font-medium ${s.diasRestantes < 0 ? 'text-blue-500' : s.diasRestantes <= 5 ? 'text-blue-500' : 'text-blue-400'}`}>
+                        <span className="block text-gray-600">{dVenc}</span>
+                        <span className={`text-xs font-medium ${s.diasRestantes < 0 ? 'text-gray-500' : s.diasRestantes <= 5 ? 'text-gray-500' : 'text-gray-500'}`}>
                           {s.diasRestantes < 0 ? `Venceu há ${Math.abs(s.diasRestantes)} dias` : `Em ${s.diasRestantes} dias`}
                         </span>
                       </td>
-                      <td className="py-4 px-6 text-sm text-blue-200 font-medium">
+                      <td className="py-4 px-6 text-sm text-gray-500 font-medium">
                         R$ {Number(ass.planos?.valor_mensal || 100).toFixed(2).replace('.', ',')}
                       </td>
                       <td className="py-4 px-6 text-right">
@@ -253,8 +253,8 @@ export default function Assinaturas() {
                           onClick={() => abrirModal(s)}
                           className={`px-4 py-2 rounded-lg text-sm font-bold transition-all shadow-sm ${
                             isVencido || s.diasRestantes <= 5
-                              ? 'bg-blue-500 hover:bg-blue-600 text-white shadow-blue-500/20'
-                              : 'bg-blue-900 border border-blue-300 text-blue-100 hover:bg-blue-950'
+                              ? 'bg-sky-500 hover:bg-sky-500 text-white shadow-blue-500/20'
+                              : 'bg-white border border-gray-200 text-gray-600 hover:bg-gray-50'
                           }`}
                         >
                           {isVencido ? 'Liberar Acesso' : 'Renovar'}
@@ -272,13 +272,13 @@ export default function Assinaturas() {
       {/* MODAL DE RENOVAÇÃO */}
       {modalAberto && salaoSelecionado && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-white/60 backdrop-blur-sm animate-fadeIn">
-          <div className="bg-blue-900 rounded-2xl w-full max-w-md shadow-2xl overflow-hidden">
-            <div className="p-6 border-b border-blue-800 flex justify-between items-center">
+          <div className="bg-white rounded-2xl w-full max-w-md shadow-2xl overflow-hidden">
+            <div className="p-6 border-b border-gray-200 flex justify-between items-center">
               <div>
-                <h3 className="text-lg font-bold text-white">Renovar Assinatura</h3>
-                <p className="text-sm text-blue-500">{salaoSelecionado.nome}</p>
+                <h3 className="text-lg font-bold text-gray-800">Renovar Assinatura</h3>
+                <p className="text-sm text-gray-500">{salaoSelecionado.nome}</p>
               </div>
-              <button onClick={() => setModalAberto(false)} className="text-blue-400 hover:text-blue-200">
+              <button onClick={() => setModalAberto(false)} className="text-gray-500 hover:text-gray-500">
                 ✕
               </button>
             </div>
@@ -286,11 +286,11 @@ export default function Assinaturas() {
             <form onSubmit={handleRenovar} className="p-6 space-y-4">
               
               <div>
-                <label className="block text-sm font-medium text-blue-100 mb-1">Forma de Pagamento</label>
+                <label className="block text-sm font-medium text-gray-600 mb-1">Forma de Pagamento</label>
                 <select 
                   value={renovacaoForm.forma_pagamento}
                   onChange={(e) => setRenovacaoForm({...renovacaoForm, forma_pagamento: e.target.value})}
-                  className="w-full p-3 bg-blue-950 border border-blue-700 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none"
+                  className="w-full p-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-sky-500 outline-none"
                 >
                   <option value="PIX">PIX</option>
                   <option value="CARTAO">Cartão de Crédito</option>
@@ -299,33 +299,33 @@ export default function Assinaturas() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-blue-100 mb-1">Valor Recebido (R$)</label>
+                <label className="block text-sm font-medium text-gray-600 mb-1">Valor Recebido (R$)</label>
                 <input 
                   type="number" step="0.01" min="0" required
                   value={renovacaoForm.valor}
                   onChange={(e) => setRenovacaoForm({...renovacaoForm, valor: e.target.value})}
-                  className="w-full p-3 bg-blue-950 border border-blue-700 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none"
+                  className="w-full p-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-sky-500 outline-none"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-blue-100 mb-1">Referência / Comprovante (opcional)</label>
+                <label className="block text-sm font-medium text-gray-600 mb-1">Referência / Comprovante (opcional)</label>
                 <input 
                   type="text" 
                   placeholder="Ex: ID da transação PIX"
                   value={renovacaoForm.referencia}
                   onChange={(e) => setRenovacaoForm({...renovacaoForm, referencia: e.target.value})}
-                  className="w-full p-3 bg-blue-950 border border-blue-700 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none"
+                  className="w-full p-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-sky-500 outline-none"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-blue-100 mb-1">Observações internas</label>
+                <label className="block text-sm font-medium text-gray-600 mb-1">Observações internas</label>
                 <textarea 
                   rows="2"
                   value={renovacaoForm.obs}
                   onChange={(e) => setRenovacaoForm({...renovacaoForm, obs: e.target.value})}
-                  className="w-full p-3 bg-blue-950 border border-blue-700 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none"
+                  className="w-full p-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-sky-500 outline-none"
                 />
               </div>
 
@@ -333,14 +333,14 @@ export default function Assinaturas() {
                 <button 
                   type="button" 
                   onClick={() => setModalAberto(false)}
-                  className="flex-1 py-3 bg-blue-100 hover:bg-blue-200 text-blue-100 font-bold rounded-xl transition-colors"
+                  className="flex-1 py-3 bg-sky-50 hover:bg-sky-100 text-gray-600 font-bold rounded-xl transition-colors"
                 >
                   Cancelar
                 </button>
                 <button 
                   type="submit" 
                   disabled={salvando}
-                  className="flex-1 py-3 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl transition-all shadow-lg shadow-blue-600/20 disabled:opacity-50"
+                  className="flex-1 py-3 bg-sky-500 hover:bg-sky-500 text-white font-bold rounded-xl transition-all shadow-lg shadow-sky-500/20 disabled:opacity-50"
                 >
                   {salvando ? 'Salvando...' : 'Confirmar Renovação'}
                 </button>

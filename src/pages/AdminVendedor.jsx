@@ -133,7 +133,7 @@ export default function AdminVendedor({ email, userId }) {
       {tab === 'saloes' && (
         <div>
           {/* Formulário */}
-          <div className="bg-blue-900 rounded-lg shadow p-6 mb-8">
+          <div className="bg-white rounded-lg shadow p-6 mb-8">
             <h2 className="text-lg font-semibold text-gray-900 mb-4">Criar Novo Salão</h2>
             <form onSubmit={criarSalao} className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
@@ -155,7 +155,7 @@ export default function AdminVendedor({ email, userId }) {
               <button
                 type="submit"
                 disabled={salvandoSalao || carregando}
-                className="bg-gray-800 text-white px-4 py-2 rounded-lg hover:bg-gray-900 disabled:opacity-50 flex items-center gap-2"
+                className="bg-gray-800 text-gray-800 px-4 py-2 rounded-lg hover:bg-gray-900 disabled:opacity-50 flex items-center gap-2"
               >
                 <Plus className="w-4 h-4" />
                 {salvandoSalao ? 'Criando...' : 'Criar Salão'}
@@ -164,9 +164,9 @@ export default function AdminVendedor({ email, userId }) {
           </div>
 
           {/* Lista de Salões */}
-          <div className="bg-blue-900 rounded-lg shadow overflow-hidden">
+          <div className="bg-white rounded-lg shadow overflow-hidden">
             <table className="w-full">
-              <thead className="bg-blue-950 border-b border-gray-200">
+              <thead className="bg-gray-50 border-b border-gray-200">
                 <tr>
                   <th className="text-left px-6 py-3 text-sm font-semibold text-gray-900">Nome</th>
                   <th className="text-left px-6 py-3 text-sm font-semibold text-gray-900">Telefone</th>
@@ -192,7 +192,7 @@ export default function AdminVendedor({ email, userId }) {
                   saloes
                     .filter((s) => !s.deletado_em)
                     .map((salao) => (
-                      <tr key={salao.id} className="border-b border-gray-200 hover:bg-blue-950">
+                      <tr key={salao.id} className="border-b border-gray-200 hover:bg-gray-50">
                         <td className="px-6 py-4 font-medium text-gray-900">{salao.nome}</td>
                         <td className="px-6 py-4 text-gray-600">{salao.telefone || '-'}</td>
                         <td className="px-6 py-4">
@@ -229,7 +229,7 @@ export default function AdminVendedor({ email, userId }) {
 
       {/* TAB: PROPRIETÁRIAS */}
       {tab === 'proprietarios' && (
-        <div className="bg-blue-900 rounded-lg shadow p-8 text-center">
+        <div className="bg-white rounded-lg shadow p-8 text-center">
           <Users className="w-16 h-16 mx-auto text-gray-400 mb-4" />
           <h3 className="text-lg font-semibold text-gray-900 mb-2">Gerenciar Proprietárias</h3>
           <p className="text-gray-600 mb-6">
@@ -346,7 +346,7 @@ function CadastroPropietaria({ salao, vendedorId, onSuccess }) {
   };
 
   return (
-    <div className="bg-blue-900 border border-gray-200 rounded-lg p-4">
+    <div className="bg-white border border-gray-200 rounded-lg p-4">
       <button
         onClick={() => setMostrando(!mostrando)}
         className="w-full text-left font-semibold text-gray-900 hover:text-gray-700"
@@ -375,7 +375,7 @@ function CadastroPropietaria({ salao, vendedorId, onSuccess }) {
             <button
               type="submit"
               disabled={salvando}
-              className="w-full bg-gray-800 text-white py-1 rounded text-sm hover:bg-gray-900 disabled:opacity-50"
+              className="w-full bg-gray-800 text-gray-800 py-1 rounded text-sm hover:bg-gray-900 disabled:opacity-50"
             >
               {salvando ? 'Criando...' : 'Gerar Login'}
             </button>
@@ -383,13 +383,13 @@ function CadastroPropietaria({ salao, vendedorId, onSuccess }) {
 
           {/* 🔑 MOSTRAR SENHA UMA VEZ (sem alert) */}
           {senhaVisivel && (
-            <div className="bg-blue-50 border border-blue-300 rounded-lg p-3 space-y-2">
+            <div className="bg-sky-50 border border-gray-200 rounded-lg p-3 space-y-2">
               <p className="text-xs font-bold text-blue-900">⚠️ COPIE ESSAS CREDENCIAIS AGORA!</p>
-              <div className="bg-blue-900 rounded p-2">
+              <div className="bg-white rounded p-2">
                 <p className="text-[10px] text-gray-600 font-semibold mb-1">EMAIL:</p>
                 <p className="font-mono text-sm text-gray-900 break-all">{senhaVisivel.email}</p>
               </div>
-              <div className="bg-blue-900 rounded p-2">
+              <div className="bg-white rounded p-2">
                 <p className="text-[10px] text-gray-600 font-semibold mb-1">SENHA TEMPORÁRIA:</p>
                 <div className="flex gap-1">
                   <p className="font-mono text-sm text-gray-900 flex-1 break-all">{senhaVisivel.senha}</p>
@@ -399,14 +399,14 @@ function CadastroPropietaria({ salao, vendedorId, onSuccess }) {
                       navigator.clipboard.writeText(senhaVisivel.senha);
                       showToast('Senha copiada!', 'success');
                     }}
-                    className="text-blue-600 hover:bg-blue-50 p-1 rounded"
+                    className="text-sky-600 hover:bg-sky-50 p-1 rounded"
                     title="Copiar"
                   >
                     <Copy size={14} />
                   </button>
                 </div>
               </div>
-              <p className="text-[10px] text-blue-700">Desaparece em 60 segundos</p>
+              <p className="text-[10px] text-sky-600">Desaparece em 60 segundos</p>
             </div>
           )}
 
@@ -422,7 +422,7 @@ function CadastroPropietaria({ salao, vendedorId, onSuccess }) {
                 {logins.map((login) => (
                   <li
                     key={login.id}
-                    className="text-xs bg-blue-950 border border-gray-200 rounded p-2"
+                    className="text-xs bg-gray-50 border border-gray-200 rounded p-2"
                   >
                     <p className="font-mono text-gray-900">{login.email_proprietaria}</p>
                     <p className="text-gray-500">

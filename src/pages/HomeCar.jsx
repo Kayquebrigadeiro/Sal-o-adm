@@ -149,7 +149,7 @@ export default function HomeCar({ salaoId }) {
             <select
               value={mesSelecionado}
               onChange={e => setMesSelecionado(e.target.value)}
-              className="border border-blue-300 rounded-lg px-4 py-2 text-sm bg-blue-900 outline-none"
+              className="border border-gray-200 rounded-lg px-4 py-2 text-sm bg-white outline-none"
             >
               {meses.map(m => (
                 <option key={m} value={m}>
@@ -169,59 +169,59 @@ export default function HomeCar({ salaoId }) {
 
       {/* Cards de Resumo */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-        <div className="bg-blue-900 rounded-xl border border-blue-700 p-4">
-          <p className="text-xs text-blue-500 mb-1">Total Vendas</p>
-          <p className="text-2xl font-bold text-white">{fmt(totalVendas)}</p>
+        <div className="bg-white rounded-xl border border-gray-200 p-4">
+          <p className="text-xs text-gray-500 mb-1">Total Vendas</p>
+          <p className="text-2xl font-bold text-gray-800">{fmt(totalVendas)}</p>
         </div>
-        <div className="bg-blue-900 rounded-xl border border-blue-700 p-4">
-          <p className="text-xs text-blue-500 mb-1">Total Recebido</p>
+        <div className="bg-white rounded-xl border border-gray-200 p-4">
+          <p className="text-xs text-gray-500 mb-1">Total Recebido</p>
           <p className="text-2xl font-bold text-emerald-600">{fmt(totalRecebido)}</p>
         </div>
-        <div className="bg-blue-900 rounded-xl border border-blue-700 p-4">
-          <p className="text-xs text-blue-500 mb-1">Lucro Total</p>
-          <p className="text-2xl font-bold text-blue-600">{fmt(totalLucro)}</p>
+        <div className="bg-white rounded-xl border border-gray-200 p-4">
+          <p className="text-xs text-gray-500 mb-1">Lucro Total</p>
+          <p className="text-2xl font-bold text-sky-600">{fmt(totalLucro)}</p>
         </div>
-        <div className="bg-blue-900 rounded-xl border border-blue-700 p-4">
-          <p className="text-xs text-blue-500 mb-1">Pendências</p>
-          <p className="text-2xl font-bold text-blue-600">{fmt(totalPendente)}</p>
+        <div className="bg-white rounded-xl border border-gray-200 p-4">
+          <p className="text-xs text-gray-500 mb-1">Pendências</p>
+          <p className="text-2xl font-bold text-sky-600">{fmt(totalPendente)}</p>
         </div>
       </div>
 
       {/* Tabela */}
-      <div className="bg-blue-900 rounded-xl border border-blue-700 overflow-x-auto">
+      <div className="bg-white rounded-xl border border-gray-200 overflow-x-auto">
         <table className="w-full text-sm min-w-[600px]">
-          <thead className="bg-blue-950 border-b border-blue-700">
+          <thead className="bg-gray-50 border-b border-gray-200">
             <tr>
-              <th className="text-left px-4 py-3 font-medium text-blue-100">Data</th>
-              <th className="text-left px-4 py-3 font-medium text-blue-100">Cliente</th>
-              <th className="text-left px-4 py-3 font-medium text-blue-100">Produto</th>
-              <th className="text-right px-4 py-3 font-medium text-blue-100">Custo</th>
-              <th className="text-right px-4 py-3 font-medium text-blue-100">Venda</th>
-              <th className="text-right px-4 py-3 font-medium text-blue-100">Pago</th>
-              <th className="text-right px-4 py-3 font-medium text-blue-100">Lucro</th>
-              <th className="text-right px-4 py-3 font-medium text-blue-100">Pendente</th>
-              <th className="text-center px-4 py-3 font-medium text-blue-100">Ações</th>
+              <th className="text-left px-4 py-3 font-medium text-gray-600">Data</th>
+              <th className="text-left px-4 py-3 font-medium text-gray-600">Cliente</th>
+              <th className="text-left px-4 py-3 font-medium text-gray-600">Produto</th>
+              <th className="text-right px-4 py-3 font-medium text-gray-600">Custo</th>
+              <th className="text-right px-4 py-3 font-medium text-gray-600">Venda</th>
+              <th className="text-right px-4 py-3 font-medium text-gray-600">Pago</th>
+              <th className="text-right px-4 py-3 font-medium text-gray-600">Lucro</th>
+              <th className="text-right px-4 py-3 font-medium text-gray-600">Pendente</th>
+              <th className="text-center px-4 py-3 font-medium text-gray-600">Ações</th>
             </tr>
           </thead>
           <tbody>
             {vendas.length === 0 ? (
               <tr>
-                <td colSpan="9" className="text-center py-8 text-blue-400">Nenhuma venda neste mês</td>
+                <td colSpan="9" className="text-center py-8 text-gray-500">Nenhuma venda neste mês</td>
               </tr>
             ) : (
               vendas.map(venda => (
-                <tr key={venda.id} className="border-b border-blue-800 hover:bg-blue-950">
+                <tr key={venda.id} className="border-b border-gray-200 hover:bg-gray-50">
                   <td className="px-4 py-3">{fmtData(venda.data)}</td>
                   <td className="px-4 py-3 font-medium">{venda.cliente}</td>
                   <td className="px-4 py-3">{venda.produto}</td>
-                  <td className="px-4 py-3 text-right text-blue-200">{fmt(venda.custo_produto)}</td>
+                  <td className="px-4 py-3 text-right text-gray-500">{fmt(venda.custo_produto)}</td>
                   <td className="px-4 py-3 text-right">{fmt(venda.valor_venda)}</td>
                   <td className="px-4 py-3 text-right text-emerald-600">{fmt(venda.valor_pago)}</td>
-                  <td className="px-4 py-3 text-right text-blue-600">{fmt(venda.lucro)}</td>
-                  <td className="px-4 py-3 text-right text-blue-600">{fmt(venda.valor_pendente)}</td>
+                  <td className="px-4 py-3 text-right text-sky-600">{fmt(venda.lucro)}</td>
+                  <td className="px-4 py-3 text-right text-sky-600">{fmt(venda.valor_pendente)}</td>
                   <td className="px-4 py-3">
                     <div className="flex items-center justify-center gap-2">
-                      <button onClick={() => abrirModal(venda)} className="text-blue-500 hover:text-blue-700">
+                      <button onClick={() => abrirModal(venda)} className="text-gray-500 hover:text-sky-600">
                         <Pencil size={16} />
                       </button>
                       <button onClick={() => deletar(venda.id)} className="text-red-500 hover:text-red-700">
@@ -240,68 +240,68 @@ export default function HomeCar({ salaoId }) {
       <Modal open={modalAberto} onClose={() => setModalAberto(false)} title={vendaEditando ? 'Editar Venda' : 'Nova Venda'}>
         <div className="space-y-4">
           <div>
-            <label className="block text-sm font-medium text-blue-100 mb-1">Data</label>
+            <label className="block text-sm font-medium text-gray-600 mb-1">Data</label>
             <input
               type="date"
               value={form.data}
               onChange={e => setForm({ ...form, data: e.target.value })}
-              className="w-full border border-blue-300 rounded-lg px-3 py-2 outline-none focus:ring-2 focus:ring-emerald-500"
+              className="w-full border border-gray-200 rounded-lg px-3 py-2 outline-none focus:ring-2 focus:ring-emerald-500"
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-blue-100 mb-1">Cliente</label>
+            <label className="block text-sm font-medium text-gray-600 mb-1">Cliente</label>
             <input
               type="text"
               value={form.cliente}
               onChange={e => setForm({ ...form, cliente: e.target.value.toUpperCase() })}
               placeholder="Nome do cliente"
-              className="w-full border border-blue-300 rounded-lg px-3 py-2 outline-none focus:ring-2 focus:ring-emerald-500"
+              className="w-full border border-gray-200 rounded-lg px-3 py-2 outline-none focus:ring-2 focus:ring-emerald-500"
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-blue-100 mb-1">Produto</label>
+            <label className="block text-sm font-medium text-gray-600 mb-1">Produto</label>
             <input
               type="text"
               value={form.produto}
               onChange={e => setForm({ ...form, produto: e.target.value.toUpperCase() })}
               placeholder="Ex: Shampoo Kerastase"
-              className="w-full border border-blue-300 rounded-lg px-3 py-2 outline-none focus:ring-2 focus:ring-emerald-500"
+              className="w-full border border-gray-200 rounded-lg px-3 py-2 outline-none focus:ring-2 focus:ring-emerald-500"
             />
           </div>
 
           <div className="grid grid-cols-3 gap-4">
             <div>
-              <label className="block text-sm font-medium text-blue-100 mb-1">Custo (R$)</label>
+              <label className="block text-sm font-medium text-gray-600 mb-1">Custo (R$)</label>
               <input
                 type="number"
                 step="0.01"
                 value={form.custo_produto}
                 onChange={e => setForm({ ...form, custo_produto: e.target.value })}
-                className="w-full border border-blue-300 rounded-lg px-3 py-2 outline-none focus:ring-2 focus:ring-emerald-500"
+                className="w-full border border-gray-200 rounded-lg px-3 py-2 outline-none focus:ring-2 focus:ring-emerald-500"
               />
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-blue-100 mb-1">Venda (R$)</label>
+              <label className="block text-sm font-medium text-gray-600 mb-1">Venda (R$)</label>
               <input
                 type="number"
                 step="0.01"
                 value={form.valor_venda}
                 onChange={e => setForm({ ...form, valor_venda: e.target.value })}
-                className="w-full border border-blue-300 rounded-lg px-3 py-2 outline-none focus:ring-2 focus:ring-emerald-500"
+                className="w-full border border-gray-200 rounded-lg px-3 py-2 outline-none focus:ring-2 focus:ring-emerald-500"
               />
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-blue-100 mb-1">Pago (R$)</label>
+              <label className="block text-sm font-medium text-gray-600 mb-1">Pago (R$)</label>
               <input
                 type="number"
                 step="0.01"
                 value={form.valor_pago}
                 onChange={e => setForm({ ...form, valor_pago: e.target.value })}
-                className="w-full border border-blue-300 rounded-lg px-3 py-2 outline-none focus:ring-2 focus:ring-emerald-500"
+                className="w-full border border-gray-200 rounded-lg px-3 py-2 outline-none focus:ring-2 focus:ring-emerald-500"
               />
             </div>
           </div>
@@ -321,24 +321,24 @@ export default function HomeCar({ salaoId }) {
                   ) : (
                     <TrendingUp size={14} className="text-emerald-600" />
                   )}
-                  <span className="text-xs font-bold text-blue-200 uppercase">Preview Financeiro</span>
+                  <span className="text-xs font-bold text-gray-500 uppercase">Preview Financeiro</span>
                 </div>
                 <div className="grid grid-cols-3 gap-3 text-center">
                   <div>
-                    <p className="text-[10px] text-blue-400 font-bold">LUCRO</p>
+                    <p className="text-[10px] text-gray-500 font-bold">LUCRO</p>
                     <p className={`text-lg font-black ${preview.lucro < 0 ? 'text-red-600' : 'text-emerald-600'}`}>
                       {fmt(preview.lucro)}
                     </p>
                   </div>
                   <div>
-                    <p className="text-[10px] text-blue-400 font-bold">MARGEM</p>
+                    <p className="text-[10px] text-gray-500 font-bold">MARGEM</p>
                     <p className={`text-lg font-black ${preview.margemLucro < 0 ? 'text-red-600' : 'text-emerald-600'}`}>
                       {preview.margemLucro.toFixed(1)}%
                     </p>
                   </div>
                   <div>
-                    <p className="text-[10px] text-blue-400 font-bold">PENDÊNCIA</p>
-                    <p className={`text-lg font-black ${preview.pendencia > 0 ? 'text-blue-600' : 'text-blue-400'}`}>
+                    <p className="text-[10px] text-gray-500 font-bold">PENDÊNCIA</p>
+                    <p className={`text-lg font-black ${preview.pendencia > 0 ? 'text-sky-600' : 'text-gray-500'}`}>
                       {fmt(preview.pendencia)}
                     </p>
                   </div>
@@ -348,20 +348,20 @@ export default function HomeCar({ salaoId }) {
           })()}
 
           <div>
-            <label className="block text-sm font-medium text-blue-100 mb-1">Observação</label>
+            <label className="block text-sm font-medium text-gray-600 mb-1">Observação</label>
             <textarea
               value={form.obs}
               onChange={e => setForm({ ...form, obs: e.target.value.toUpperCase() })}
               placeholder="Observações adicionais..."
               rows="3"
-              className="w-full border border-blue-300 rounded-lg px-3 py-2 outline-none focus:ring-2 focus:ring-emerald-500"
+              className="w-full border border-gray-200 rounded-lg px-3 py-2 outline-none focus:ring-2 focus:ring-emerald-500"
             />
           </div>
 
           <div className="flex justify-end gap-3 pt-4">
             <button
               onClick={() => setModalAberto(false)}
-              className="px-4 py-2 text-blue-200 hover:bg-blue-800 rounded-lg transition-colors"
+              className="px-4 py-2 text-gray-500 hover:bg-sky-500 rounded-lg transition-colors"
             >
               Cancelar
             </button>

@@ -83,20 +83,20 @@ export default function ProdutosRelacionados({ salaoId, servicoId, onUpdate }) {
   };
 
   if (loading) {
-    return <div className="p-4 text-center text-xs font-bold text-blue-400 uppercase animate-pulse">CARREGANDO PRODUTOS...</div>;
+    return <div className="p-4 text-center text-xs font-bold text-gray-500 uppercase animate-pulse">CARREGANDO PRODUTOS...</div>;
   }
 
   return (
-    <div className="bg-blue-900 rounded-xl border border-blue-100 p-5 shadow-inner">
+    <div className="bg-white rounded-xl border border-sky-100 p-5 shadow-inner">
       <h4 className="text-xs font-black text-blue-800 uppercase mb-4 flex items-center gap-2">
-        <Package size={14} className="text-blue-500" />
+        <Package size={14} className="text-gray-500" />
         Composição do Custo de Material
       </h4>
 
       {/* Lista de produtos já vinculados */}
       {vinculos.length === 0 ? (
-        <div className="text-center py-5 bg-blue-950 rounded-xl border border-dashed border-blue-700 mb-4">
-          <p className="text-[10px] font-bold text-blue-400 uppercase">NENHUM PRODUTO VINCULADO A ESTE SERVIÇO</p>
+        <div className="text-center py-5 bg-gray-50 rounded-xl border border-dashed border-gray-200 mb-4">
+          <p className="text-[10px] font-bold text-gray-500 uppercase">NENHUM PRODUTO VINCULADO A ESTE SERVIÇO</p>
         </div>
       ) : (
         <div className="space-y-2 mb-5">
@@ -111,18 +111,18 @@ export default function ProdutosRelacionados({ salaoId, servicoId, onUpdate }) {
             const custoTotal = custoUnitario * Number(v.qtd_usada);
 
             return (
-              <div key={v.produto_id} className="flex items-center justify-between bg-blue-50/50 border border-blue-100 p-3 rounded-xl transition-all hover:bg-blue-50">
+              <div key={v.produto_id} className="flex items-center justify-between bg-sky-50/50 border border-sky-100 p-3 rounded-xl transition-all hover:bg-sky-50">
                 <div className="flex-1">
-                  <p className="text-xs font-bold text-blue-100 uppercase">{p.nome}</p>
-                  <p className="text-[10px] text-blue-500 uppercase">{fmt(custoUnitario)} POR DOSE</p>
+                  <p className="text-xs font-bold text-gray-600 uppercase">{p.nome}</p>
+                  <p className="text-[10px] text-gray-500 uppercase">{fmt(custoUnitario)} POR DOSE</p>
                 </div>
                 <div className="flex items-center gap-5">
                   <div className="text-center">
-                    <p className="text-[9px] font-bold text-blue-400 uppercase">Qtd Usada</p>
-                    <p className="text-xs font-black text-blue-600">{v.qtd_usada}x</p>
+                    <p className="text-[9px] font-bold text-gray-500 uppercase">Qtd Usada</p>
+                    <p className="text-xs font-black text-sky-600">{v.qtd_usada}x</p>
                   </div>
                   <div className="text-right w-20">
-                    <p className="text-[9px] font-bold text-blue-400 uppercase">Custo</p>
+                    <p className="text-[9px] font-bold text-gray-500 uppercase">Custo</p>
                     <p className="text-xs font-black text-red-500">{fmt(custoTotal)}</p>
                   </div>
                   <button onClick={() => remover(v.produto_id)} className="p-2 text-red-400 hover:bg-red-50 hover:text-red-600 rounded-lg transition-colors" title="REMOVER PRODUTO">
@@ -136,11 +136,11 @@ export default function ProdutosRelacionados({ salaoId, servicoId, onUpdate }) {
       )}
 
       {/* Adicionar novo vínculo */}
-      <div className="flex items-end gap-3 bg-blue-950 p-4 rounded-xl border border-blue-700">
+      <div className="flex items-end gap-3 bg-gray-50 p-4 rounded-xl border border-gray-200">
         <div className="flex-1">
-          <label className="block text-[10px] font-black text-blue-500 uppercase mb-1.5">Vincular Novo Produto</label>
+          <label className="block text-[10px] font-black text-gray-500 uppercase mb-1.5">Vincular Novo Produto</label>
           <select
-            className="w-full border-2 border-blue-700 rounded-xl px-3 py-2.5 text-xs font-bold text-blue-100 uppercase outline-none focus:border-blue-500 bg-blue-900"
+            className="w-full border-2 border-gray-200 rounded-xl px-3 py-2.5 text-xs font-bold text-gray-600 uppercase outline-none focus:border-sky-500 bg-white"
             value={novoProdutoId}
             onChange={e => setNovoProdutoId(e.target.value)}
           >
@@ -156,10 +156,10 @@ export default function ProdutosRelacionados({ salaoId, servicoId, onUpdate }) {
           </select>
         </div>
         <div className="w-24">
-          <label className="block text-[10px] font-black text-blue-500 uppercase mb-1.5">Doses Usadas</label>
+          <label className="block text-[10px] font-black text-gray-500 uppercase mb-1.5">Doses Usadas</label>
           <input
             type="number" min="0.1" step="0.1"
-            className="w-full border-2 border-blue-700 rounded-xl px-3 py-2.5 text-xs font-bold text-center outline-none focus:border-blue-500 bg-blue-900"
+            className="w-full border-2 border-gray-200 rounded-xl px-3 py-2.5 text-xs font-bold text-center outline-none focus:border-sky-500 bg-white"
             value={novaQtd}
             onChange={e => setNovaQtd(e.target.value)}
           />
@@ -167,7 +167,7 @@ export default function ProdutosRelacionados({ salaoId, servicoId, onUpdate }) {
         <button
           onClick={adicionar}
           disabled={salvando}
-          className="bg-blue-600 text-white px-5 py-2.5 rounded-xl font-bold hover:bg-blue-700 transition-colors flex items-center justify-center disabled:opacity-50 h-[38px] uppercase text-xs shadow-md shadow-blue-200"
+          className="bg-sky-500 text-white px-5 py-2.5 rounded-xl font-bold hover:bg-sky-500 transition-colors flex items-center justify-center disabled:opacity-50 h-[38px] uppercase text-xs shadow-md shadow-sky-200"
         >
           {salvando ? <Loader2 size={16} className="animate-spin" /> : <><Plus size={16} className="mr-1" /> Vincular</>}
         </button>

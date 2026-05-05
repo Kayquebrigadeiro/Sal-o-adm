@@ -45,7 +45,7 @@ function Toast({ message, type }) {
   const colors = {
     success: 'bg-emerald-500 text-white',
     error: 'bg-red-500 text-white',
-    info: 'bg-blue-500 text-white'
+    info: 'bg-sky-500 text-white'
   };
 
   return (

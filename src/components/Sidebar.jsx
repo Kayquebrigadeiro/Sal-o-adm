@@ -46,29 +46,29 @@ export default function Sidebar({ role, email, salaoNome }) {
   return (
     <>
       {/* Desktop Sidebar */}
-      <aside className={`hidden md:flex ${recolhida ? 'w-16' : 'w-56'} min-h-screen bg-gradient-to-b from-blue-900 via-blue-800 to-blue-900 flex-col transition-all duration-300 relative z-20`}>
+      <aside className={`hidden md:flex ${recolhida ? 'w-16' : 'w-56'} min-h-screen bg-white border-r border-gray-200 flex-col transition-all duration-300 relative z-20`}>
         {/* Botão recolher */}
         <button
           onClick={() => setRecolhida(!recolhida)}
-          className="absolute -right-3 top-7 w-6 h-6 bg-blue-900 border border-blue-700 rounded-full flex items-center justify-center shadow-md hover:shadow-lg z-10 transition-all"
+          className="absolute -right-3 top-7 w-6 h-6 bg-white border border-gray-200 rounded-full flex items-center justify-center shadow-md hover:shadow-lg z-10 transition-all"
         >
-          {recolhida ? <ChevronRight size={12} className="text-blue-500" /> : <ChevronLeft size={12} className="text-blue-500" />}
+          {recolhida ? <ChevronRight size={12} className="text-gray-500" /> : <ChevronLeft size={12} className="text-gray-500" />}
         </button>
 
         {/* Logo / Brand */}
-        <div className={`px-4 py-5 border-b border-white/10 ${recolhida ? 'flex justify-center' : ''}`}>
+        <div className={`px-4 py-5 border-b border-gray-100 ${recolhida ? 'flex justify-center' : ''}`}>
           {recolhida ? (
-            <div className="w-8 h-8 bg-gradient-to-br from-blue-400 to-blue-400 rounded-lg flex items-center justify-center shadow-lg">
+            <div className="w-8 h-8 bg-sky-500 rounded-lg flex items-center justify-center shadow-lg">
               <Scissors size={14} className="text-white" />
             </div>
           ) : (
             <div className="flex items-center gap-3">
-              <div className="w-9 h-9 bg-gradient-to-br from-blue-400 to-blue-400 rounded-xl flex items-center justify-center shadow-lg shadow-blue-500/20 flex-shrink-0">
+              <div className="w-9 h-9 bg-sky-500 rounded-xl flex items-center justify-center shadow-lg shadow-sky-500/20 flex-shrink-0">
                 <Scissors size={16} className="text-white" />
               </div>
               <div className="overflow-hidden">
-                <p className="text-sm font-bold text-white truncate">{salaoNome || 'Salão'}</p>
-                <p className="text-[10px] text-blue-400 truncate">{email}</p>
+                <p className="text-sm font-bold text-gray-800 truncate">{salaoNome || 'Salão'}</p>
+                <p className="text-[10px] text-gray-400 truncate">{email}</p>
               </div>
             </div>
           )}
@@ -77,7 +77,7 @@ export default function Sidebar({ role, email, salaoNome }) {
         {/* Menu */}
         <nav className="flex-1 py-3 px-2 space-y-0.5 overflow-y-auto overflow-x-hidden custom-scrollbar">
           {!recolhida && (
-            <p className="text-[9px] font-bold text-blue-500 uppercase tracking-widest px-2 mb-2">Menu</p>
+            <p className="text-[9px] font-bold text-gray-400 uppercase tracking-widest px-2 mb-2">Menu</p>
           )}
           {menuItens.map(item => {
             const Icon = item.icon;
@@ -89,19 +89,19 @@ export default function Sidebar({ role, email, salaoNome }) {
                 className={({ isActive }) =>
                   `flex items-center gap-2.5 ${recolhida ? 'justify-center px-2' : 'px-3'} py-2.5 rounded-xl text-xs font-medium transition-all duration-200 group ${
                     isActive
-                      ? 'bg-gradient-to-r from-blue-500/20 to-blue-500/10 text-white shadow-sm border border-blue-500/20'
-                      : 'text-blue-400 hover:text-white hover:bg-white/5'
+                      ? 'bg-sky-50 text-sky-600 shadow-sm border border-sky-100'
+                      : 'text-gray-500 hover:text-gray-800 hover:bg-gray-50'
                   }`
                 }
               >
                 {({ isActive }) => (
                   <>
-                    <div className={`flex-shrink-0 ${isActive ? 'text-blue-400' : 'text-blue-500 group-hover:text-blue-300'} transition-colors`}>
+                    <div className={`flex-shrink-0 ${isActive ? 'text-sky-500' : 'text-gray-400 group-hover:text-gray-600'} transition-colors`}>
                       <Icon size={16} />
                     </div>
                     {!recolhida && <span className="truncate">{item.label}</span>}
                     {isActive && !recolhida && (
-                      <div className="ml-auto w-1.5 h-1.5 rounded-full bg-blue-400 shadow-sm shadow-blue-400" />
+                      <div className="ml-auto w-1.5 h-1.5 rounded-full bg-sky-500 shadow-sm shadow-sky-500" />
                     )}
                   </>
                 )}
@@ -111,12 +111,12 @@ export default function Sidebar({ role, email, salaoNome }) {
         </nav>
 
         {/* Rodapé */}
-        <div className={`px-3 py-4 border-t border-white/10 ${recolhida ? 'flex justify-center' : ''}`}>
+        <div className={`px-3 py-4 border-t border-gray-100 ${recolhida ? 'flex justify-center' : ''}`}>
           <button
             onClick={handleLogout}
             disabled={saindo}
             title={recolhida ? 'Sair' : undefined}
-            className={`${recolhida ? 'p-2' : 'w-full flex items-center gap-2 px-3 py-2'} text-xs text-blue-500 hover:text-blue-400 disabled:opacity-50 rounded-xl hover:bg-white/5 transition-all duration-200`}
+            className={`${recolhida ? 'p-2' : 'w-full flex items-center gap-2 px-3 py-2'} text-xs text-gray-400 hover:text-red-500 disabled:opacity-50 rounded-xl hover:bg-red-50 transition-all duration-200`}
           >
             <LogOut size={14} />
             {!recolhida && <span className="font-medium">{saindo ? 'Saindo...' : 'Sair da conta'}</span>}
@@ -125,7 +125,7 @@ export default function Sidebar({ role, email, salaoNome }) {
       </aside>
 
       {/* Mobile Bottom Nav */}
-      <nav className="md:hidden fixed bottom-0 left-0 right-0 h-[72px] bg-blue-900 border-t border-white/10 flex justify-around items-center px-2 z-50 pb-safe">
+      <nav className="md:hidden fixed bottom-0 left-0 right-0 h-[72px] bg-white border-t border-gray-200 flex justify-around items-center px-2 z-50 pb-safe">
         {menuItens.slice(0, 4).map(item => {
           const Icon = item.icon;
           return (
@@ -134,7 +134,7 @@ export default function Sidebar({ role, email, salaoNome }) {
               to={item.path}
               className={({ isActive }) =>
                 `flex flex-col items-center justify-center w-full h-full space-y-1 transition-colors ${
-                  isActive ? 'text-blue-400' : 'text-blue-400 hover:text-blue-200'
+                  isActive ? 'text-sky-500' : 'text-gray-400 hover:text-gray-600'
                 }`
               }
             >
@@ -148,7 +148,7 @@ export default function Sidebar({ role, email, salaoNome }) {
             to="/configuracoes"
             className={({ isActive }) =>
               `flex flex-col items-center justify-center w-full h-full space-y-1 transition-colors ${
-                isActive ? 'text-blue-400' : 'text-blue-400 hover:text-blue-200'
+                isActive ? 'text-sky-500' : 'text-gray-400 hover:text-gray-600'
               }`
             }
           >
@@ -158,9 +158,9 @@ export default function Sidebar({ role, email, salaoNome }) {
       </nav>
       
       {/* Mobile Top Header (Optional if needed) */}
-      <header className="md:hidden bg-blue-900 text-white flex items-center justify-between px-4 py-3 sticky top-0 z-40 border-b border-white/10 shadow-md">
+      <header className="md:hidden bg-white text-gray-800 flex items-center justify-between px-4 py-3 sticky top-0 z-40 border-b border-gray-200 shadow-sm">
         <div className="flex items-center gap-2">
-          <div className="w-8 h-8 bg-gradient-to-br from-blue-400 to-blue-400 rounded-lg flex items-center justify-center shadow-lg">
+          <div className="w-8 h-8 bg-sky-500 rounded-lg flex items-center justify-center shadow-lg">
             <Scissors size={14} className="text-white" />
           </div>
           <div className="overflow-hidden">
@@ -170,7 +170,7 @@ export default function Sidebar({ role, email, salaoNome }) {
         <button
           onClick={handleLogout}
           disabled={saindo}
-          className="text-blue-400 hover:text-blue-400 p-2"
+          className="text-gray-400 hover:text-red-500 p-2"
         >
           <LogOut size={18} />
         </button>

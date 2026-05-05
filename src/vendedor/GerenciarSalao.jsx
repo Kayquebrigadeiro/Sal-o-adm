@@ -43,7 +43,7 @@ export default function GerenciarSalao({ userId }) {
   return (
     <div className="p-8 max-w-6xl">
       <div className="mb-6">
-        <h1 className="text-2xl font-bold text-gray-900">{salao.nome}</h1>
+        <h1 className="text-2xl font-bold text-gray-800">{salao.nome}</h1>
         <p className="text-gray-600 text-sm">Configuração do salão</p>
       </div>
 
@@ -53,7 +53,7 @@ export default function GerenciarSalao({ userId }) {
             key={id}
             onClick={() => setAba(id)}
             className={`px-4 py-2.5 text-sm transition-colors border-b-2 -mb-px ${
-              aba === id ? 'border-gray-800 text-white font-medium' : 'border-transparent text-gray-400 hover:text-gray-600'
+              aba === id ? 'border-gray-800 text-gray-800 font-medium' : 'border-transparent text-gray-400 hover:text-gray-600'
             }`}
           >
             {label}
@@ -129,20 +129,20 @@ function AbaProfissionais({ salaoId }) {
   return (
     <div className="space-y-4">
       {/* Formulário para adicionar nova profissional */}
-      <form onSubmit={adicionarProfissional} className="bg-blue-50 border border-blue-200 rounded-xl p-4">
-        <p className="text-xs font-bold text-blue-700 mb-3">➕ Adicionar nova profissional</p>
+      <form onSubmit={adicionarProfissional} className="bg-sky-50 border border-sky-200 rounded-xl p-4">
+        <p className="text-xs font-bold text-sky-600 mb-3">➕ Adicionar nova profissional</p>
         <div className="grid grid-cols-3 gap-3">
           <input
             type="text"
             placeholder="Nome *"
             value={novaProf.nome}
             onChange={e => setNovaProf({ ...novaProf, nome: e.target.value })}
-            className="border border-blue-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
+            className="border border-sky-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-sky-400"
           />
           <select
             value={novaProf.cargo}
             onChange={e => setNovaProf({ ...novaProf, cargo: e.target.value })}
-            className="border border-blue-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
+            className="border border-sky-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-sky-400"
           >
             <option value="FUNCIONARIO">Funcionária</option>
             <option value="PROPRIETARIO">Proprietária</option>
@@ -154,12 +154,12 @@ function AbaProfissionais({ salaoId }) {
               placeholder="Salário (opcional)"
               value={novaProf.salario_fixo}
               onChange={e => setNovaProf({ ...novaProf, salario_fixo: e.target.value })}
-              className="flex-1 border border-blue-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
+              className="flex-1 border border-sky-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-sky-400"
             />
             <button
               type="submit"
               disabled={adicionando}
-              className="px-4 py-2 bg-blue-700 text-white text-sm font-bold rounded-lg hover:bg-blue-800 disabled:opacity-50 whitespace-nowrap"
+              className="px-4 py-2 bg-sky-500 text-white text-sm font-bold rounded-lg hover:bg-sky-500 disabled:opacity-50 whitespace-nowrap"
             >
               {adicionando ? '...' : 'Adicionar'}
             </button>
@@ -168,9 +168,9 @@ function AbaProfissionais({ salaoId }) {
       </form>
 
       {/* Tabela de profissionais */}
-      <div className="bg-blue-900 rounded-xl border border-gray-200 overflow-hidden">
+      <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
         <table className="w-full text-sm">
-          <thead className="bg-blue-950 border-b border-gray-200">
+          <thead className="bg-gray-50 border-b border-gray-200">
             <tr>
               {['Nome', 'Cargo', 'Salário Fixo', 'Status', 'Ações'].map(h => (
                 <th key={h} className="text-left px-4 py-3 text-xs font-bold text-gray-600">{h}</th>
@@ -186,8 +186,8 @@ function AbaProfissionais({ salaoId }) {
               </tr>
             ) : (
               lista.map(p => (
-                <tr key={p.id} className="hover:bg-blue-950 transition-colors">
-                  <td className="px-4 py-3 font-bold text-gray-900">{p.nome}</td>
+                <tr key={p.id} className="hover:bg-gray-50 transition-colors">
+                  <td className="px-4 py-3 font-bold text-gray-800">{p.nome}</td>
                   <td className="px-4 py-3 text-gray-600">
                     <select
                       value={p.cargo}
@@ -293,14 +293,14 @@ function AbaProcedimentos({ salaoId }) {
   return (
     <div className="space-y-4">
       {/* Atalhos - Procedimentos padrão */}
-      <div className="border border-gray-200 rounded-xl p-4 bg-blue-950">
+      <div className="border border-gray-200 rounded-xl p-4 bg-gray-50">
         <p className="text-xs font-bold text-gray-600 mb-3">📋 Adicionar procedimentos padrão:</p>
         <div className="flex flex-wrap gap-2">
           {PROCEDIMENTOS_PADRAO.filter(p => !lista.some(l => l.nome.toLowerCase() === p.nome.toLowerCase())).map(proc => (
             <button
               key={proc.nome}
               onClick={() => adicionarPadrao(proc)}
-              className="text-xs bg-blue-900 border border-blue-200 text-blue-700 px-3 py-1.5 rounded-lg hover:bg-blue-50 font-medium transition-colors"
+              className="text-xs bg-white border border-sky-200 text-sky-600 px-3 py-1.5 rounded-lg hover:bg-sky-50 font-medium transition-colors"
               title={`${proc.categoria} - R$ ${proc.preco_p}`}
             >
               + {proc.nome}
@@ -310,9 +310,9 @@ function AbaProcedimentos({ salaoId }) {
       </div>
 
       {/* Tabela de procedimentos */}
-      <div className="bg-blue-900 rounded-xl border border-gray-200 overflow-x-auto">
+      <div className="bg-white rounded-xl border border-gray-200 overflow-x-auto">
         <table className="w-full text-sm">
-          <thead className="bg-blue-950 border-b border-gray-200 sticky top-0">
+          <thead className="bg-gray-50 border-b border-gray-200 sticky top-0">
             <tr>
               {[
                 'Procedimento',
@@ -342,8 +342,8 @@ function AbaProcedimentos({ salaoId }) {
               </tr>
             ) : (
               lista.map(p => (
-                <tr key={p.id} className="hover:bg-blue-950 transition-colors">
-                  <td className="px-3 py-3 font-bold text-gray-900">{p.nome}</td>
+                <tr key={p.id} className="hover:bg-gray-50 transition-colors">
+                  <td className="px-3 py-3 font-bold text-gray-800">{p.nome}</td>
                   <td className="px-3 py-3 text-xs text-gray-500 whitespace-nowrap">{p.categoria}</td>
                   <td className="px-3 py-3">
                     <CelulaEditavel valor={p.preco_p} onSave={v => salvarCampo(p.id, 'preco_p', v)} width="w-16" />
@@ -378,8 +378,8 @@ function AbaProcedimentos({ salaoId }) {
                       onClick={() => toggleRequerComprimento(p.id, p.requer_comprimento)}
                       className={`text-xs px-2 py-1 rounded-lg border transition-colors ${
                         p.requer_comprimento
-                          ? 'bg-blue-50 border-blue-200 text-blue-700'
-                          : 'bg-blue-950 border-gray-200 text-gray-500'
+                          ? 'bg-sky-50 border-sky-200 text-sky-600'
+                          : 'bg-gray-50 border-gray-200 text-gray-500'
                       }`}
                     >
                       {p.requer_comprimento ? '✓ Sim' : 'Não'}
@@ -391,7 +391,7 @@ function AbaProcedimentos({ salaoId }) {
                       className={`text-xs px-2 py-1 rounded-lg font-bold transition-colors ${
                         p.ativo
                           ? 'bg-green-50 text-green-700 border border-green-200'
-                          : 'bg-blue-950 text-gray-500 border border-gray-200'
+                          : 'bg-gray-50 text-gray-500 border border-gray-200'
                       }`}
                     >
                       {p.ativo ? '✓ Ativo' : 'Inativo'}
@@ -482,12 +482,12 @@ function AbaUsuarios({ salaoId }) {
     <div className="space-y-4">
       <button
         onClick={() => setModal(true)}
-        className="bg-green-700 text-white text-sm px-4 py-2 rounded-lg hover:bg-green-800 font-bold"
+        className="bg-green-700 text-gray-800 text-sm px-4 py-2 rounded-lg hover:bg-green-800 font-bold"
       >
         + Convidar usuária
       </button>
 
-      <div className="bg-blue-900 rounded-xl border border-gray-200 overflow-hidden">
+      <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
         {carregando ? (
           <div className="p-8 text-center text-gray-400">Carregando usuários...</div>
         ) : usuarios.length === 0 ? (
@@ -496,7 +496,7 @@ function AbaUsuarios({ salaoId }) {
           </div>
         ) : (
           <table className="w-full text-sm">
-            <thead className="bg-blue-950 border-b border-gray-200">
+            <thead className="bg-gray-50 border-b border-gray-200">
               <tr>
                 {['Email', 'Nome', 'Cargo', 'Status', 'Ações'].map(h => (
                   <th key={h} className="text-left px-4 py-3 text-xs font-bold text-gray-600">{h}</th>
@@ -505,14 +505,14 @@ function AbaUsuarios({ salaoId }) {
             </thead>
             <tbody className="divide-y divide-gray-50">
               {usuarios.map(u => (
-                <tr key={u.id} className="hover:bg-blue-950">
-                  <td className="px-4 py-3 font-medium text-gray-900">{u.auth?.email || u.id}</td>
+                <tr key={u.id} className="hover:bg-gray-50">
+                  <td className="px-4 py-3 font-medium text-gray-800">{u.auth?.email || u.id}</td>
                   <td className="px-4 py-3 text-gray-600">—</td>
                   <td className="px-4 py-3 text-sm">
                     <span className={`px-3 py-1 rounded-full text-xs font-bold ${
                       u.cargo === 'PROPRIETARIO'
-                        ? 'bg-blue-50 text-blue-700'
-                        : 'bg-blue-950 text-gray-700'
+                        ? 'bg-sky-50 text-sky-600'
+                        : 'bg-gray-50 text-gray-700'
                     }`}>
                       {u.cargo === 'PROPRIETARIO' ? 'Proprietária' : 'Funcionária'}
                     </span>
@@ -543,8 +543,8 @@ function AbaUsuarios({ salaoId }) {
           className="fixed inset-0 bg-black/40 flex items-center justify-center p-4 z-50"
           onClick={e => e.target === e.currentTarget && !convidando && setModal(false)}
         >
-          <div className="bg-blue-900 rounded-2xl shadow-xl w-full max-w-sm p-6">
-            <h2 className="text-lg font-bold text-gray-900 mb-4">Convidar nova usuária</h2>
+          <div className="bg-white rounded-2xl shadow-xl w-full max-w-sm p-6">
+            <h2 className="text-lg font-bold text-gray-800 mb-4">Convidar nova usuária</h2>
             
             {mensagem && (
               <div className={`mb-4 p-3 rounded-lg text-sm font-medium ${
@@ -619,14 +619,14 @@ function AbaUsuarios({ salaoId }) {
                     setForm({ email: '', nome: '', cargo: 'PROPRIETARIO' });
                   }}
                   disabled={convidando}
-                  className="flex-1 py-2.5 text-sm border border-gray-300 rounded-lg font-bold hover:bg-blue-950 disabled:opacity-50"
+                  className="flex-1 py-2.5 text-sm border border-gray-300 rounded-lg font-bold hover:bg-gray-50 disabled:opacity-50"
                 >
                   Cancelar
                 </button>
                 <button
                   type="submit"
                   disabled={convidando}
-                  className="flex-1 py-2.5 text-sm bg-green-700 text-white rounded-lg font-bold hover:bg-green-800 disabled:opacity-50"
+                  className="flex-1 py-2.5 text-sm bg-green-700 text-gray-800 rounded-lg font-bold hover:bg-green-800 disabled:opacity-50"
                 >
                   {convidando ? '⏳ Enviando...' : 'Enviar Convite'}
                 </button>

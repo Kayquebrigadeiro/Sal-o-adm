@@ -40,7 +40,7 @@ export default function CelulaEditavel({ valor, onSave, tipo = 'number', step = 
   return (
     <span
       onClick={() => setEditando(true)}
-      className="cursor-pointer hover:bg-blue-50 px-2 py-1 rounded text-xs group inline-flex items-center gap-1 transition-colors"
+      className="cursor-pointer hover:bg-sky-50 px-2 py-1 rounded text-xs group inline-flex items-center gap-1 transition-colors"
     >
       {valorFormatado}
       {salvo && <span className="text-green-600 text-[10px]">✓</span>}

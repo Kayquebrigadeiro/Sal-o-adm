@@ -63,7 +63,7 @@ export default function Login() {
 
         {/* Header Section */}
         <div className="bg-sky-500 p-8 text-center relative overflow-hidden">
-          <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-5 pointer-events-none" />
+
 
           <div className="w-16 h-16 bg-white/20 border border-white/30 rounded-2xl flex items-center justify-center mx-auto mb-5 backdrop-blur-sm shadow-xl relative z-10">
             <Scissors size={28} className="text-white" />

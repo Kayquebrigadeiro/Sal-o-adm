@@ -85,15 +85,6 @@ export default function App() {
   useEffect(() => {
     mountedRef.current = true;
     perfilBuscadoRef.current = false;
-
-    // 🛡️ Failsafe: Nunca travar na tela de loading por mais de 10 segundos
-    const failsafeTimeout = setTimeout(() => {
-      if (mountedRef.current && carregando) {
-        console.warn('[Auth] Failsafe: Forçando fim do loading após 10s');
-        setCarregando(false);
-      }
-    }, 10000);
-
     const initSession = async () => {
       try {
         const { data: { session } } = await supabase.auth.getSession();

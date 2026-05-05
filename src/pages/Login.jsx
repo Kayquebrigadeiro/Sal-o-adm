@@ -15,12 +15,12 @@ export default function Login() {
     setLoading(true);
 
     try {
-      let emailParaLogin = login;
+      let emailParaLogin = login.trim().toLowerCase();
 
       // Se não tem @, é a tentativa de entrar com o Username
-      if (!login.includes('@')) {
+      if (!emailParaLogin.includes('@')) {
         const { data: emailDescoberto, error: rpcError } = await supabase.rpc('get_email_from_username', {
-          p_username: login
+          p_username: emailParaLogin
         });
 
         if (rpcError || !emailDescoberto) {
@@ -34,7 +34,7 @@ export default function Login() {
       // Login real no Supabase com o E-mail
       const { error: signInError } = await supabase.auth.signInWithPassword({
         email: emailParaLogin,
-        password: senha,
+        password: senha.trim(),
       });
 
       if (signInError) throw signInError;

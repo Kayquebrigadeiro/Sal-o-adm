@@ -60,7 +60,7 @@ export default function MeusSaloes({ userId }) {
   return (
     <div className="p-6 max-w-5xl">
       <div className="flex items-center justify-between mb-6">
-        <h1 className="text-xl font-semibold text-slate-800">Meus Salões</h1>
+        <h1 className="text-xl font-semibold text-white">Meus Salões</h1>
         <button
           onClick={() => navigate('/admin/novo-salao')}
           className="bg-slate-800 text-white text-sm px-4 py-2 rounded-lg hover:bg-slate-900">
@@ -69,7 +69,7 @@ export default function MeusSaloes({ userId }) {
       </div>
 
       {saloes.length === 0 ? (
-        <div className="bg-white rounded-xl border border-slate-200 p-12 text-center">
+        <div className="bg-slate-900 rounded-xl border border-slate-700 p-12 text-center">
           <p className="text-slate-400 text-sm mb-4">Nenhum salão cadastrado ainda.</p>
           <button
             onClick={() => navigate('/admin/novo-salao')}
@@ -80,10 +80,10 @@ export default function MeusSaloes({ userId }) {
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {saloes.map(s => (
-            <div key={s.id} className="bg-white rounded-xl border border-slate-200 p-5 hover:shadow-md transition-shadow">
+            <div key={s.id} className="bg-slate-900 rounded-xl border border-slate-700 p-5 hover:shadow-md transition-shadow">
               <div className="flex items-start justify-between mb-3">
                 <div className="flex-1">
-                  <h2 className="font-semibold text-slate-800">{s.nome}</h2>
+                  <h2 className="font-semibold text-white">{s.nome}</h2>
                   {s.telefone && <p className="text-xs text-slate-400 mt-0.5">{s.telefone}</p>}
                 </div>
                 <span className={`text-xs px-2 py-0.5 rounded-full ${
@@ -101,7 +101,7 @@ export default function MeusSaloes({ userId }) {
               <div className="flex gap-2">
                 <button
                   onClick={() => alert('Funcionalidade em desenvolvimento')}
-                  className="flex-1 text-center text-xs border border-slate-200 rounded-lg py-1.5 hover:bg-slate-50">
+                  className="flex-1 text-center text-xs border border-slate-700 rounded-lg py-1.5 hover:bg-slate-950">
                   Gerenciar
                 </button>
                 <button

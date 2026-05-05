@@ -152,7 +152,7 @@ export default function Paralelos({ salaoId }) {
             <select
               value={mesSelecionado}
               onChange={e => setMesSelecionado(e.target.value)}
-              className="border border-slate-300 rounded-lg px-4 py-2 text-sm bg-white outline-none"
+              className="border border-slate-300 rounded-lg px-4 py-2 text-sm bg-slate-900 outline-none"
             >
               {meses.map(m => (
                 <option key={m} value={m}>
@@ -172,38 +172,38 @@ export default function Paralelos({ salaoId }) {
 
       {/* Cards de Resumo */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-        <div className="bg-white rounded-xl border border-slate-200 p-4">
+        <div className="bg-slate-900 rounded-xl border border-slate-700 p-4">
           <p className="text-xs text-slate-500 mb-1">Total Faturado</p>
-          <p className="text-2xl font-bold text-slate-900">{fmt(totalFaturado)}</p>
+          <p className="text-2xl font-bold text-white">{fmt(totalFaturado)}</p>
         </div>
-        <div className="bg-white rounded-xl border border-slate-200 p-4">
+        <div className="bg-slate-900 rounded-xl border border-slate-700 p-4">
           <p className="text-xs text-slate-500 mb-1">Total Recebido</p>
           <p className="text-2xl font-bold text-emerald-600">{fmt(totalRecebido)}</p>
         </div>
-        <div className="bg-white rounded-xl border border-slate-200 p-4">
+        <div className="bg-slate-900 rounded-xl border border-slate-700 p-4">
           <p className="text-xs text-slate-500 mb-1">A Receber</p>
           <p className="text-2xl font-bold text-amber-600">{fmt(totalPendente)}</p>
         </div>
-        <div className="bg-white rounded-xl border border-slate-200 p-4">
+        <div className="bg-slate-900 rounded-xl border border-slate-700 p-4">
           <p className="text-xs text-slate-500 mb-1">Total Comissões</p>
           <p className="text-2xl font-bold text-blue-600">{fmt(totalComissoes)}</p>
         </div>
       </div>
 
       {/* Tabela */}
-      <div className="bg-white rounded-xl border border-slate-200 overflow-x-auto">
+      <div className="bg-slate-900 rounded-xl border border-slate-700 overflow-x-auto">
         <table className="w-full text-sm min-w-[600px]">
-          <thead className="bg-slate-50 border-b border-slate-200">
+          <thead className="bg-slate-950 border-b border-slate-700">
             <tr>
-              <th className="text-left px-4 py-3 font-medium text-slate-700">Data</th>
-              <th className="text-left px-4 py-3 font-medium text-slate-700">Cliente</th>
-              <th className="text-left px-4 py-3 font-medium text-slate-700">Descrição</th>
-              <th className="text-left px-4 py-3 font-medium text-slate-700">Profissional</th>
-              <th className="text-right px-4 py-3 font-medium text-slate-700">Valor</th>
-              <th className="text-right px-4 py-3 font-medium text-slate-700">Pago</th>
-              <th className="text-right px-4 py-3 font-medium text-slate-700">Comissão</th>
-              <th className="text-right px-4 py-3 font-medium text-slate-700">Pendente</th>
-              <th className="text-center px-4 py-3 font-medium text-slate-700">Ações</th>
+              <th className="text-left px-4 py-3 font-medium text-slate-100">Data</th>
+              <th className="text-left px-4 py-3 font-medium text-slate-100">Cliente</th>
+              <th className="text-left px-4 py-3 font-medium text-slate-100">Descrição</th>
+              <th className="text-left px-4 py-3 font-medium text-slate-100">Profissional</th>
+              <th className="text-right px-4 py-3 font-medium text-slate-100">Valor</th>
+              <th className="text-right px-4 py-3 font-medium text-slate-100">Pago</th>
+              <th className="text-right px-4 py-3 font-medium text-slate-100">Comissão</th>
+              <th className="text-right px-4 py-3 font-medium text-slate-100">Pendente</th>
+              <th className="text-center px-4 py-3 font-medium text-slate-100">Ações</th>
             </tr>
           </thead>
           <tbody>
@@ -213,11 +213,11 @@ export default function Paralelos({ salaoId }) {
               </tr>
             ) : (
               paralelos.map(par => (
-                <tr key={par.id} className="border-b border-slate-100 hover:bg-slate-50">
+                <tr key={par.id} className="border-b border-slate-800 hover:bg-slate-950">
                   <td className="px-4 py-3">{fmtData(par.data)}</td>
                   <td className="px-4 py-3 font-medium">{par.cliente}</td>
                   <td className="px-4 py-3">{par.descricao}</td>
-                  <td className="px-4 py-3 text-slate-600">{par.profissionais?.nome || '-'}</td>
+                  <td className="px-4 py-3 text-slate-200">{par.profissionais?.nome || '-'}</td>
                   <td className="px-4 py-3 text-right">{fmt(par.valor)}</td>
                   <td className="px-4 py-3 text-right text-emerald-600">{fmt(par.valor_pago)}</td>
                   <td className="px-4 py-3 text-right text-blue-600">{fmt(par.valor_profissional)}</td>
@@ -243,7 +243,7 @@ export default function Paralelos({ salaoId }) {
       <Modal open={modalAberto} onClose={() => setModalAberto(false)} title={paraleloEditando ? 'Editar Paralelo' : 'Novo Paralelo'}>
         <div className="space-y-4">
           <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1">Data</label>
+            <label className="block text-sm font-medium text-slate-100 mb-1">Data</label>
             <input
               type="date"
               value={form.data}
@@ -253,7 +253,7 @@ export default function Paralelos({ salaoId }) {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1">Cliente</label>
+            <label className="block text-sm font-medium text-slate-100 mb-1">Cliente</label>
             <input
               type="text"
               value={form.cliente}
@@ -264,7 +264,7 @@ export default function Paralelos({ salaoId }) {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1">Descrição do Serviço</label>
+            <label className="block text-sm font-medium text-slate-100 mb-1">Descrição do Serviço</label>
             <input
               type="text"
               value={form.descricao}
@@ -275,11 +275,11 @@ export default function Paralelos({ salaoId }) {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1">Profissional (opcional)</label>
+            <label className="block text-sm font-medium text-slate-100 mb-1">Profissional (opcional)</label>
             <select
               value={form.profissional_id}
               onChange={e => setForm({ ...form, profissional_id: e.target.value })}
-              className="w-full border border-slate-300 rounded-lg px-3 py-2 bg-white outline-none focus:ring-2 focus:ring-emerald-500"
+              className="w-full border border-slate-300 rounded-lg px-3 py-2 bg-slate-900 outline-none focus:ring-2 focus:ring-emerald-500"
             >
               <option value="">Nenhum</option>
               {profissionais.map(p => (
@@ -290,7 +290,7 @@ export default function Paralelos({ salaoId }) {
 
           <div className="grid grid-cols-3 gap-4">
             <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1">Valor Cobrado (R$)</label>
+              <label className="block text-sm font-medium text-slate-100 mb-1">Valor Cobrado (R$)</label>
               <input
                 type="number"
                 step="0.01"
@@ -301,7 +301,7 @@ export default function Paralelos({ salaoId }) {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1">Valor Pago (R$)</label>
+              <label className="block text-sm font-medium text-slate-100 mb-1">Valor Pago (R$)</label>
               <input
                 type="number"
                 step="0.01"
@@ -312,7 +312,7 @@ export default function Paralelos({ salaoId }) {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1">Comissão Prof. (R$)</label>
+              <label className="block text-sm font-medium text-slate-100 mb-1">Comissão Prof. (R$)</label>
               <input
                 type="number"
                 step="0.01"
@@ -326,7 +326,7 @@ export default function Paralelos({ salaoId }) {
           <div className="flex justify-end gap-3 pt-4">
             <button
               onClick={() => setModalAberto(false)}
-              className="px-4 py-2 text-slate-600 hover:bg-slate-100 rounded-lg transition-colors"
+              className="px-4 py-2 text-slate-200 hover:bg-slate-800 rounded-lg transition-colors"
             >
               Cancelar
             </button>

@@ -50,7 +50,7 @@ export default function TelaAssinaturaVencida({ salaoNome, dataVencimento, diasR
             Seu acesso ao <strong>{salaoNome}</strong> está temporariamente suspenso.
           </p>
 
-          <div className="w-full bg-slate-900/50 rounded-xl p-4 mb-8 border border-white/5 text-left">
+          <div className="w-full bg-white/50 rounded-xl p-4 mb-8 border border-white/5 text-left">
             <div className="flex justify-between items-center mb-3">
               <span className="text-slate-400 text-sm">Plano Atual</span>
               <span className="text-white font-medium">R$ {Number(valorPlano || 100).toFixed(2).replace('.', ',')}/mês</span>
@@ -103,7 +103,7 @@ export default function TelaAssinaturaVencida({ salaoNome, dataVencimento, diasR
 
       {/* MODAL PIX */}
       {modalPixAberto && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/80 backdrop-blur-sm animate-fadeIn">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-white/80 backdrop-blur-sm animate-fadeIn">
           <div className="bg-slate-800 border border-slate-700 rounded-2xl w-full max-w-sm shadow-2xl overflow-hidden transform transition-all">
             <div className="p-6">
               <div className="flex justify-between items-center mb-6">

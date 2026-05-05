@@ -50,7 +50,7 @@ export default function Sidebar({ role, email, salaoNome }) {
         {/* Botão recolher */}
         <button
           onClick={() => setRecolhida(!recolhida)}
-          className="absolute -right-3 top-7 w-6 h-6 bg-white border border-slate-200 rounded-full flex items-center justify-center shadow-md hover:shadow-lg z-10 transition-all"
+          className="absolute -right-3 top-7 w-6 h-6 bg-slate-900 border border-slate-700 rounded-full flex items-center justify-center shadow-md hover:shadow-lg z-10 transition-all"
         >
           {recolhida ? <ChevronRight size={12} className="text-slate-500" /> : <ChevronLeft size={12} className="text-slate-500" />}
         </button>

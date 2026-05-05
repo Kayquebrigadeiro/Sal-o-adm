@@ -86,10 +86,10 @@ export default function NovoSalao({ userId }) {
       {/* ── ETAPA 1: Dados do Salão ── */}
       {etapa === 1 && (
         <div className="space-y-4">
-          <h2 className="text-xl font-bold text-slate-800">Dados do Salão</h2>
+          <h2 className="text-xl font-bold text-white">Dados do Salão</h2>
 
           <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1">
+            <label className="block text-sm font-medium text-slate-100 mb-1">
               Nome do Salão *
             </label>
             <input
@@ -102,7 +102,7 @@ export default function NovoSalao({ userId }) {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1">
+            <label className="block text-sm font-medium text-slate-100 mb-1">
               Telefone / WhatsApp *
             </label>
             <input
@@ -130,13 +130,13 @@ export default function NovoSalao({ userId }) {
       {/* ── ETAPA 2: Dados da Proprietária (NOVO FLUXO) ── */}
       {etapa === 2 && (
         <div className="space-y-4">
-          <h2 className="text-xl font-bold text-slate-800">Acesso da Proprietária</h2>
+          <h2 className="text-xl font-bold text-white">Acesso da Proprietária</h2>
           <p className="text-sm text-slate-500">
             Use o e-mail real da proprietária. Ela receberá um link de ativação.
           </p>
 
           <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1">
+            <label className="block text-sm font-medium text-slate-100 mb-1">
               Nome da Proprietária *
             </label>
             <input
@@ -150,7 +150,7 @@ export default function NovoSalao({ userId }) {
 
           {/* ← CAMPO NOVO: e-mail real obrigatório */}
           <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1">
+            <label className="block text-sm font-medium text-slate-100 mb-1">
               E-mail da Proprietária *
             </label>
             <input
@@ -169,7 +169,7 @@ export default function NovoSalao({ userId }) {
           <div className="flex gap-3">
             <button
               onClick={() => setEtapa(1)}
-              className="flex-1 py-3 border border-slate-300 text-slate-600 font-medium rounded-xl hover:bg-slate-50"
+              className="flex-1 py-3 border border-slate-300 text-slate-200 font-medium rounded-xl hover:bg-slate-950"
             >
               ← Voltar
             </button>
@@ -192,10 +192,10 @@ export default function NovoSalao({ userId }) {
       {/* ── ETAPA 3: Confirmação + credenciais geradas ── */}
       {etapa === 3 && (
         <div className="space-y-4">
-          <h2 className="text-xl font-bold text-slate-800">Confirmar e Criar</h2>
+          <h2 className="text-xl font-bold text-white">Confirmar e Criar</h2>
 
           {/* Resumo */}
-          <div className="bg-slate-50 border border-slate-200 rounded-xl p-4 space-y-1 text-sm">
+          <div className="bg-slate-950 border border-slate-700 rounded-xl p-4 space-y-1 text-sm">
             <p><span className="text-slate-500">Salão:</span> <strong>{form.nome_salao}</strong></p>
             <p><span className="text-slate-500">Proprietária:</span> <strong>{form.nome_proprietaria}</strong></p>
           </div>
@@ -207,13 +207,13 @@ export default function NovoSalao({ userId }) {
             </p>
             <div>
               <p className="text-xs text-emerald-600 mb-0.5">Login (E-mail)</p>
-              <p className="font-mono font-bold text-slate-800 break-all">
+              <p className="font-mono font-bold text-white break-all">
                 {form.email_proprietaria}
               </p>
             </div>
             <div>
               <p className="text-xs text-emerald-600 mb-0.5">Senha Temporária</p>
-              <p className="font-mono font-bold text-slate-800 text-lg tracking-widest">
+              <p className="font-mono font-bold text-white text-lg tracking-widest">
                 {senhaGerada}
               </p>
             </div>
@@ -232,7 +232,7 @@ export default function NovoSalao({ userId }) {
           <div className="flex gap-3">
             <button
               onClick={() => setEtapa(2)}
-              className="flex-1 py-3 border border-slate-300 text-slate-600 font-medium rounded-xl hover:bg-slate-50"
+              className="flex-1 py-3 border border-slate-300 text-slate-200 font-medium rounded-xl hover:bg-slate-950"
               disabled={carregando}
             >
               ← Voltar
@@ -252,7 +252,7 @@ export default function NovoSalao({ userId }) {
       {etapa === 4 && (
         <div className="text-center space-y-4 py-8">
           <div className="text-5xl">🎉</div>
-          <h2 className="text-xl font-bold text-slate-800">Salão criado com sucesso!</h2>
+          <h2 className="text-xl font-bold text-white">Salão criado com sucesso!</h2>
           <p className="text-sm text-slate-500">
             Um e-mail de ativação foi enviado para{' '}
             <strong>{form.email_proprietaria}</strong>.

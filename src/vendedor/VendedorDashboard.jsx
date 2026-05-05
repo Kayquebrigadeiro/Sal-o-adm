@@ -48,7 +48,7 @@ export default function VendedorDashboard({ userId }) {
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {saloes.map(salao => (
-          <div key={salao.id} className="bg-white rounded-xl border border-gray-200 p-6 hover:shadow-lg transition-shadow">
+          <div key={salao.id} className="bg-slate-900 rounded-xl border border-gray-200 p-6 hover:shadow-lg transition-shadow">
             <div className="flex items-start justify-between mb-4">
               <h3 className="text-lg font-bold text-gray-900">{salao.nome}</h3>
               <span className={`text-xs px-2 py-1 rounded-full font-bold ${

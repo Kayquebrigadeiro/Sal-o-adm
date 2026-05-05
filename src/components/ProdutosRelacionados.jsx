@@ -87,7 +87,7 @@ export default function ProdutosRelacionados({ salaoId, servicoId, onUpdate }) {
   }
 
   return (
-    <div className="bg-white rounded-xl border border-indigo-100 p-5 shadow-inner">
+    <div className="bg-slate-900 rounded-xl border border-indigo-100 p-5 shadow-inner">
       <h4 className="text-xs font-black text-indigo-800 uppercase mb-4 flex items-center gap-2">
         <Package size={14} className="text-indigo-500" />
         Composição do Custo de Material
@@ -95,7 +95,7 @@ export default function ProdutosRelacionados({ salaoId, servicoId, onUpdate }) {
 
       {/* Lista de produtos já vinculados */}
       {vinculos.length === 0 ? (
-        <div className="text-center py-5 bg-slate-50 rounded-xl border border-dashed border-slate-200 mb-4">
+        <div className="text-center py-5 bg-slate-950 rounded-xl border border-dashed border-slate-700 mb-4">
           <p className="text-[10px] font-bold text-slate-400 uppercase">NENHUM PRODUTO VINCULADO A ESTE SERVIÇO</p>
         </div>
       ) : (
@@ -113,7 +113,7 @@ export default function ProdutosRelacionados({ salaoId, servicoId, onUpdate }) {
             return (
               <div key={v.produto_id} className="flex items-center justify-between bg-indigo-50/50 border border-indigo-100 p-3 rounded-xl transition-all hover:bg-indigo-50">
                 <div className="flex-1">
-                  <p className="text-xs font-bold text-slate-700 uppercase">{p.nome}</p>
+                  <p className="text-xs font-bold text-slate-100 uppercase">{p.nome}</p>
                   <p className="text-[10px] text-slate-500 uppercase">{fmt(custoUnitario)} POR DOSE</p>
                 </div>
                 <div className="flex items-center gap-5">
@@ -136,11 +136,11 @@ export default function ProdutosRelacionados({ salaoId, servicoId, onUpdate }) {
       )}
 
       {/* Adicionar novo vínculo */}
-      <div className="flex items-end gap-3 bg-slate-50 p-4 rounded-xl border border-slate-200">
+      <div className="flex items-end gap-3 bg-slate-950 p-4 rounded-xl border border-slate-700">
         <div className="flex-1">
           <label className="block text-[10px] font-black text-slate-500 uppercase mb-1.5">Vincular Novo Produto</label>
           <select
-            className="w-full border-2 border-slate-200 rounded-xl px-3 py-2.5 text-xs font-bold text-slate-700 uppercase outline-none focus:border-indigo-500 bg-white"
+            className="w-full border-2 border-slate-700 rounded-xl px-3 py-2.5 text-xs font-bold text-slate-100 uppercase outline-none focus:border-indigo-500 bg-slate-900"
             value={novoProdutoId}
             onChange={e => setNovoProdutoId(e.target.value)}
           >
@@ -159,7 +159,7 @@ export default function ProdutosRelacionados({ salaoId, servicoId, onUpdate }) {
           <label className="block text-[10px] font-black text-slate-500 uppercase mb-1.5">Doses Usadas</label>
           <input
             type="number" min="0.1" step="0.1"
-            className="w-full border-2 border-slate-200 rounded-xl px-3 py-2.5 text-xs font-bold text-center outline-none focus:border-indigo-500 bg-white"
+            className="w-full border-2 border-slate-700 rounded-xl px-3 py-2.5 text-xs font-bold text-center outline-none focus:border-indigo-500 bg-slate-900"
             value={novaQtd}
             onChange={e => setNovaQtd(e.target.value)}
           />

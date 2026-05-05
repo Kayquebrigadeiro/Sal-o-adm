@@ -21,28 +21,28 @@ export default function VendedorSidebar({ email }) {
         <NavLink to="/admin/saloes"
           className={({ isActive }) =>
             `block px-3 py-2 rounded-lg text-sm transition-colors ${
-              isActive ? 'bg-white text-slate-900 font-medium' : 'text-slate-400 hover:bg-slate-800 hover:text-white'
+              isActive ? 'bg-slate-900 text-white font-medium' : 'text-slate-400 hover:bg-slate-800 hover:text-white'
             }`}>
           Meus Salões
         </NavLink>
         <NavLink to="/admin/novo-salao"
           className={({ isActive }) =>
             `block px-3 py-2 rounded-lg text-sm transition-colors ${
-              isActive ? 'bg-white text-slate-900 font-medium' : 'text-slate-400 hover:bg-slate-800 hover:text-white'
+              isActive ? 'bg-slate-900 text-white font-medium' : 'text-slate-400 hover:bg-slate-800 hover:text-white'
             }`}>
           + Novo Salão
         </NavLink>
         <NavLink to="/admin/admins"
           className={({ isActive }) =>
             `block px-3 py-2 rounded-lg text-sm transition-colors ${
-              isActive ? 'bg-white text-slate-900 font-medium' : 'text-slate-400 hover:bg-slate-800 hover:text-white'
+              isActive ? 'bg-slate-900 text-white font-medium' : 'text-slate-400 hover:bg-slate-800 hover:text-white'
             }`}>
           Admins
         </NavLink>
         <NavLink to="/admin/assinaturas"
           className={({ isActive }) =>
             `block px-3 py-2 rounded-lg text-sm transition-colors ${
-              isActive ? 'bg-white text-slate-900 font-medium' : 'text-slate-400 hover:bg-slate-800 hover:text-white'
+              isActive ? 'bg-slate-900 text-white font-medium' : 'text-slate-400 hover:bg-slate-800 hover:text-white'
             }`}>
           Assinaturas
         </NavLink>

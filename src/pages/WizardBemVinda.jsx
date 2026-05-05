@@ -449,7 +449,7 @@ function Field({ label, value, onChange, placeholder, type = 'text', required })
       </label>
       <input type={type} value={value} onChange={e => onChange(e.target.value)}
         placeholder={placeholder}
-        className="w-full bg-white/10 border border-white/10 text-white rounded-xl px-4 py-3 text-sm outline-none focus:border-rose-400 focus:bg-white/[0.12] transition-all placeholder:text-slate-600 font-medium [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none" />
+        className="w-full bg-white/10 border border-white/10 text-white rounded-xl px-4 py-3 text-sm outline-none focus:border-rose-400 focus:bg-white/[0.12] transition-all placeholder:text-slate-200 font-medium [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none" />
     </div>
   );
 }

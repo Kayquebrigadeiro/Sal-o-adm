@@ -106,8 +106,8 @@ const TableRow = ({ proc, config, custoMaterial, isExpanded, onToggleExpand, sal
 
   return (
     <React.Fragment>
-      <tr className={`border-b border-slate-100 hover:bg-slate-50 transition-colors ${isExpanded ? 'bg-indigo-50/50' : ''}`}>
-        <td className="p-3 font-bold text-slate-800">
+      <tr className={`border-b border-slate-800 hover:bg-slate-950 transition-colors ${isExpanded ? 'bg-indigo-50/50' : ''}`}>
+        <td className="p-3 font-bold text-white">
           {proc.nome}
         </td>
         <td className="p-3 text-center text-slate-500 font-medium">{fmt(config.custo_fixo_por_atendimento)}</td>
@@ -117,10 +117,10 @@ const TableRow = ({ proc, config, custoMaterial, isExpanded, onToggleExpand, sal
             onFocus={e => e.target.select()}
             className="w-20 text-center border border-emerald-200 rounded p-1 text-sm outline-none focus:border-emerald-500 font-bold text-emerald-700 bg-emerald-50 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none" />
         </td>
-        <td className="p-3 text-center border-l border-slate-100">
+        <td className="p-3 text-center border-l border-slate-800">
           <input type="number" step="0.01" value={precoP} onChange={e => handleFieldChange(setPrecoP, 'preco_p', e.target.value)}
             onFocus={e => e.target.select()}
-            className="w-20 text-center border border-slate-200 rounded p-1 text-sm outline-none focus:border-slate-500 font-bold text-slate-800 bg-white [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none" />
+            className="w-20 text-center border border-slate-700 rounded p-1 text-sm outline-none focus:border-slate-500 font-bold text-white bg-slate-900 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none" />
           {/* MATEMÁTICA ÓBVIA COM MAQUININHA */}
           <div className="text-[9px] text-slate-400 mt-1 font-bold bg-slate-100/50 rounded py-0.5 px-1 whitespace-nowrap uppercase">
             ({fmt(config.custo_fixo_por_atendimento)} + {fmt(custoMaterial)} + {fmt(ganho || 0)}) ÷ 0.95
@@ -130,17 +130,17 @@ const TableRow = ({ proc, config, custoMaterial, isExpanded, onToggleExpand, sal
           {proc.requer_comprimento ? (
             <input type="number" step="0.01" value={precoM} onChange={e => handleFieldChange(setPrecoM, 'preco_m', e.target.value)}
               onFocus={e => e.target.select()}
-              className="w-20 text-center border border-slate-200 rounded p-1 text-sm outline-none focus:border-slate-500 font-bold text-slate-600 bg-white [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none" />
+              className="w-20 text-center border border-slate-700 rounded p-1 text-sm outline-none focus:border-slate-500 font-bold text-slate-200 bg-slate-900 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none" />
           ) : '-'}
         </td>
         <td className="p-3 text-center">
           {proc.requer_comprimento ? (
             <input type="number" step="0.01" value={precoG} onChange={e => handleFieldChange(setPrecoG, 'preco_g', e.target.value)}
               onFocus={e => e.target.select()}
-              className="w-20 text-center border border-slate-200 rounded p-1 text-sm outline-none focus:border-slate-500 font-bold text-slate-600 bg-white [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none" />
+              className="w-20 text-center border border-slate-700 rounded p-1 text-sm outline-none focus:border-slate-500 font-bold text-slate-200 bg-slate-900 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none" />
           ) : '-'}
         </td>
-        <td className="p-3 text-center border-l border-slate-100">
+        <td className="p-3 text-center border-l border-slate-800">
           <div className="flex items-center justify-center gap-1">
             <button onClick={onToggleExpand} className={`p-1.5 rounded transition-colors ${isExpanded ? 'bg-indigo-100 text-indigo-600' : 'text-slate-400 hover:text-indigo-600 hover:bg-indigo-50'}`} title="Produtos Relacionados">
               <Package size={14} />
@@ -339,21 +339,21 @@ export default function Precificacao({ salaoId }) {
   const categoriasValidas = ORDEM_CATEGORIAS.filter(c => c !== 'PRODUTO_APLICADO');
 
   return (
-    <div className="p-6 bg-slate-50 min-h-screen font-sans">
+    <div className="p-6 bg-slate-950 min-h-screen font-sans">
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-4 gap-4">
         <div>
-          <h1 className="text-2xl font-black text-slate-800 uppercase">Precificação Estratégica</h1>
+          <h1 className="text-2xl font-black text-white uppercase">Precificação Estratégica</h1>
           <p className="text-sm text-slate-500 mt-1 uppercase">Motor de cálculo baseado na sua planilha real</p>
         </div>
       </div>
 
-      <div className="flex gap-1 border-b border-slate-200 mb-6">
+      <div className="flex gap-1 border-b border-slate-700 mb-6">
         {ABAS.map(aba => {
           const Icon = aba.icon;
           const ativo = abaAtiva === aba.key;
           return (
             <button key={`tab-${aba.key}`} onClick={() => setAbaAtiva(aba.key)}
-              className={`flex items-center gap-2 px-5 py-3 text-sm font-semibold border-b-2 transition-all -mb-px ${ativo ? 'border-emerald-600 text-emerald-700' : 'border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300'
+              className={`flex items-center gap-2 px-5 py-3 text-sm font-semibold border-b-2 transition-all -mb-px ${ativo ? 'border-emerald-600 text-emerald-700' : 'border-transparent text-slate-500 hover:text-slate-100 hover:border-slate-300'
                 }`}>
               <Icon size={16} /> {aba.label}
             </button>
@@ -378,24 +378,24 @@ export default function Precificacao({ salaoId }) {
             </h3>
             <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-4">
               <div>
-                <label className="block text-xs font-bold text-slate-600 mb-1 uppercase">Valor Cobrado (R$)</label>
+                <label className="block text-xs font-bold text-slate-200 mb-1 uppercase">Valor Cobrado (R$)</label>
                 <input type="number" step="0.01"
-                  className="w-full border border-violet-200 rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-violet-500 bg-white"
+                  className="w-full border border-violet-200 rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-violet-500 bg-slate-900"
                   value={sim.valorCobrado} onChange={e => setSim({ ...sim, valorCobrado: e.target.value })}
                   placeholder="150.00"
                 />
               </div>
               <div>
-                <label className="block text-xs font-bold text-slate-600 mb-1 uppercase">Custo Material (R$)</label>
+                <label className="block text-xs font-bold text-slate-200 mb-1 uppercase">Custo Material (R$)</label>
                 <input type="number" step="0.01"
-                  className="w-full border border-violet-200 rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-violet-500 bg-white"
+                  className="w-full border border-violet-200 rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-violet-500 bg-slate-900"
                   value={sim.custoProduto} onChange={e => setSim({ ...sim, custoProduto: e.target.value })}
                   placeholder="15.83"
                 />
               </div>
               <div>
-                <label className="block text-xs font-bold text-slate-600 mb-1 uppercase">Categoria</label>
-                <select className="w-full border border-violet-200 rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-violet-500 bg-white"
+                <label className="block text-xs font-bold text-slate-200 mb-1 uppercase">Categoria</label>
+                <select className="w-full border border-violet-200 rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-violet-500 bg-slate-900"
                   value={sim.categoria} onChange={e => setSim({ ...sim, categoria: e.target.value })}>
                   <option value="CABELO">Cabelo</option>
                   <option value="UNHAS">Unhas</option>
@@ -406,11 +406,11 @@ export default function Precificacao({ salaoId }) {
             </div>
 
             {resultadoSim && (
-              <div className="bg-white rounded-xl border border-violet-200 p-4 mt-2">
+              <div className="bg-slate-900 rounded-xl border border-violet-200 p-4 mt-2">
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-3">
                   <div>
                     <p className="text-[10px] font-bold text-slate-400 uppercase">Faturamento</p>
-                    <p className="text-lg font-black text-slate-800">{fmt(resultadoSim.valorBruto)}</p>
+                    <p className="text-lg font-black text-white">{fmt(resultadoSim.valorBruto)}</p>
                   </div>
                   <div>
                     <p className="text-[10px] font-bold text-slate-400 uppercase">Lucro Líquido</p>
@@ -425,12 +425,12 @@ export default function Precificacao({ salaoId }) {
                     </p>
                   </div>
                 </div>
-                <div className="flex flex-wrap gap-3 text-xs font-medium text-slate-500 border-t border-slate-100 pt-3 uppercase">
-                  <span>Maquininha: <b className="text-slate-700">{fmt(resultadoSim.valorMaquininha)}</b></span>
+                <div className="flex flex-wrap gap-3 text-xs font-medium text-slate-500 border-t border-slate-800 pt-3 uppercase">
+                  <span>Maquininha: <b className="text-slate-100">{fmt(resultadoSim.valorMaquininha)}</b></span>
                   <span>•</span>
-                  <span>Custo Fixo: <b className="text-slate-700">{fmt(resultadoSim.custoFixo)}</b></span>
+                  <span>Custo Fixo: <b className="text-slate-100">{fmt(resultadoSim.custoFixo)}</b></span>
                   <span>•</span>
-                  <span>Custo Material: <b className="text-slate-700">{fmt(resultadoSim.custoProduto)}</b></span>
+                  <span>Custo Material: <b className="text-slate-100">{fmt(resultadoSim.custoProduto)}</b></span>
                 </div>
                 {resultadoSim.prejuizo && (
                   <div className="mt-3 flex items-center gap-2 text-xs font-bold text-red-600 bg-red-50 px-3 py-2 rounded-lg uppercase">
@@ -443,22 +443,22 @@ export default function Precificacao({ salaoId }) {
         )}
 
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
-          <div className="bg-white border border-slate-200 rounded-xl p-3 shadow-sm">
+          <div className="bg-slate-900 border border-slate-700 rounded-xl p-3 shadow-sm">
             <p className="text-[9px] font-bold text-slate-400 uppercase tracking-wider mb-1">Custo Fixo / Atend.</p>
             <div className="flex items-center gap-1">
               <span className="text-slate-400 text-xs">R$</span>
               <input type="number" step="0.01"
-                className="w-full bg-transparent outline-none text-lg font-black text-slate-800 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                className="w-full bg-transparent outline-none text-lg font-black text-white [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                 value={config.custo_fixo_por_atendimento}
                 onChange={e => updateConfig('custo_fixo_por_atendimento', e.target.value)}
                 onBlur={async () => { try { await supabase.from('configuracoes').update({ custo_fixo_por_atendimento: Number(config.custo_fixo_por_atendimento) }).eq('salao_id', salaoId); showToast('✓', 'success'); } catch { } }}
               />
             </div>
           </div>
-          <div className="bg-white border border-slate-200 rounded-xl p-3 shadow-sm">
+          <div className="bg-slate-900 border border-slate-700 rounded-xl p-3 shadow-sm">
             <p className="text-[9px] font-bold text-slate-400 uppercase tracking-wider mb-1">Atendimentos / Mês</p>
             <input type="number" step="1"
-              className="w-full bg-transparent outline-none text-lg font-black text-slate-800 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+              className="w-full bg-transparent outline-none text-lg font-black text-white [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
               value={config.qtd_atendimentos_mes}
               onChange={e => updateConfig('qtd_atendimentos_mes', e.target.value)}
               onBlur={async () => {
@@ -497,7 +497,7 @@ export default function Precificacao({ salaoId }) {
                   onClick={() => setCatAtiva(key)}
                   className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold whitespace-nowrap transition-all duration-200 uppercase ${catAtiva === key
                     ? 'bg-slate-900 text-white shadow-md'
-                    : 'bg-white border border-slate-200 text-slate-600 hover:bg-slate-50'
+                    : 'bg-slate-900 border border-slate-700 text-slate-200 hover:bg-slate-950'
                     }`}
                 >
                   <span className="opacity-80">{cat.emoji}</span> {cat.label}
@@ -523,7 +523,7 @@ export default function Precificacao({ salaoId }) {
           </button>
         </div>
 
-        <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-x-auto">
+        <div className="bg-slate-900 rounded-2xl shadow-sm border border-slate-700 overflow-x-auto">
           <table className="w-full text-left border-collapse text-xs">
             <thead>
               <tr className="bg-slate-900 text-white text-[10px] uppercase font-bold tracking-wider">
@@ -571,13 +571,13 @@ export default function Precificacao({ salaoId }) {
         <Modal open={modalProc} onClose={() => setModalProc(false)} title="NOVO SERVIÇO">
           <div className="space-y-5 max-h-[75vh] overflow-y-auto pr-2">
             <div>
-              <label className="text-xs font-black text-slate-600 mb-1 block uppercase">Nome do Serviço</label>
-              <input type="text" value={formProc.nome} onChange={e => setFormProc({ ...formProc, nome: e.target.value.toUpperCase() })} placeholder="EX: NUTRIÇÃO" className="w-full border-2 border-slate-200 p-3 rounded-xl focus:border-slate-900 outline-none font-bold uppercase" />
+              <label className="text-xs font-black text-slate-200 mb-1 block uppercase">Nome do Serviço</label>
+              <input type="text" value={formProc.nome} onChange={e => setFormProc({ ...formProc, nome: e.target.value.toUpperCase() })} placeholder="EX: NUTRIÇÃO" className="w-full border-2 border-slate-700 p-3 rounded-xl focus:border-slate-900 outline-none font-bold uppercase" />
             </div>
 
-            <div className="bg-slate-50 border border-slate-200 rounded-xl p-4">
-              <label className="text-xs font-black text-slate-600 mb-2 block uppercase">Produtos Utilizados (Custo Mat.)</label>
-              <select className="w-full border-2 border-slate-200 p-3 rounded-xl text-xs font-bold uppercase mb-3 outline-none" onChange={(e) => {
+            <div className="bg-slate-950 border border-slate-700 rounded-xl p-4">
+              <label className="text-xs font-black text-slate-200 mb-2 block uppercase">Produtos Utilizados (Custo Mat.)</label>
+              <select className="w-full border-2 border-slate-700 p-3 rounded-xl text-xs font-bold uppercase mb-3 outline-none" onChange={(e) => {
                 const id = e.target.value;
                 if (!id) return;
                 const p = catalogo.find(c => c.id === id);
@@ -599,10 +599,10 @@ export default function Precificacao({ salaoId }) {
                     const fb = (Number(p.preco_compra) || 0) / Math.max(Number(p.qtd_aplicacoes) || 1, 1);
                     const c = Number(p.custo_por_uso) || fb;
                     return (
-                      <div key={p.id} className="flex items-center justify-between bg-white border border-slate-200 p-2 rounded-lg">
-                        <span className="text-xs font-bold text-slate-700 truncate flex-1 uppercase">{p.nome}</span>
+                      <div key={p.id} className="flex items-center justify-between bg-slate-900 border border-slate-700 p-2 rounded-lg">
+                        <span className="text-xs font-bold text-slate-100 truncate flex-1 uppercase">{p.nome}</span>
                         <div className="flex items-center gap-3">
-                          <input type="number" min="0.1" step="0.1" className="w-14 text-center border border-slate-200 rounded text-xs p-1 font-bold"
+                          <input type="number" min="0.1" step="0.1" className="w-14 text-center border border-slate-700 rounded text-xs p-1 font-bold"
                             value={p.qtd_usada} onChange={e => {
                               const val = Number(e.target.value);
                               setProdsSelecionados(prodsSelecionados.map(x => x.id === p.id ? { ...x, qtd_usada: val } : x));
@@ -620,8 +620,8 @@ export default function Precificacao({ salaoId }) {
             </div>
 
             <div>
-              <label className="text-xs font-black text-slate-600 mb-1 block uppercase">Ganho Líquido Desejado (R$)</label>
-              <input type="number" step="0.01" value={formProc.ganho} onChange={e => setFormProc({ ...formProc, ganho: e.target.value })} className="w-full border-2 border-slate-200 p-3 rounded-xl focus:border-emerald-500 outline-none font-bold text-emerald-700 bg-emerald-50" placeholder="50.00" />
+              <label className="text-xs font-black text-slate-200 mb-1 block uppercase">Ganho Líquido Desejado (R$)</label>
+              <input type="number" step="0.01" value={formProc.ganho} onChange={e => setFormProc({ ...formProc, ganho: e.target.value })} className="w-full border-2 border-slate-700 p-3 rounded-xl focus:border-emerald-500 outline-none font-bold text-emerald-700 bg-emerald-50" placeholder="50.00" />
             </div>
 
             <div className="bg-slate-900 rounded-2xl p-5 text-white shadow-xl">

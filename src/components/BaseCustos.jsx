@@ -70,11 +70,11 @@ export default function BaseCustos({ salaoId, qtdAtendimentos, onCustoFixoChange
     <div className="space-y-6 max-w-3xl">
       {/* Resumo */}
       <div className="grid grid-cols-3 gap-4">
-        <div className="bg-white rounded-2xl border border-slate-200 p-5">
+        <div className="bg-slate-900 rounded-2xl border border-slate-700 p-5">
           <p className="text-[10px] font-bold text-slate-400 uppercase">Total Mensal</p>
-          <p className="text-2xl font-black text-slate-800">{fmt(total)}</p>
+          <p className="text-2xl font-black text-white">{fmt(total)}</p>
         </div>
-        <div className="bg-white rounded-2xl border border-slate-200 p-5">
+        <div className="bg-slate-900 rounded-2xl border border-slate-700 p-5">
           <p className="text-[10px] font-bold text-slate-400 uppercase">Atendimentos/Mês</p>
           <p className="text-2xl font-black text-blue-600">{qtd}</p>
         </div>
@@ -86,7 +86,7 @@ export default function BaseCustos({ salaoId, qtdAtendimentos, onCustoFixoChange
       </div>
 
       {/* Tabela editável */}
-      <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden">
+      <div className="bg-slate-900 rounded-2xl border border-slate-700 overflow-hidden">
         <table className="w-full text-sm">
           <thead className="bg-slate-900 text-white text-[10px] uppercase tracking-wider">
             <tr>
@@ -102,23 +102,23 @@ export default function BaseCustos({ salaoId, qtdAtendimentos, onCustoFixoChange
             ) : itens.map(item => {
               const Icon = ICONES[item.tipo] || Wrench;
               return (
-                <tr key={item.id} className="border-b border-slate-100 hover:bg-slate-50">
+                <tr key={item.id} className="border-b border-slate-800 hover:bg-slate-950">
                   <td className="px-4 py-2">
                     <div className="flex items-center gap-2">
                       <Icon size={14} className="text-slate-400 flex-shrink-0" />
-                      <input type="text" className="w-full bg-transparent border-0 outline-none font-bold text-slate-800 focus:bg-slate-50 px-1 rounded"
+                      <input type="text" className="w-full bg-transparent border-0 outline-none font-bold text-white focus:bg-slate-950 px-1 rounded"
                         value={item.descricao} onChange={e => updateItem(item.id, 'descricao', e.target.value.toUpperCase())}
                         onBlur={() => salvarItem(item)} placeholder="Ex: ALUGUEL" />
                     </div>
                   </td>
                   <td className="px-4 py-2">
-                    <select className="bg-transparent border border-slate-200 rounded-lg px-2 py-1 text-xs outline-none"
+                    <select className="bg-transparent border border-slate-700 rounded-lg px-2 py-1 text-xs outline-none"
                       value={item.tipo} onChange={e => { updateItem(item.id, 'tipo', e.target.value); setTimeout(() => salvarItem({...item, tipo: e.target.value}), 0); }}>
                       {TIPOS.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}
                     </select>
                   </td>
                   <td className="px-4 py-2">
-                    <input type="number" step="0.01" className="w-full bg-transparent border-0 outline-none font-black text-right text-slate-800 focus:bg-slate-50 px-1 rounded"
+                    <input type="number" step="0.01" className="w-full bg-transparent border-0 outline-none font-black text-right text-white focus:bg-slate-950 px-1 rounded"
                       value={item.valor} onChange={e => updateItem(item.id, 'valor', e.target.value)}
                       onBlur={() => salvarItem(item)} />
                   </td>

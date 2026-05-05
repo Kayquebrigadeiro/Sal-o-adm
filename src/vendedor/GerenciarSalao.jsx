@@ -53,7 +53,7 @@ export default function GerenciarSalao({ userId }) {
             key={id}
             onClick={() => setAba(id)}
             className={`px-4 py-2.5 text-sm transition-colors border-b-2 -mb-px ${
-              aba === id ? 'border-gray-800 text-gray-800 font-medium' : 'border-transparent text-gray-400 hover:text-gray-600'
+              aba === id ? 'border-gray-800 text-white font-medium' : 'border-transparent text-gray-400 hover:text-gray-600'
             }`}
           >
             {label}
@@ -168,9 +168,9 @@ function AbaProfissionais({ salaoId }) {
       </form>
 
       {/* Tabela de profissionais */}
-      <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+      <div className="bg-slate-900 rounded-xl border border-gray-200 overflow-hidden">
         <table className="w-full text-sm">
-          <thead className="bg-gray-50 border-b border-gray-200">
+          <thead className="bg-slate-950 border-b border-gray-200">
             <tr>
               {['Nome', 'Cargo', 'Salário Fixo', 'Status', 'Ações'].map(h => (
                 <th key={h} className="text-left px-4 py-3 text-xs font-bold text-gray-600">{h}</th>
@@ -186,7 +186,7 @@ function AbaProfissionais({ salaoId }) {
               </tr>
             ) : (
               lista.map(p => (
-                <tr key={p.id} className="hover:bg-gray-50 transition-colors">
+                <tr key={p.id} className="hover:bg-slate-950 transition-colors">
                   <td className="px-4 py-3 font-bold text-gray-900">{p.nome}</td>
                   <td className="px-4 py-3 text-gray-600">
                     <select
@@ -293,14 +293,14 @@ function AbaProcedimentos({ salaoId }) {
   return (
     <div className="space-y-4">
       {/* Atalhos - Procedimentos padrão */}
-      <div className="border border-gray-200 rounded-xl p-4 bg-gray-50">
+      <div className="border border-gray-200 rounded-xl p-4 bg-slate-950">
         <p className="text-xs font-bold text-gray-600 mb-3">📋 Adicionar procedimentos padrão:</p>
         <div className="flex flex-wrap gap-2">
           {PROCEDIMENTOS_PADRAO.filter(p => !lista.some(l => l.nome.toLowerCase() === p.nome.toLowerCase())).map(proc => (
             <button
               key={proc.nome}
               onClick={() => adicionarPadrao(proc)}
-              className="text-xs bg-white border border-blue-200 text-blue-700 px-3 py-1.5 rounded-lg hover:bg-blue-50 font-medium transition-colors"
+              className="text-xs bg-slate-900 border border-blue-200 text-blue-700 px-3 py-1.5 rounded-lg hover:bg-blue-50 font-medium transition-colors"
               title={`${proc.categoria} - R$ ${proc.preco_p}`}
             >
               + {proc.nome}
@@ -310,9 +310,9 @@ function AbaProcedimentos({ salaoId }) {
       </div>
 
       {/* Tabela de procedimentos */}
-      <div className="bg-white rounded-xl border border-gray-200 overflow-x-auto">
+      <div className="bg-slate-900 rounded-xl border border-gray-200 overflow-x-auto">
         <table className="w-full text-sm">
-          <thead className="bg-gray-50 border-b border-gray-200 sticky top-0">
+          <thead className="bg-slate-950 border-b border-gray-200 sticky top-0">
             <tr>
               {[
                 'Procedimento',
@@ -342,7 +342,7 @@ function AbaProcedimentos({ salaoId }) {
               </tr>
             ) : (
               lista.map(p => (
-                <tr key={p.id} className="hover:bg-gray-50 transition-colors">
+                <tr key={p.id} className="hover:bg-slate-950 transition-colors">
                   <td className="px-3 py-3 font-bold text-gray-900">{p.nome}</td>
                   <td className="px-3 py-3 text-xs text-gray-500 whitespace-nowrap">{p.categoria}</td>
                   <td className="px-3 py-3">
@@ -379,7 +379,7 @@ function AbaProcedimentos({ salaoId }) {
                       className={`text-xs px-2 py-1 rounded-lg border transition-colors ${
                         p.requer_comprimento
                           ? 'bg-blue-50 border-blue-200 text-blue-700'
-                          : 'bg-gray-50 border-gray-200 text-gray-500'
+                          : 'bg-slate-950 border-gray-200 text-gray-500'
                       }`}
                     >
                       {p.requer_comprimento ? '✓ Sim' : 'Não'}
@@ -391,7 +391,7 @@ function AbaProcedimentos({ salaoId }) {
                       className={`text-xs px-2 py-1 rounded-lg font-bold transition-colors ${
                         p.ativo
                           ? 'bg-green-50 text-green-700 border border-green-200'
-                          : 'bg-gray-50 text-gray-500 border border-gray-200'
+                          : 'bg-slate-950 text-gray-500 border border-gray-200'
                       }`}
                     >
                       {p.ativo ? '✓ Ativo' : 'Inativo'}
@@ -487,7 +487,7 @@ function AbaUsuarios({ salaoId }) {
         + Convidar usuária
       </button>
 
-      <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+      <div className="bg-slate-900 rounded-xl border border-gray-200 overflow-hidden">
         {carregando ? (
           <div className="p-8 text-center text-gray-400">Carregando usuários...</div>
         ) : usuarios.length === 0 ? (
@@ -496,7 +496,7 @@ function AbaUsuarios({ salaoId }) {
           </div>
         ) : (
           <table className="w-full text-sm">
-            <thead className="bg-gray-50 border-b border-gray-200">
+            <thead className="bg-slate-950 border-b border-gray-200">
               <tr>
                 {['Email', 'Nome', 'Cargo', 'Status', 'Ações'].map(h => (
                   <th key={h} className="text-left px-4 py-3 text-xs font-bold text-gray-600">{h}</th>
@@ -505,14 +505,14 @@ function AbaUsuarios({ salaoId }) {
             </thead>
             <tbody className="divide-y divide-gray-50">
               {usuarios.map(u => (
-                <tr key={u.id} className="hover:bg-gray-50">
+                <tr key={u.id} className="hover:bg-slate-950">
                   <td className="px-4 py-3 font-medium text-gray-900">{u.auth?.email || u.id}</td>
                   <td className="px-4 py-3 text-gray-600">—</td>
                   <td className="px-4 py-3 text-sm">
                     <span className={`px-3 py-1 rounded-full text-xs font-bold ${
                       u.cargo === 'PROPRIETARIO'
                         ? 'bg-blue-50 text-blue-700'
-                        : 'bg-gray-50 text-gray-700'
+                        : 'bg-slate-950 text-gray-700'
                     }`}>
                       {u.cargo === 'PROPRIETARIO' ? 'Proprietária' : 'Funcionária'}
                     </span>
@@ -543,7 +543,7 @@ function AbaUsuarios({ salaoId }) {
           className="fixed inset-0 bg-black/40 flex items-center justify-center p-4 z-50"
           onClick={e => e.target === e.currentTarget && !convidando && setModal(false)}
         >
-          <div className="bg-white rounded-2xl shadow-xl w-full max-w-sm p-6">
+          <div className="bg-slate-900 rounded-2xl shadow-xl w-full max-w-sm p-6">
             <h2 className="text-lg font-bold text-gray-900 mb-4">Convidar nova usuária</h2>
             
             {mensagem && (
@@ -619,7 +619,7 @@ function AbaUsuarios({ salaoId }) {
                     setForm({ email: '', nome: '', cargo: 'PROPRIETARIO' });
                   }}
                   disabled={convidando}
-                  className="flex-1 py-2.5 text-sm border border-gray-300 rounded-lg font-bold hover:bg-gray-50 disabled:opacity-50"
+                  className="flex-1 py-2.5 text-sm border border-gray-300 rounded-lg font-bold hover:bg-slate-950 disabled:opacity-50"
                 >
                   Cancelar
                 </button>

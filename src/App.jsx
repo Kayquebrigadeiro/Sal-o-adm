@@ -227,7 +227,7 @@ export default function App() {
       )}
       */}
       <ToastProvider>
-        <div className="flex flex-col md:flex-row min-h-screen bg-gradient-to-br from-slate-50 to-rose-50/20 pb-[72px] md:pb-0">
+        <div className="flex flex-col md:flex-row min-h-screen bg-gradient-to-br from-slate-950 to-rose-50/20 pb-[72px] md:pb-0">
           <Sidebar role={role} email={email} salaoNome={salaoNome} />
           <main className="flex-1 min-w-0 overflow-x-hidden overflow-y-auto flex flex-col w-full relative">
             <div className="animate-fadeIn flex-1">

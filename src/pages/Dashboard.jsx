@@ -72,8 +72,8 @@ const LabelValorH = ({ x, y, width, height, value }) => {
 };
 
 // ─── KPI Card ───
-const KpiCard = ({ label, value, sub, cor = 'text-slate-800' }) => (
-  <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-4">
+const KpiCard = ({ label, value, sub, cor = 'text-white' }) => (
+  <div className="bg-slate-900 rounded-2xl border border-slate-700 shadow-sm p-4">
     <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">{label}</p>
     <p className={`text-xl font-black ${cor} truncate`}>{value}</p>
     {sub && <p className="text-[10px] text-slate-400 mt-0.5">{sub}</p>}
@@ -336,19 +336,19 @@ export default function Dashboard({ salaoId }) {
   // DASHBOARD PRINCIPAL
   // ────────────────────────────────────────────────────────────
   return (
-    <div className="p-5 bg-slate-50 min-h-screen font-sans">
+    <div className="p-5 bg-slate-950 min-h-screen font-sans">
 
       {/* ─── Header ─── */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
         <div className="flex items-center gap-2">
           <Sparkles size={16} className="text-rose-400" />
-          <h1 className="text-2xl font-black text-slate-800 uppercase">Painel Financeiro</h1>
+          <h1 className="text-2xl font-black text-white uppercase">Painel Financeiro</h1>
         </div>
         <div className="flex items-center gap-3">
-          <div className="flex items-center gap-2 bg-white border border-slate-200 rounded-xl px-3 py-2 shadow-sm">
+          <div className="flex items-center gap-2 bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 shadow-sm">
             <CalendarDays size={14} className="text-slate-400" />
             <select value={mesSelecionado} onChange={e => setMesSelecionado(e.target.value)}
-              className="border-0 bg-transparent outline-none text-sm font-medium text-slate-700 cursor-pointer">
+              className="border-0 bg-transparent outline-none text-sm font-medium text-slate-100 cursor-pointer">
               {meses.map(m => (
                 <option key={m} value={m}>
                   {new Date(m + '-01').toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' })}
@@ -357,7 +357,7 @@ export default function Dashboard({ salaoId }) {
             </select>
           </div>
           <button onClick={() => { setUnlocked(false); setPin(''); }}
-            className="flex items-center gap-2 bg-white px-4 py-2 rounded-xl border border-slate-200 text-slate-500 font-bold hover:bg-slate-50 text-sm shadow-sm">
+            className="flex items-center gap-2 bg-slate-900 px-4 py-2 rounded-xl border border-slate-700 text-slate-500 font-bold hover:bg-slate-950 text-sm shadow-sm">
             <Lock size={14} /> Bloquear
           </button>
         </div>
@@ -374,17 +374,17 @@ export default function Dashboard({ salaoId }) {
             BLOCO 1 — KPIs PRINCIPAIS (igual cabeçalho da planilha)
         ════════════════════════════════════════════════════ */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-          <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-5 col-span-2 lg:col-span-1">
+          <div className="bg-slate-900 rounded-2xl border border-slate-700 shadow-sm p-5 col-span-2 lg:col-span-1">
             <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Total Faturado</p>
-            <p className="text-3xl font-black text-slate-800 mt-1">{fmt(totalFaturamento)}</p>
+            <p className="text-3xl font-black text-white mt-1">{fmt(totalFaturamento)}</p>
             <p className="text-[10px] text-slate-400 mt-1">Acumulado dos {fechamento.length} meses</p>
           </div>
-          <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-5">
+          <div className="bg-slate-900 rounded-2xl border border-slate-700 shadow-sm p-5">
             <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Lucro Possível</p>
             <p className="text-2xl font-black text-amber-600 mt-1">{fmt(totalPossivel)}</p>
             <p className="text-[10px] text-slate-400 mt-1">Sem taxa maquininha</p>
           </div>
-          <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-5">
+          <div className="bg-slate-900 rounded-2xl border border-slate-700 shadow-sm p-5">
             <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Lucro Real</p>
             <p className={`text-2xl font-black mt-1 ${totalReal >= 0 ? 'text-emerald-600' : 'text-red-600'}`}>
               {fmt(totalReal)}
@@ -646,7 +646,7 @@ export default function Dashboard({ salaoId }) {
               {[new Date().getFullYear(), new Date().getFullYear() - 1].map(ano => (
                 <button key={ano} onClick={() => setAnoHomecare(ano)}
                   className={`px-3 py-1.5 rounded text-xs font-black transition-all ${anoHomecare === ano
-                    ? 'bg-amber-400 text-slate-900'
+                    ? 'bg-amber-400 text-white'
                     : 'text-slate-300 hover:text-white'}`}>
                   {ano}
                 </button>
@@ -702,14 +702,14 @@ export default function Dashboard({ salaoId }) {
         {/* ════════════════════════════════════════════════════
             FECHAR MÊS
         ════════════════════════════════════════════════════ */}
-        <div className="bg-white rounded-2xl border border-slate-100 p-6 shadow-sm">
+        <div className="bg-slate-900 rounded-2xl border border-slate-800 p-6 shadow-sm">
           <div className="flex items-center justify-between flex-wrap gap-4">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-500 to-violet-600 flex items-center justify-center shadow-md">
                 <Bookmark size={18} className="text-white" />
               </div>
               <div>
-                <h3 className="text-sm font-black text-slate-800">Fechamento do Mês</h3>
+                <h3 className="text-sm font-black text-white">Fechamento do Mês</h3>
                 <p className="text-xs text-slate-500 mt-0.5">
                   {fechamentoExiste
                     ? 'Este mês já foi fechado. Você pode atualizar os dados.'
@@ -793,9 +793,9 @@ export default function Dashboard({ salaoId }) {
               ['Despesas', despesasDados.total],
               ['Resultado', (Number(mesAtual?.lucro_real) || 0) + homecareDados.lucro - despesasDados.total - gastosPessoais - salariosFixos],
             ].map(([label, val]) => (
-              <div key={label} className="bg-slate-50 rounded-xl px-3 py-2 border border-slate-100">
+              <div key={label} className="bg-slate-950 rounded-xl px-3 py-2 border border-slate-800">
                 <p className="text-[9px] font-bold text-slate-400 uppercase">{label}</p>
-                <p className={`text-sm font-black ${Number(val) >= 0 ? 'text-slate-700' : 'text-red-600'}`}>{fmt(val)}</p>
+                <p className={`text-sm font-black ${Number(val) >= 0 ? 'text-slate-100' : 'text-red-600'}`}>{fmt(val)}</p>
               </div>
             ))}
           </div>

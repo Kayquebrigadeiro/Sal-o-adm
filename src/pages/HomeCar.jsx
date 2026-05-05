@@ -149,7 +149,7 @@ export default function HomeCar({ salaoId }) {
             <select
               value={mesSelecionado}
               onChange={e => setMesSelecionado(e.target.value)}
-              className="border border-slate-300 rounded-lg px-4 py-2 text-sm bg-white outline-none"
+              className="border border-slate-300 rounded-lg px-4 py-2 text-sm bg-slate-900 outline-none"
             >
               {meses.map(m => (
                 <option key={m} value={m}>
@@ -169,38 +169,38 @@ export default function HomeCar({ salaoId }) {
 
       {/* Cards de Resumo */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-        <div className="bg-white rounded-xl border border-slate-200 p-4">
+        <div className="bg-slate-900 rounded-xl border border-slate-700 p-4">
           <p className="text-xs text-slate-500 mb-1">Total Vendas</p>
-          <p className="text-2xl font-bold text-slate-900">{fmt(totalVendas)}</p>
+          <p className="text-2xl font-bold text-white">{fmt(totalVendas)}</p>
         </div>
-        <div className="bg-white rounded-xl border border-slate-200 p-4">
+        <div className="bg-slate-900 rounded-xl border border-slate-700 p-4">
           <p className="text-xs text-slate-500 mb-1">Total Recebido</p>
           <p className="text-2xl font-bold text-emerald-600">{fmt(totalRecebido)}</p>
         </div>
-        <div className="bg-white rounded-xl border border-slate-200 p-4">
+        <div className="bg-slate-900 rounded-xl border border-slate-700 p-4">
           <p className="text-xs text-slate-500 mb-1">Lucro Total</p>
           <p className="text-2xl font-bold text-blue-600">{fmt(totalLucro)}</p>
         </div>
-        <div className="bg-white rounded-xl border border-slate-200 p-4">
+        <div className="bg-slate-900 rounded-xl border border-slate-700 p-4">
           <p className="text-xs text-slate-500 mb-1">Pendências</p>
           <p className="text-2xl font-bold text-amber-600">{fmt(totalPendente)}</p>
         </div>
       </div>
 
       {/* Tabela */}
-      <div className="bg-white rounded-xl border border-slate-200 overflow-x-auto">
+      <div className="bg-slate-900 rounded-xl border border-slate-700 overflow-x-auto">
         <table className="w-full text-sm min-w-[600px]">
-          <thead className="bg-slate-50 border-b border-slate-200">
+          <thead className="bg-slate-950 border-b border-slate-700">
             <tr>
-              <th className="text-left px-4 py-3 font-medium text-slate-700">Data</th>
-              <th className="text-left px-4 py-3 font-medium text-slate-700">Cliente</th>
-              <th className="text-left px-4 py-3 font-medium text-slate-700">Produto</th>
-              <th className="text-right px-4 py-3 font-medium text-slate-700">Custo</th>
-              <th className="text-right px-4 py-3 font-medium text-slate-700">Venda</th>
-              <th className="text-right px-4 py-3 font-medium text-slate-700">Pago</th>
-              <th className="text-right px-4 py-3 font-medium text-slate-700">Lucro</th>
-              <th className="text-right px-4 py-3 font-medium text-slate-700">Pendente</th>
-              <th className="text-center px-4 py-3 font-medium text-slate-700">Ações</th>
+              <th className="text-left px-4 py-3 font-medium text-slate-100">Data</th>
+              <th className="text-left px-4 py-3 font-medium text-slate-100">Cliente</th>
+              <th className="text-left px-4 py-3 font-medium text-slate-100">Produto</th>
+              <th className="text-right px-4 py-3 font-medium text-slate-100">Custo</th>
+              <th className="text-right px-4 py-3 font-medium text-slate-100">Venda</th>
+              <th className="text-right px-4 py-3 font-medium text-slate-100">Pago</th>
+              <th className="text-right px-4 py-3 font-medium text-slate-100">Lucro</th>
+              <th className="text-right px-4 py-3 font-medium text-slate-100">Pendente</th>
+              <th className="text-center px-4 py-3 font-medium text-slate-100">Ações</th>
             </tr>
           </thead>
           <tbody>
@@ -210,11 +210,11 @@ export default function HomeCar({ salaoId }) {
               </tr>
             ) : (
               vendas.map(venda => (
-                <tr key={venda.id} className="border-b border-slate-100 hover:bg-slate-50">
+                <tr key={venda.id} className="border-b border-slate-800 hover:bg-slate-950">
                   <td className="px-4 py-3">{fmtData(venda.data)}</td>
                   <td className="px-4 py-3 font-medium">{venda.cliente}</td>
                   <td className="px-4 py-3">{venda.produto}</td>
-                  <td className="px-4 py-3 text-right text-slate-600">{fmt(venda.custo_produto)}</td>
+                  <td className="px-4 py-3 text-right text-slate-200">{fmt(venda.custo_produto)}</td>
                   <td className="px-4 py-3 text-right">{fmt(venda.valor_venda)}</td>
                   <td className="px-4 py-3 text-right text-emerald-600">{fmt(venda.valor_pago)}</td>
                   <td className="px-4 py-3 text-right text-blue-600">{fmt(venda.lucro)}</td>
@@ -240,7 +240,7 @@ export default function HomeCar({ salaoId }) {
       <Modal open={modalAberto} onClose={() => setModalAberto(false)} title={vendaEditando ? 'Editar Venda' : 'Nova Venda'}>
         <div className="space-y-4">
           <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1">Data</label>
+            <label className="block text-sm font-medium text-slate-100 mb-1">Data</label>
             <input
               type="date"
               value={form.data}
@@ -250,7 +250,7 @@ export default function HomeCar({ salaoId }) {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1">Cliente</label>
+            <label className="block text-sm font-medium text-slate-100 mb-1">Cliente</label>
             <input
               type="text"
               value={form.cliente}
@@ -261,7 +261,7 @@ export default function HomeCar({ salaoId }) {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1">Produto</label>
+            <label className="block text-sm font-medium text-slate-100 mb-1">Produto</label>
             <input
               type="text"
               value={form.produto}
@@ -273,7 +273,7 @@ export default function HomeCar({ salaoId }) {
 
           <div className="grid grid-cols-3 gap-4">
             <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1">Custo (R$)</label>
+              <label className="block text-sm font-medium text-slate-100 mb-1">Custo (R$)</label>
               <input
                 type="number"
                 step="0.01"
@@ -284,7 +284,7 @@ export default function HomeCar({ salaoId }) {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1">Venda (R$)</label>
+              <label className="block text-sm font-medium text-slate-100 mb-1">Venda (R$)</label>
               <input
                 type="number"
                 step="0.01"
@@ -295,7 +295,7 @@ export default function HomeCar({ salaoId }) {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1">Pago (R$)</label>
+              <label className="block text-sm font-medium text-slate-100 mb-1">Pago (R$)</label>
               <input
                 type="number"
                 step="0.01"
@@ -321,7 +321,7 @@ export default function HomeCar({ salaoId }) {
                   ) : (
                     <TrendingUp size={14} className="text-emerald-600" />
                   )}
-                  <span className="text-xs font-bold text-slate-600 uppercase">Preview Financeiro</span>
+                  <span className="text-xs font-bold text-slate-200 uppercase">Preview Financeiro</span>
                 </div>
                 <div className="grid grid-cols-3 gap-3 text-center">
                   <div>
@@ -348,7 +348,7 @@ export default function HomeCar({ salaoId }) {
           })()}
 
           <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1">Observação</label>
+            <label className="block text-sm font-medium text-slate-100 mb-1">Observação</label>
             <textarea
               value={form.obs}
               onChange={e => setForm({ ...form, obs: e.target.value.toUpperCase() })}
@@ -361,7 +361,7 @@ export default function HomeCar({ salaoId }) {
           <div className="flex justify-end gap-3 pt-4">
             <button
               onClick={() => setModalAberto(false)}
-              className="px-4 py-2 text-slate-600 hover:bg-slate-100 rounded-lg transition-colors"
+              className="px-4 py-2 text-slate-200 hover:bg-slate-800 rounded-lg transition-colors"
             >
               Cancelar
             </button>

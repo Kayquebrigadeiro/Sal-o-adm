@@ -76,7 +76,7 @@ export default function CatalogoProdutos({ salaoId }) {
     <div className="w-full">
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h2 className="text-lg font-black text-slate-800 uppercase">Catálogo de Produtos</h2>
+          <h2 className="text-lg font-black text-white uppercase">Catálogo de Produtos</h2>
           <p className="text-sm text-slate-500 uppercase">Custo por aplicação calculado automaticamente</p>
         </div>
         <button onClick={() => abrirModalProduto()}
@@ -86,7 +86,7 @@ export default function CatalogoProdutos({ salaoId }) {
       </div>
 
       {/* ═══ TABELA DE PRODUTOS ═══ */}
-      <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden mb-10">
+      <div className="bg-slate-900 rounded-2xl border border-slate-700 overflow-hidden mb-10">
         <table className="w-full text-sm">
           <thead className="bg-slate-900 text-white text-[10px] uppercase tracking-wider">
             <tr>
@@ -106,14 +106,14 @@ export default function CatalogoProdutos({ salaoId }) {
               const fallbackCusto = (Number(prod.preco_compra) || 0) / Math.max(Number(prod.qtd_aplicacoes) || 1, 1);
               const custoExibido = prod.custo_por_uso || fallbackCusto;
               return (
-                <tr key={prod.id} className="border-b border-slate-100 hover:bg-slate-50 transition-colors uppercase">
-                  <td className="px-4 py-3 font-bold text-slate-800 flex items-center gap-2">
+                <tr key={prod.id} className="border-b border-slate-800 hover:bg-slate-950 transition-colors uppercase">
+                  <td className="px-4 py-3 font-bold text-white flex items-center gap-2">
                     <Package size={14} className="text-violet-400" />
                     {prod.nome}
                   </td>
-                  <td className="px-4 py-3 text-right text-slate-600">{fmt(prod.preco_compra)}</td>
+                  <td className="px-4 py-3 text-right text-slate-200">{fmt(prod.preco_compra)}</td>
                   <td className="px-4 py-3 text-center">
-                    <span className="bg-slate-100 text-slate-600 px-2 py-0.5 rounded-full text-xs font-bold">{prod.qtd_aplicacoes}x</span>
+                    <span className="bg-slate-100 text-slate-200 px-2 py-0.5 rounded-full text-xs font-bold">{prod.qtd_aplicacoes}x</span>
                   </td>
                   <td className="px-4 py-3 text-right font-black text-indigo-600">{fmt(custoExibido)}</td>
                   <td className="px-4 py-3">
@@ -133,18 +133,18 @@ export default function CatalogoProdutos({ salaoId }) {
       <Modal open={modalProd} onClose={() => setModalProd(false)} title={editando ? 'EDITAR PRODUTO' : 'NOVO PRODUTO'}>
         <div className="space-y-4">
           <div>
-            <label className="block text-sm font-bold text-slate-700 mb-1 uppercase">Nome do Produto</label>
+            <label className="block text-sm font-bold text-slate-100 mb-1 uppercase">Nome do Produto</label>
             <input type="text" className="w-full border border-slate-300 rounded-xl px-3 py-2.5 outline-none focus:ring-2 focus:ring-indigo-500 uppercase font-bold"
               value={form.nome} onChange={e => setForm({ ...form, nome: e.target.value })} placeholder="EX: BOTOX CAPILAR 500ML" />
           </div>
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-bold text-slate-700 mb-1 uppercase">Valor do Frasco (R$)</label>
+              <label className="block text-sm font-bold text-slate-100 mb-1 uppercase">Valor do Frasco (R$)</label>
               <input type="number" step="0.01" className="w-full border border-slate-300 rounded-xl px-3 py-2.5 outline-none focus:ring-2 focus:ring-indigo-500"
                 value={form.preco_compra} onChange={e => setForm({ ...form, preco_compra: e.target.value })} placeholder="190.00" />
             </div>
             <div>
-              <label className="block text-sm font-bold text-slate-700 mb-1 uppercase">Qtd Aplicações</label>
+              <label className="block text-sm font-bold text-slate-100 mb-1 uppercase">Qtd Aplicações</label>
               <input type="number" className="w-full border border-slate-300 rounded-xl px-3 py-2.5 outline-none focus:ring-2 focus:ring-indigo-500"
                 value={form.qtd_aplicacoes} onChange={e => setForm({ ...form, qtd_aplicacoes: e.target.value })} placeholder="12" />
             </div>

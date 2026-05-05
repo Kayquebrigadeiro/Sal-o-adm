@@ -52,15 +52,15 @@ export default function Login() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center p-4 sm:p-8 font-sans relative overflow-hidden">
+    <div className="min-h-screen bg-slate-950 flex flex-col items-center justify-center p-4 sm:p-8 font-sans relative overflow-hidden">
 
       {/* Background patterns and gradients */}
-      <div className="absolute top-0 w-full h-96 bg-gradient-to-b from-slate-900 to-slate-50 -z-10" />
+      <div className="absolute top-0 w-full h-96 bg-gradient-to-b from-slate-900 to-slate-950 -z-10" />
       <div className="absolute -top-[20%] -right-[10%] w-[50%] h-[50%] bg-indigo-500/10 rounded-full blur-[120px] -z-10" />
       <div className="absolute top-[10%] -left-[10%] w-[40%] h-[40%] bg-emerald-500/10 rounded-full blur-[100px] -z-10" />
 
       {/* Main Login Card */}
-      <div className="bg-white rounded-3xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-slate-100 w-full max-w-[420px] overflow-hidden">
+      <div className="bg-slate-900 rounded-3xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-slate-800 w-full max-w-[420px] overflow-hidden">
 
         {/* Header Section */}
         <div className="bg-slate-900 p-8 text-center relative overflow-hidden">
@@ -91,7 +91,7 @@ export default function Login() {
                   autoFocus
                   value={login}
                   onChange={(e) => setLogin(e.target.value)}
-                  className="w-full bg-slate-50 border border-slate-200 rounded-xl pl-11 pr-4 py-3.5 text-sm text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 focus:bg-white transition-all font-medium"
+                  className="w-full bg-slate-950 border border-slate-700 rounded-xl pl-11 pr-4 py-3.5 text-sm text-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 focus:bg-slate-900 transition-all font-medium"
                   placeholder="USUARIO_ADMIN"
                 />
               </div>
@@ -110,7 +110,7 @@ export default function Login() {
                   required
                   value={senha}
                   onChange={(e) => setSenha(e.target.value)}
-                  className="w-full bg-slate-50 border border-slate-200 rounded-xl pl-11 pr-12 py-3.5 text-sm text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 focus:bg-white transition-all font-medium"
+                  className="w-full bg-slate-950 border border-slate-700 rounded-xl pl-11 pr-12 py-3.5 text-sm text-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 focus:bg-slate-900 transition-all font-medium"
                   placeholder="********"
                 />
                 <button
@@ -150,7 +150,7 @@ export default function Login() {
         </div>
 
         {/* Footer Section */}
-        <div className="bg-slate-50 px-8 py-5 border-t border-slate-100 flex items-center justify-between">
+        <div className="bg-slate-950 px-8 py-5 border-t border-slate-800 flex items-center justify-between">
           <p className="text-xs text-slate-500 font-medium">
             SALÃO SECRETO © {new Date().getFullYear()}
           </p>

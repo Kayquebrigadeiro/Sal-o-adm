@@ -7,7 +7,7 @@ import Assinaturas from './Assinaturas';
 
 export default function VendedorApp({ email, userId }) {
   return (
-    <div className="flex min-h-screen bg-slate-50">
+    <div className="flex min-h-screen bg-slate-950">
       <VendedorSidebar email={email} />
       <main className="flex-1 overflow-auto">
         <Routes>

@@ -64,7 +64,7 @@ export default function GerenciarAdmins() {
     <div className="p-6 max-w-2xl">
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-xl font-semibold text-slate-800">Admins do sistema</h1>
+          <h1 className="text-xl font-semibold text-white">Admins do sistema</h1>
           <p className="text-xs text-slate-400 mt-0.5">
             Todos os admins têm acesso igual ao painel — podem criar e gerenciar salões.
           </p>
@@ -77,12 +77,12 @@ export default function GerenciarAdmins() {
         </button>
       </div>
 
-      <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
+      <div className="bg-slate-900 rounded-xl border border-slate-700 overflow-hidden">
         {loading ? (
           <p className="p-6 text-sm text-slate-400">Carregando...</p>
         ) : (
           <table className="w-full text-sm">
-            <thead className="bg-slate-50 border-b border-slate-200">
+            <thead className="bg-slate-950 border-b border-slate-700">
               <tr>
                 <th className="text-left px-4 py-3 text-xs text-slate-500 font-medium">Email</th>
                 <th className="text-left px-4 py-3 text-xs text-slate-500 font-medium">Desde</th>
@@ -91,9 +91,9 @@ export default function GerenciarAdmins() {
             </thead>
             <tbody className="divide-y divide-slate-50">
               {admins.map(a => (
-                <tr key={a.auth_user_id} className="hover:bg-slate-50">
+                <tr key={a.auth_user_id} className="hover:bg-slate-950">
                   <td className="px-4 py-3">
-                    <span className="font-medium text-slate-800">{a.email || '—'}</span>
+                    <span className="font-medium text-white">{a.email || '—'}</span>
                     {a.auth_user_id === meuId && (
                       <span className="ml-2 text-[10px] bg-blue-50 text-blue-600 px-1.5 py-0.5 rounded-full">
                         você
@@ -126,15 +126,15 @@ export default function GerenciarAdmins() {
           className="fixed inset-0 bg-black/40 flex items-center justify-center p-4 z-50"
           onClick={e => e.target === e.currentTarget && setModal(false)}
         >
-          <div className="bg-white rounded-2xl shadow-xl w-full max-w-sm p-6">
-            <h2 className="text-lg font-semibold text-slate-800 mb-1">Novo admin</h2>
+          <div className="bg-slate-900 rounded-2xl shadow-xl w-full max-w-sm p-6">
+            <h2 className="text-lg font-semibold text-white mb-1">Novo admin</h2>
             <p className="text-xs text-slate-400 mb-5">
               Defina email e senha presencialmente. O acesso é imediato.
             </p>
 
             <form onSubmit={criarAdmin} className="space-y-3">
               <div>
-                <label className="text-xs text-slate-600 block mb-1">Nome</label>
+                <label className="text-xs text-slate-200 block mb-1">Nome</label>
                 <input
                   type="text" required value={form.nome}
                   onChange={e => setForm({...form, nome: e.target.value.toUpperCase()})}
@@ -143,7 +143,7 @@ export default function GerenciarAdmins() {
                 />
               </div>
               <div>
-                <label className="text-xs text-slate-600 block mb-1">E-mail de acesso</label>
+                <label className="text-xs text-slate-200 block mb-1">E-mail de acesso</label>
                 <input
                   type="email" required value={form.email}
                   onChange={e => setForm({...form, email: e.target.value})}
@@ -152,7 +152,7 @@ export default function GerenciarAdmins() {
                 />
               </div>
               <div>
-                <label className="text-xs text-slate-600 block mb-1">Senha</label>
+                <label className="text-xs text-slate-200 block mb-1">Senha</label>
                 <input
                   type="text" required value={form.senha}
                   onChange={e => setForm({...form, senha: e.target.value})}
@@ -167,7 +167,7 @@ export default function GerenciarAdmins() {
               <div className="flex gap-3 pt-2">
                 <button
                   type="button" onClick={() => setModal(false)}
-                  className="flex-1 py-2.5 text-sm border border-slate-300 rounded-lg hover:bg-slate-50"
+                  className="flex-1 py-2.5 text-sm border border-slate-300 rounded-lg hover:bg-slate-950"
                 >
                   Cancelar
                 </button>

@@ -4,7 +4,7 @@
 
 @layer base {
   body {
-    @apply bg-[#FAFAFA] text-zinc-800 antialiased selection:bg-rose-200;
+    @apply bg-[#FAFAFA] text-white antialiased selection:bg-rose-200;
   }
 }
 

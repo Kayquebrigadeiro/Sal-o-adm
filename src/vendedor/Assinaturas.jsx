@@ -150,43 +150,43 @@ export default function Assinaturas() {
     <div className="p-8 max-w-7xl mx-auto animate-fadeIn">
       <div className="flex justify-between items-end mb-8">
         <div>
-          <h1 className="text-2xl font-bold text-slate-800">Gestão de Assinaturas</h1>
+          <h1 className="text-2xl font-bold text-white">Gestão de Assinaturas</h1>
           <p className="text-slate-500 mt-1">Controle de pagamentos e acessos dos seus salões.</p>
         </div>
       </div>
 
       <div className="grid grid-cols-3 gap-4 mb-8">
-        <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex items-center gap-4">
+        <div className="bg-slate-900 p-5 rounded-xl border border-slate-700 shadow-sm flex items-center gap-4">
           <div className="w-12 h-12 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center">
             <CheckCircle className="w-6 h-6" />
           </div>
           <div>
             <p className="text-sm font-medium text-slate-500">Ativos</p>
-            <p className="text-2xl font-bold text-slate-800">{qtAtivos}</p>
+            <p className="text-2xl font-bold text-white">{qtAtivos}</p>
           </div>
         </div>
-        <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex items-center gap-4">
+        <div className="bg-slate-900 p-5 rounded-xl border border-slate-700 shadow-sm flex items-center gap-4">
           <div className="w-12 h-12 bg-rose-100 text-rose-600 rounded-full flex items-center justify-center">
             <ShieldAlert className="w-6 h-6" />
           </div>
           <div>
             <p className="text-sm font-medium text-slate-500">Vencidos / Bloqueados</p>
-            <p className="text-2xl font-bold text-slate-800">{qtVencidos}</p>
+            <p className="text-2xl font-bold text-white">{qtVencidos}</p>
           </div>
         </div>
-        <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex items-center gap-4">
+        <div className="bg-slate-900 p-5 rounded-xl border border-slate-700 shadow-sm flex items-center gap-4">
           <div className="w-12 h-12 bg-amber-100 text-amber-600 rounded-full flex items-center justify-center">
             <CalendarClock className="w-6 h-6" />
           </div>
           <div>
             <p className="text-sm font-medium text-slate-500">Em Trial (Teste)</p>
-            <p className="text-2xl font-bold text-slate-800">{qtTrial}</p>
+            <p className="text-2xl font-bold text-white">{qtTrial}</p>
           </div>
         </div>
       </div>
 
-      <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
-        <div className="p-4 border-b border-slate-100 flex gap-4 bg-slate-50">
+      <div className="bg-slate-900 rounded-2xl border border-slate-700 shadow-sm overflow-hidden">
+        <div className="p-4 border-b border-slate-800 flex gap-4 bg-slate-950">
           <div className="relative flex-1 max-w-md">
             <Search className="absolute left-3 top-2.5 w-5 h-5 text-slate-400" />
             <input
@@ -194,7 +194,7 @@ export default function Assinaturas() {
               placeholder="Buscar salão..."
               value={busca}
               onChange={(e) => setBusca(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 bg-white border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none transition-all"
+              className="w-full pl-10 pr-4 py-2 bg-slate-900 border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none transition-all"
             />
           </div>
         </div>
@@ -202,7 +202,7 @@ export default function Assinaturas() {
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse">
             <thead>
-              <tr className="bg-slate-50/50 text-slate-500 text-sm border-b border-slate-200">
+              <tr className="bg-slate-950/50 text-slate-500 text-sm border-b border-slate-700">
                 <th className="py-4 px-6 font-semibold">Salão</th>
                 <th className="py-4 px-6 font-semibold">Status</th>
                 <th className="py-4 px-6 font-semibold">Vencimento</th>
@@ -228,8 +228,8 @@ export default function Assinaturas() {
                   const dVenc = new Date(ass.proximo_vencimento + 'T00:00:00').toLocaleDateString('pt-BR');
 
                   return (
-                    <tr key={s.id} className="hover:bg-slate-50 transition-colors">
-                      <td className="py-4 px-6 font-medium text-slate-800">{s.nome}</td>
+                    <tr key={s.id} className="hover:bg-slate-950 transition-colors">
+                      <td className="py-4 px-6 font-medium text-white">{s.nome}</td>
                       <td className="py-4 px-6">
                         <span className={`px-2.5 py-1 rounded-md text-xs font-bold border ${
                           isVencido ? 'bg-rose-50 text-rose-600 border-rose-200' :
@@ -240,12 +240,12 @@ export default function Assinaturas() {
                         </span>
                       </td>
                       <td className="py-4 px-6 text-sm">
-                        <span className="block text-slate-700">{dVenc}</span>
+                        <span className="block text-slate-100">{dVenc}</span>
                         <span className={`text-xs font-medium ${s.diasRestantes < 0 ? 'text-rose-500' : s.diasRestantes <= 5 ? 'text-amber-500' : 'text-slate-400'}`}>
                           {s.diasRestantes < 0 ? `Venceu há ${Math.abs(s.diasRestantes)} dias` : `Em ${s.diasRestantes} dias`}
                         </span>
                       </td>
-                      <td className="py-4 px-6 text-sm text-slate-600 font-medium">
+                      <td className="py-4 px-6 text-sm text-slate-200 font-medium">
                         R$ {Number(ass.planos?.valor_mensal || 100).toFixed(2).replace('.', ',')}
                       </td>
                       <td className="py-4 px-6 text-right">
@@ -254,7 +254,7 @@ export default function Assinaturas() {
                           className={`px-4 py-2 rounded-lg text-sm font-bold transition-all shadow-sm ${
                             isVencido || s.diasRestantes <= 5
                               ? 'bg-rose-500 hover:bg-rose-600 text-white shadow-rose-500/20'
-                              : 'bg-white border border-slate-300 text-slate-700 hover:bg-slate-50'
+                              : 'bg-slate-900 border border-slate-300 text-slate-100 hover:bg-slate-950'
                           }`}
                         >
                           {isVencido ? 'Liberar Acesso' : 'Renovar'}
@@ -271,14 +271,14 @@ export default function Assinaturas() {
 
       {/* MODAL DE RENOVAÇÃO */}
       {modalAberto && salaoSelecionado && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-fadeIn">
-          <div className="bg-white rounded-2xl w-full max-w-md shadow-2xl overflow-hidden">
-            <div className="p-6 border-b border-slate-100 flex justify-between items-center">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-white/60 backdrop-blur-sm animate-fadeIn">
+          <div className="bg-slate-900 rounded-2xl w-full max-w-md shadow-2xl overflow-hidden">
+            <div className="p-6 border-b border-slate-800 flex justify-between items-center">
               <div>
-                <h3 className="text-lg font-bold text-slate-800">Renovar Assinatura</h3>
+                <h3 className="text-lg font-bold text-white">Renovar Assinatura</h3>
                 <p className="text-sm text-slate-500">{salaoSelecionado.nome}</p>
               </div>
-              <button onClick={() => setModalAberto(false)} className="text-slate-400 hover:text-slate-600">
+              <button onClick={() => setModalAberto(false)} className="text-slate-400 hover:text-slate-200">
                 ✕
               </button>
             </div>
@@ -286,11 +286,11 @@ export default function Assinaturas() {
             <form onSubmit={handleRenovar} className="p-6 space-y-4">
               
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">Forma de Pagamento</label>
+                <label className="block text-sm font-medium text-slate-100 mb-1">Forma de Pagamento</label>
                 <select 
                   value={renovacaoForm.forma_pagamento}
                   onChange={(e) => setRenovacaoForm({...renovacaoForm, forma_pagamento: e.target.value})}
-                  className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none"
+                  className="w-full p-3 bg-slate-950 border border-slate-700 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none"
                 >
                   <option value="PIX">PIX</option>
                   <option value="CARTAO">Cartão de Crédito</option>
@@ -299,33 +299,33 @@ export default function Assinaturas() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">Valor Recebido (R$)</label>
+                <label className="block text-sm font-medium text-slate-100 mb-1">Valor Recebido (R$)</label>
                 <input 
                   type="number" step="0.01" min="0" required
                   value={renovacaoForm.valor}
                   onChange={(e) => setRenovacaoForm({...renovacaoForm, valor: e.target.value})}
-                  className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none"
+                  className="w-full p-3 bg-slate-950 border border-slate-700 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">Referência / Comprovante (opcional)</label>
+                <label className="block text-sm font-medium text-slate-100 mb-1">Referência / Comprovante (opcional)</label>
                 <input 
                   type="text" 
                   placeholder="Ex: ID da transação PIX"
                   value={renovacaoForm.referencia}
                   onChange={(e) => setRenovacaoForm({...renovacaoForm, referencia: e.target.value})}
-                  className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none"
+                  className="w-full p-3 bg-slate-950 border border-slate-700 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">Observações internas</label>
+                <label className="block text-sm font-medium text-slate-100 mb-1">Observações internas</label>
                 <textarea 
                   rows="2"
                   value={renovacaoForm.obs}
                   onChange={(e) => setRenovacaoForm({...renovacaoForm, obs: e.target.value})}
-                  className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none"
+                  className="w-full p-3 bg-slate-950 border border-slate-700 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none"
                 />
               </div>
 
@@ -333,7 +333,7 @@ export default function Assinaturas() {
                 <button 
                   type="button" 
                   onClick={() => setModalAberto(false)}
-                  className="flex-1 py-3 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl transition-colors"
+                  className="flex-1 py-3 bg-slate-100 hover:bg-slate-200 text-slate-100 font-bold rounded-xl transition-colors"
                 >
                   Cancelar
                 </button>

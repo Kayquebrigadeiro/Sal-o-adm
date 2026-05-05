@@ -34,8 +34,8 @@ const FUNDO_CARD          = '#1e2433';
 const TooltipMoeda = ({ active, payload, label }) => {
   if (!active || !payload?.length) return null;
   return (
-    <div className="bg-slate-800 border border-slate-600 shadow-xl rounded-xl p-3 text-xs">
-      <p className="font-bold text-slate-200 mb-1">{label}</p>
+    <div className="bg-blue-800 border border-blue-600 shadow-xl rounded-xl p-3 text-xs">
+      <p className="font-bold text-blue-200 mb-1">{label}</p>
       {payload.map((entry, i) => (
         <p key={i} style={{ color: entry.color || '#e2e8f0' }} className="font-bold">
           {entry.name}: {typeof entry.value === 'number' && Math.abs(entry.value) > 10
@@ -73,19 +73,19 @@ const LabelValorH = ({ x, y, width, height, value }) => {
 
 // ─── KPI Card ───
 const KpiCard = ({ label, value, sub, cor = 'text-white' }) => (
-  <div className="bg-slate-900 rounded-2xl border border-slate-700 shadow-sm p-4">
-    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">{label}</p>
+  <div className="bg-blue-900 rounded-2xl border border-blue-700 shadow-sm p-4">
+    <p className="text-[10px] font-bold text-blue-400 uppercase tracking-widest mb-1">{label}</p>
     <p className={`text-xl font-black ${cor} truncate`}>{value}</p>
-    {sub && <p className="text-[10px] text-slate-400 mt-0.5">{sub}</p>}
+    {sub && <p className="text-[10px] text-blue-400 mt-0.5">{sub}</p>}
   </div>
 );
 
 // ─── Explicação de gráfico (reutilizável) ───
 const ExplicacaoGrafico = ({ texto, dica }) => (
   <div className="mb-4 space-y-2">
-    <div className="flex items-start gap-2 bg-slate-700/50 rounded-lg p-3">
+    <div className="flex items-start gap-2 bg-blue-700/50 rounded-lg p-3">
       <span className="text-lg flex-shrink-0">💡</span>
-      <p className="text-slate-300 text-xs leading-relaxed">{texto}</p>
+      <p className="text-blue-300 text-xs leading-relaxed">{texto}</p>
     </div>
     {dica && (
       <div className="flex items-start gap-2 bg-orange-500/10 border border-orange-500/20 rounded-lg p-3">
@@ -310,20 +310,20 @@ export default function Dashboard({ salaoId }) {
   // ────────────────────────────────────────────────────────────
   if (!unlocked) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-screen bg-gradient-to-br from-slate-900 to-slate-800 p-4">
+      <div className="flex flex-col items-center justify-center min-h-screen bg-gradient-to-br from-blue-900 to-blue-800 p-4">
         <div className="bg-white/10 backdrop-blur-xl p-8 rounded-3xl shadow-2xl border border-white/10 w-full max-w-sm text-center">
-          <div className="w-16 h-16 bg-gradient-to-br from-rose-500 to-amber-500 text-white rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-xl">
+          <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-blue-500 text-white rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-xl">
             <Lock size={28} />
           </div>
           <h2 className="text-2xl font-black text-white mb-2">Painel Financeiro</h2>
-          <p className="text-slate-400 mb-8 text-sm">Acesso restrito à gestão financeira.</p>
+          <p className="text-blue-400 mb-8 text-sm">Acesso restrito à gestão financeira.</p>
           <form onSubmit={e => { e.preventDefault(); if (pin === (import.meta.env.VITE_DASHBOARD_PIN || '8239')) setUnlocked(true); else { alert('PIN incorreto'); setPin(''); } }}>
             <input
               type="password" maxLength={4} placeholder="PIN"
-              className="w-full text-center text-4xl tracking-[0.5em] font-black bg-white/10 border border-white/20 text-white rounded-xl py-4 outline-none focus:ring-2 focus:ring-rose-500 mb-4"
+              className="w-full text-center text-4xl tracking-[0.5em] font-black bg-white/10 border border-white/20 text-white rounded-xl py-4 outline-none focus:ring-2 focus:ring-blue-500 mb-4"
               value={pin} onChange={e => setPin(e.target.value)} autoFocus
             />
-            <button type="submit" className="w-full bg-gradient-to-r from-rose-500 to-amber-500 text-white py-4 rounded-xl font-bold hover:opacity-90 transition-all shadow-xl">
+            <button type="submit" className="w-full bg-gradient-to-r from-blue-500 to-blue-500 text-white py-4 rounded-xl font-bold hover:opacity-90 transition-all shadow-xl">
               Desbloquear
             </button>
           </form>
@@ -336,19 +336,19 @@ export default function Dashboard({ salaoId }) {
   // DASHBOARD PRINCIPAL
   // ────────────────────────────────────────────────────────────
   return (
-    <div className="p-5 bg-slate-950 min-h-screen font-sans">
+    <div className="p-5 bg-blue-950 min-h-screen font-sans">
 
       {/* ─── Header ─── */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
         <div className="flex items-center gap-2">
-          <Sparkles size={16} className="text-rose-400" />
+          <Sparkles size={16} className="text-blue-400" />
           <h1 className="text-2xl font-black text-white uppercase">Painel Financeiro</h1>
         </div>
         <div className="flex items-center gap-3">
-          <div className="flex items-center gap-2 bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 shadow-sm">
-            <CalendarDays size={14} className="text-slate-400" />
+          <div className="flex items-center gap-2 bg-blue-900 border border-blue-700 rounded-xl px-3 py-2 shadow-sm">
+            <CalendarDays size={14} className="text-blue-400" />
             <select value={mesSelecionado} onChange={e => setMesSelecionado(e.target.value)}
-              className="border-0 bg-transparent outline-none text-sm font-medium text-slate-100 cursor-pointer">
+              className="border-0 bg-transparent outline-none text-sm font-medium text-blue-100 cursor-pointer">
               {meses.map(m => (
                 <option key={m} value={m}>
                   {new Date(m + '-01').toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' })}
@@ -357,7 +357,7 @@ export default function Dashboard({ salaoId }) {
             </select>
           </div>
           <button onClick={() => { setUnlocked(false); setPin(''); }}
-            className="flex items-center gap-2 bg-slate-900 px-4 py-2 rounded-xl border border-slate-700 text-slate-500 font-bold hover:bg-slate-950 text-sm shadow-sm">
+            className="flex items-center gap-2 bg-blue-900 px-4 py-2 rounded-xl border border-blue-700 text-blue-500 font-bold hover:bg-blue-950 text-sm shadow-sm">
             <Lock size={14} /> Bloquear
           </button>
         </div>
@@ -365,8 +365,8 @@ export default function Dashboard({ salaoId }) {
 
       {loading ? (
         <div className="flex items-center justify-center py-24">
-          <div className="w-6 h-6 border-2 border-rose-400 border-t-transparent rounded-full animate-spin mr-3" />
-          <span className="text-slate-400 font-medium">Carregando dados...</span>
+          <div className="w-6 h-6 border-2 border-blue-400 border-t-transparent rounded-full animate-spin mr-3" />
+          <span className="text-blue-400 font-medium">Carregando dados...</span>
         </div>
       ) : (<>
 
@@ -374,29 +374,29 @@ export default function Dashboard({ salaoId }) {
             BLOCO 1 — KPIs PRINCIPAIS (igual cabeçalho da planilha)
         ════════════════════════════════════════════════════ */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-          <div className="bg-slate-900 rounded-2xl border border-slate-700 shadow-sm p-5 col-span-2 lg:col-span-1">
-            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Total Faturado</p>
+          <div className="bg-blue-900 rounded-2xl border border-blue-700 shadow-sm p-5 col-span-2 lg:col-span-1">
+            <p className="text-[10px] font-bold text-blue-400 uppercase tracking-widest">Total Faturado</p>
             <p className="text-3xl font-black text-white mt-1">{fmt(totalFaturamento)}</p>
-            <p className="text-[10px] text-slate-400 mt-1">Acumulado dos {fechamento.length} meses</p>
+            <p className="text-[10px] text-blue-400 mt-1">Acumulado dos {fechamento.length} meses</p>
           </div>
-          <div className="bg-slate-900 rounded-2xl border border-slate-700 shadow-sm p-5">
-            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Lucro Possível</p>
-            <p className="text-2xl font-black text-amber-600 mt-1">{fmt(totalPossivel)}</p>
-            <p className="text-[10px] text-slate-400 mt-1">Sem taxa maquininha</p>
+          <div className="bg-blue-900 rounded-2xl border border-blue-700 shadow-sm p-5">
+            <p className="text-[10px] font-bold text-blue-400 uppercase tracking-widest">Lucro Possível</p>
+            <p className="text-2xl font-black text-blue-600 mt-1">{fmt(totalPossivel)}</p>
+            <p className="text-[10px] text-blue-400 mt-1">Sem taxa maquininha</p>
           </div>
-          <div className="bg-slate-900 rounded-2xl border border-slate-700 shadow-sm p-5">
-            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Lucro Real</p>
+          <div className="bg-blue-900 rounded-2xl border border-blue-700 shadow-sm p-5">
+            <p className="text-[10px] font-bold text-blue-400 uppercase tracking-widest">Lucro Real</p>
             <p className={`text-2xl font-black mt-1 ${totalReal >= 0 ? 'text-emerald-600' : 'text-red-600'}`}>
               {fmt(totalReal)}
             </p>
-            <p className="text-[10px] text-slate-400 mt-1">Após todos os custos</p>
+            <p className="text-[10px] text-blue-400 mt-1">Após todos os custos</p>
           </div>
           <div className={`rounded-2xl border-2 shadow-sm p-5 ${resultado >= 0 ? 'bg-emerald-50 border-emerald-200' : 'bg-red-50 border-red-200'}`}>
             <div className="flex items-center gap-2 mb-1">
               {resultado >= 0
                 ? <ShieldCheck size={14} className="text-emerald-600" />
                 : <AlertCircle size={14} className="text-red-600" />}
-              <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Saúde</p>
+              <p className="text-[10px] font-bold text-blue-500 uppercase tracking-widest">Saúde</p>
             </div>
             <p className={`text-2xl font-black ${resultado >= 0 ? 'text-emerald-700' : 'text-red-700'}`}>
               {resultado >= 0 ? '✅ Saudável' : '⚠️ No vermelho'}
@@ -409,9 +409,9 @@ export default function Dashboard({ salaoId }) {
 
         {/* Alertas de pendência */}
         {Number(mesAtual?.total_pendente) > 0 && (
-          <div className="mb-6 bg-amber-50 border border-amber-200 rounded-xl p-4 flex items-center gap-3">
-            <AlertCircle size={16} className="text-amber-600 flex-shrink-0" />
-            <p className="text-sm font-bold text-amber-800">
+          <div className="mb-6 bg-blue-50 border border-blue-200 rounded-xl p-4 flex items-center gap-3">
+            <AlertCircle size={16} className="text-blue-600 flex-shrink-0" />
+            <p className="text-sm font-bold text-blue-800">
               {fmt(mesAtual.total_pendente)} em atendimentos pendentes este mês
             </p>
           </div>
@@ -451,18 +451,18 @@ export default function Dashboard({ salaoId }) {
                 </BarChart>
               </ResponsiveContainer>
             ) : (
-              <div className="h-64 flex items-center justify-center text-slate-500 text-sm">
+              <div className="h-64 flex items-center justify-center text-blue-500 text-sm">
                 Sem dados de faturamento
               </div>
             )}
             <div className="flex items-center gap-6 mt-2 justify-center">
               <div className="flex items-center gap-1.5">
                 <div className="w-3 h-3 rounded-sm" style={{ backgroundColor: COR_BARRA_PRINCIPAL }} />
-                <span className="text-[11px] font-bold text-slate-400 uppercase">Faturamento Bruto</span>
+                <span className="text-[11px] font-bold text-blue-400 uppercase">Faturamento Bruto</span>
               </div>
               <div className="flex items-center gap-1.5">
                 <div className="w-3 h-3 rounded-sm" style={{ backgroundColor: COR_BARRA_LUCRO }} />
-                <span className="text-[11px] font-bold text-slate-400 uppercase">Lucro Real</span>
+                <span className="text-[11px] font-bold text-blue-400 uppercase">Lucro Real</span>
               </div>
             </div>
           </div>
@@ -504,7 +504,7 @@ export default function Dashboard({ salaoId }) {
                   </BarChart>
                 </ResponsiveContainer>
               ) : (
-                <div className="h-48 flex items-center justify-center text-slate-500 text-sm">
+                <div className="h-48 flex items-center justify-center text-blue-500 text-sm">
                   Sem dados neste mês
                 </div>
               )}
@@ -545,7 +545,7 @@ export default function Dashboard({ salaoId }) {
                   </BarChart>
                 </ResponsiveContainer>
               ) : (
-                <div className="h-48 flex items-center justify-center text-slate-500 text-sm">
+                <div className="h-48 flex items-center justify-center text-blue-500 text-sm">
                   Sem dados neste mês
                 </div>
               )}
@@ -625,7 +625,7 @@ export default function Dashboard({ salaoId }) {
                 </BarChart>
               </ResponsiveContainer>
             ) : (
-              <div className="h-48 flex items-center justify-center text-slate-500 text-sm">
+              <div className="h-48 flex items-center justify-center text-blue-500 text-sm">
                 Sem dados de rendimento neste mês
               </div>
             )}
@@ -646,8 +646,8 @@ export default function Dashboard({ salaoId }) {
               {[new Date().getFullYear(), new Date().getFullYear() - 1].map(ano => (
                 <button key={ano} onClick={() => setAnoHomecare(ano)}
                   className={`px-3 py-1.5 rounded text-xs font-black transition-all ${anoHomecare === ano
-                    ? 'bg-amber-400 text-white'
-                    : 'text-slate-300 hover:text-white'}`}>
+                    ? 'bg-blue-400 text-white'
+                    : 'text-blue-300 hover:text-white'}`}>
                   {ano}
                 </button>
               ))}
@@ -659,14 +659,14 @@ export default function Dashboard({ salaoId }) {
               dica="Produtos em casa fidelizam a cliente e aumentam o ticket médio sem ocupar horário na agenda."
             />
             <div className="mb-4 flex items-center justify-between">
-              <p className="text-sm font-bold text-slate-400 uppercase">
+              <p className="text-sm font-bold text-blue-400 uppercase">
                 Venda Home Care {anoHomecare}
               </p>
               <p className="text-2xl font-black text-white">{fmt(totalHomecarAno)}</p>
             </div>
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               <div>
-                <p className="text-[10px] font-bold text-slate-500 uppercase mb-3">Venda / Pendência por Mês</p>
+                <p className="text-[10px] font-bold text-blue-500 uppercase mb-3">Venda / Pendência por Mês</p>
                 <ResponsiveContainer width="100%" height={220}>
                   <BarChart data={homecareMensal} margin={{ top: 10, right: 10, left: -10, bottom: 0 }}>
                     <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#2d3748" />
@@ -681,7 +681,7 @@ export default function Dashboard({ salaoId }) {
                 </ResponsiveContainer>
               </div>
               <div>
-                <p className="text-[10px] font-bold text-slate-500 uppercase mb-3">Lucro por Mês</p>
+                <p className="text-[10px] font-bold text-blue-500 uppercase mb-3">Lucro por Mês</p>
                 <ResponsiveContainer width="100%" height={220}>
                   <BarChart data={homecareMensal} margin={{ top: 10, right: 10, left: -10, bottom: 0 }}>
                     <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#2d3748" />
@@ -702,15 +702,15 @@ export default function Dashboard({ salaoId }) {
         {/* ════════════════════════════════════════════════════
             FECHAR MÊS
         ════════════════════════════════════════════════════ */}
-        <div className="bg-slate-900 rounded-2xl border border-slate-800 p-6 shadow-sm">
+        <div className="bg-blue-900 rounded-2xl border border-blue-800 p-6 shadow-sm">
           <div className="flex items-center justify-between flex-wrap gap-4">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-500 to-violet-600 flex items-center justify-center shadow-md">
+              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center shadow-md">
                 <Bookmark size={18} className="text-white" />
               </div>
               <div>
                 <h3 className="text-sm font-black text-white">Fechamento do Mês</h3>
-                <p className="text-xs text-slate-500 mt-0.5">
+                <p className="text-xs text-blue-500 mt-0.5">
                   {fechamentoExiste
                     ? 'Este mês já foi fechado. Você pode atualizar os dados.'
                     : 'Salve uma foto dos resultados deste mês.'}
@@ -772,8 +772,8 @@ export default function Dashboard({ salaoId }) {
                 disabled={salvandoFechamento}
                 className={`px-6 py-3 rounded-xl font-bold transition-all shadow-lg text-sm disabled:opacity-50 ${
                   fechamentoExiste
-                    ? 'bg-gradient-to-r from-amber-500 to-orange-500 text-white hover:opacity-90'
-                    : 'bg-gradient-to-r from-indigo-500 to-violet-600 text-white hover:opacity-90'
+                    ? 'bg-gradient-to-r from-blue-500 to-orange-500 text-white hover:opacity-90'
+                    : 'bg-gradient-to-r from-blue-500 to-blue-600 text-white hover:opacity-90'
                 }`}
               >
                 {salvandoFechamento
@@ -793,15 +793,15 @@ export default function Dashboard({ salaoId }) {
               ['Despesas', despesasDados.total],
               ['Resultado', (Number(mesAtual?.lucro_real) || 0) + homecareDados.lucro - despesasDados.total - gastosPessoais - salariosFixos],
             ].map(([label, val]) => (
-              <div key={label} className="bg-slate-950 rounded-xl px-3 py-2 border border-slate-800">
-                <p className="text-[9px] font-bold text-slate-400 uppercase">{label}</p>
-                <p className={`text-sm font-black ${Number(val) >= 0 ? 'text-slate-100' : 'text-red-600'}`}>{fmt(val)}</p>
+              <div key={label} className="bg-blue-950 rounded-xl px-3 py-2 border border-blue-800">
+                <p className="text-[9px] font-bold text-blue-400 uppercase">{label}</p>
+                <p className={`text-sm font-black ${Number(val) >= 0 ? 'text-blue-100' : 'text-red-600'}`}>{fmt(val)}</p>
               </div>
             ))}
           </div>
         </div>
 
-        <div className="mt-6 text-center text-[10px] text-slate-300 font-medium">
+        <div className="mt-6 text-center text-[10px] text-blue-300 font-medium">
           Dados em tempo real · Salão Secreto
         </div>
 

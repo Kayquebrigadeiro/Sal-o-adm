@@ -65,33 +65,33 @@ export default function GerenciarAdmins() {
       <div className="flex items-center justify-between mb-6">
         <div>
           <h1 className="text-xl font-semibold text-white">Admins do sistema</h1>
-          <p className="text-xs text-slate-400 mt-0.5">
+          <p className="text-xs text-blue-400 mt-0.5">
             Todos os admins têm acesso igual ao painel — podem criar e gerenciar salões.
           </p>
         </div>
         <button
           onClick={() => setModal(true)}
-          className="bg-slate-800 text-white text-sm px-4 py-2 rounded-lg hover:bg-slate-900"
+          className="bg-blue-800 text-white text-sm px-4 py-2 rounded-lg hover:bg-blue-900"
         >
           + Novo admin
         </button>
       </div>
 
-      <div className="bg-slate-900 rounded-xl border border-slate-700 overflow-hidden">
+      <div className="bg-blue-900 rounded-xl border border-blue-700 overflow-hidden">
         {loading ? (
-          <p className="p-6 text-sm text-slate-400">Carregando...</p>
+          <p className="p-6 text-sm text-blue-400">Carregando...</p>
         ) : (
           <table className="w-full text-sm">
-            <thead className="bg-slate-950 border-b border-slate-700">
+            <thead className="bg-blue-950 border-b border-blue-700">
               <tr>
-                <th className="text-left px-4 py-3 text-xs text-slate-500 font-medium">Email</th>
-                <th className="text-left px-4 py-3 text-xs text-slate-500 font-medium">Desde</th>
+                <th className="text-left px-4 py-3 text-xs text-blue-500 font-medium">Email</th>
+                <th className="text-left px-4 py-3 text-xs text-blue-500 font-medium">Desde</th>
                 <th className="px-4 py-3" />
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-50">
+            <tbody className="divide-y divide-blue-50">
               {admins.map(a => (
-                <tr key={a.auth_user_id} className="hover:bg-slate-950">
+                <tr key={a.auth_user_id} className="hover:bg-blue-950">
                   <td className="px-4 py-3">
                     <span className="font-medium text-white">{a.email || '—'}</span>
                     {a.auth_user_id === meuId && (
@@ -100,7 +100,7 @@ export default function GerenciarAdmins() {
                       </span>
                     )}
                   </td>
-                  <td className="px-4 py-3 text-slate-400 text-xs">
+                  <td className="px-4 py-3 text-blue-400 text-xs">
                     {new Date(a.criado_em).toLocaleDateString('pt-BR')}
                   </td>
                   <td className="px-4 py-3 text-right">
@@ -126,40 +126,40 @@ export default function GerenciarAdmins() {
           className="fixed inset-0 bg-black/40 flex items-center justify-center p-4 z-50"
           onClick={e => e.target === e.currentTarget && setModal(false)}
         >
-          <div className="bg-slate-900 rounded-2xl shadow-xl w-full max-w-sm p-6">
+          <div className="bg-blue-900 rounded-2xl shadow-xl w-full max-w-sm p-6">
             <h2 className="text-lg font-semibold text-white mb-1">Novo admin</h2>
-            <p className="text-xs text-slate-400 mb-5">
+            <p className="text-xs text-blue-400 mb-5">
               Defina email e senha presencialmente. O acesso é imediato.
             </p>
 
             <form onSubmit={criarAdmin} className="space-y-3">
               <div>
-                <label className="text-xs text-slate-200 block mb-1">Nome</label>
+                <label className="text-xs text-blue-200 block mb-1">Nome</label>
                 <input
                   type="text" required value={form.nome}
                   onChange={e => setForm({...form, nome: e.target.value.toUpperCase()})}
-                  className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm"
+                  className="w-full border border-blue-300 rounded-lg px-3 py-2 text-sm"
                   placeholder="Nome do novo admin"
                 />
               </div>
               <div>
-                <label className="text-xs text-slate-200 block mb-1">E-mail de acesso</label>
+                <label className="text-xs text-blue-200 block mb-1">E-mail de acesso</label>
                 <input
                   type="email" required value={form.email}
                   onChange={e => setForm({...form, email: e.target.value})}
-                  className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm"
+                  className="w-full border border-blue-300 rounded-lg px-3 py-2 text-sm"
                   placeholder="email@exemplo.com"
                 />
               </div>
               <div>
-                <label className="text-xs text-slate-200 block mb-1">Senha</label>
+                <label className="text-xs text-blue-200 block mb-1">Senha</label>
                 <input
                   type="text" required value={form.senha}
                   onChange={e => setForm({...form, senha: e.target.value})}
-                  className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm"
+                  className="w-full border border-blue-300 rounded-lg px-3 py-2 text-sm"
                   placeholder="Mínimo 6 caracteres"
                 />
-                <p className="text-xs text-slate-400 mt-1">
+                <p className="text-xs text-blue-400 mt-1">
                   Mostrado em texto para você anotar e entregar.
                 </p>
               </div>
@@ -167,13 +167,13 @@ export default function GerenciarAdmins() {
               <div className="flex gap-3 pt-2">
                 <button
                   type="button" onClick={() => setModal(false)}
-                  className="flex-1 py-2.5 text-sm border border-slate-300 rounded-lg hover:bg-slate-950"
+                  className="flex-1 py-2.5 text-sm border border-blue-300 rounded-lg hover:bg-blue-950"
                 >
                   Cancelar
                 </button>
                 <button
                   type="submit" disabled={salvando}
-                  className="flex-1 py-2.5 text-sm bg-slate-800 text-white rounded-lg disabled:opacity-50"
+                  className="flex-1 py-2.5 text-sm bg-blue-800 text-white rounded-lg disabled:opacity-50"
                 >
                   {salvando ? 'Criando...' : 'Criar admin'}
                 </button>

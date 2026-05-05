@@ -145,16 +145,16 @@ export default function App() {
   // Ecrã de Erro Crítico
   if (erroCritico) {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 p-6">
+      <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-blue-900 via-blue-800 to-blue-900 p-6">
         <div className="bg-white/[0.07] backdrop-blur-xl p-8 rounded-2xl shadow-2xl max-w-lg w-full border border-red-500/20">
           <div className="w-14 h-14 bg-red-500/20 rounded-xl flex items-center justify-center mx-auto mb-4">
             <span className="text-red-400 text-2xl">⚠️</span>
           </div>
           <h1 className="text-xl font-bold text-red-400 mb-2 text-center">Erro de Acesso Detectado</h1>
-          <p className="text-sm text-slate-400 mb-6 text-center">{erroCritico}</p>
+          <p className="text-sm text-blue-400 mb-6 text-center">{erroCritico}</p>
           <button
             onClick={async () => { await supabase.auth.signOut(); window.location.reload(); }}
-            className="w-full bg-gradient-to-r from-rose-500 to-amber-500 text-white px-4 py-3 rounded-xl text-sm font-bold hover:from-rose-600 hover:to-amber-600 transition-all shadow-lg"
+            className="w-full bg-gradient-to-r from-blue-500 to-blue-500 text-white px-4 py-3 rounded-xl text-sm font-bold hover:from-blue-600 hover:to-blue-600 transition-all shadow-lg"
           >
             Sair e Voltar ao Login
           </button>
@@ -165,10 +165,10 @@ export default function App() {
 
   if (carregando) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-900 via-blue-800 to-blue-900">
         <div className="flex flex-col items-center gap-4">
-          <div className="w-10 h-10 border-3 border-rose-500 border-t-transparent rounded-full animate-spin" />
-          <p className="text-slate-400 text-sm font-medium">Carregando o sistema...</p>
+          <div className="w-10 h-10 border-3 border-blue-500 border-t-transparent rounded-full animate-spin" />
+          <p className="text-blue-400 text-sm font-medium">Carregando o sistema...</p>
         </div>
       </div>
     );
@@ -227,7 +227,7 @@ export default function App() {
       )}
       */}
       <ToastProvider>
-        <div className="flex flex-col md:flex-row min-h-screen bg-gradient-to-br from-slate-950 to-rose-50/20 pb-[72px] md:pb-0">
+        <div className="flex flex-col md:flex-row min-h-screen bg-gradient-to-br from-blue-950 to-blue-50/20 pb-[72px] md:pb-0">
           <Sidebar role={role} email={email} salaoNome={salaoNome} />
           <main className="flex-1 min-w-0 overflow-x-hidden overflow-y-auto flex flex-col w-full relative">
             <div className="animate-fadeIn flex-1">

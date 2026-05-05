@@ -232,7 +232,7 @@ export default function WizardBemVinda() {
     <div className="flex items-center gap-2">
       {[1,2,3,4].map(i => (
         <div key={i} className={`w-2.5 h-2.5 rounded-full transition-all duration-300 ${
-          i < step ? 'bg-emerald-400' : i === step ? 'bg-rose-400 scale-125 shadow-lg shadow-rose-400/40' : 'bg-white/20'
+          i < step ? 'bg-emerald-400' : i === step ? 'bg-blue-400 scale-125 shadow-lg shadow-blue-400/40' : 'bg-white/20'
         }`} />
       ))}
     </div>
@@ -247,16 +247,16 @@ export default function WizardBemVinda() {
   // RENDER
   // ═══════════════════════════════════════════
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-gradient-to-br from-blue-900 via-blue-800 to-blue-900 flex items-center justify-center p-4">
       <div className="w-full max-w-lg">
 
         {/* Header */}
         <div className="text-center mb-6 animate-fadeIn">
-          <div className="w-16 h-16 bg-gradient-to-br from-rose-400 to-amber-400 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-xl shadow-rose-500/20">
+          <div className="w-16 h-16 bg-gradient-to-br from-blue-400 to-blue-400 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-xl shadow-blue-500/20">
             <span className="text-2xl">✂️</span>
           </div>
           <h1 className="text-2xl font-black text-white">Configuração do seu Salão</h1>
-          <p className="text-slate-400 text-sm mt-1">Etapa {step} de 4 — {STEP_TITLES[step]}</p>
+          <p className="text-blue-400 text-sm mt-1">Etapa {step} de 4 — {STEP_TITLES[step]}</p>
           <div className="flex justify-center mt-4"><Dots /></div>
         </div>
 
@@ -275,14 +275,14 @@ export default function WizardBemVinda() {
             {step === 2 && (<>
               <Field label="Quantos atendimentos você faz por mês?" type="number" value={qtdAtendimentos} onChange={v => setQtdAtendimentos(v)} placeholder="100" required />
 
-              <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">Seus custos mensais:</p>
+              <p className="text-xs font-bold text-blue-400 uppercase tracking-wider">Seus custos mensais:</p>
               {custos.map((c, i) => (
                 <div key={i} className="flex items-center gap-2">
-                  <input className="flex-1 bg-white/10 border border-white/10 text-white rounded-lg px-3 py-2 text-sm outline-none focus:border-rose-400"
+                  <input className="flex-1 bg-white/10 border border-white/10 text-white rounded-lg px-3 py-2 text-sm outline-none focus:border-blue-400"
                     value={c.descricao} onChange={e => updateCusto(i, 'descricao', e.target.value.toUpperCase())} placeholder="Descrição" />
                   <div className="relative w-28">
-                    <span className="absolute left-2 top-2 text-slate-500 text-sm">R$</span>
-                    <input type="number" className="w-full bg-white/10 border border-white/10 text-white rounded-lg pl-8 pr-2 py-2 text-sm outline-none focus:border-rose-400 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                    <span className="absolute left-2 top-2 text-blue-500 text-sm">R$</span>
+                    <input type="number" className="w-full bg-white/10 border border-white/10 text-white rounded-lg pl-8 pr-2 py-2 text-sm outline-none focus:border-blue-400 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                       value={c.valor} onChange={e => updateCusto(i, 'valor', e.target.value)} placeholder="0,00" />
                   </div>
                   {custos.length > 1 && (
@@ -290,7 +290,7 @@ export default function WizardBemVinda() {
                   )}
                 </div>
               ))}
-              <button onClick={addCusto} className="text-sm text-rose-400 font-bold hover:text-rose-300">+ Adicionar outro custo</button>
+              <button onClick={addCusto} className="text-sm text-blue-400 font-bold hover:text-blue-300">+ Adicionar outro custo</button>
 
               {/* Resumo em tempo real */}
               <div className="bg-emerald-500/10 border border-emerald-500/20 rounded-xl p-4">
@@ -303,20 +303,20 @@ export default function WizardBemVinda() {
 
             {/* ═══ ETAPA 3 — Equipe ═══ */}
             {step === 3 && (<>
-              <p className="text-sm text-slate-300">Você (Proprietária) já está na lista! 👑</p>
-              <div className="bg-amber-500/10 border border-amber-500/20 rounded-xl p-3 flex items-center gap-3">
+              <p className="text-sm text-blue-300">Você (Proprietária) já está na lista! 👑</p>
+              <div className="bg-blue-500/10 border border-blue-500/20 rounded-xl p-3 flex items-center gap-3">
                 <span className="text-lg">👑</span>
                 <div>
                   <p className="text-white font-bold text-sm">{(nomeProprietaria || nomeSalao).toUpperCase()}</p>
-                  <p className="text-amber-300 text-xs">Proprietária</p>
+                  <p className="text-blue-300 text-xs">Proprietária</p>
                 </div>
               </div>
 
-              <p className="text-xs font-bold text-slate-400 uppercase tracking-wider mt-2">Tem mais alguém na equipe?</p>
+              <p className="text-xs font-bold text-blue-400 uppercase tracking-wider mt-2">Tem mais alguém na equipe?</p>
               {equipe.map((e, i) => (
                 <div key={i} className="bg-white/5 border border-white/10 rounded-xl p-3 space-y-2">
                   <div className="flex items-center gap-2">
-                    <input className="flex-1 bg-white/10 border border-white/10 text-white rounded-lg px-3 py-2 text-sm outline-none focus:border-rose-400"
+                    <input className="flex-1 bg-white/10 border border-white/10 text-white rounded-lg px-3 py-2 text-sm outline-none focus:border-blue-400"
                       value={e.nome} onChange={ev => updateProfissional(i, 'nome', ev.target.value)} placeholder="Nome" />
                     <select className="bg-white/10 border border-white/10 text-white rounded-lg px-2 py-2 text-sm outline-none"
                       value={e.cargo} onChange={ev => updateProfissional(i, 'cargo', ev.target.value)}>
@@ -327,22 +327,22 @@ export default function WizardBemVinda() {
                   </div>
                 </div>
               ))}
-              <button onClick={addProfissional} className="text-sm text-rose-400 font-bold hover:text-rose-300">+ Adicionar profissional</button>
+              <button onClick={addProfissional} className="text-sm text-blue-400 font-bold hover:text-blue-300">+ Adicionar profissional</button>
             </>)}
 
             {/* ═══ ETAPA 4 — Serviços (opcional) ═══ */}
             {step === 4 && (<>
-              <p className="text-xs text-slate-400">Clique para adicionar (pode adicionar mais depois em Precificação):</p>
+              <p className="text-xs text-blue-400">Clique para adicionar (pode adicionar mais depois em Precificação):</p>
 
-              <p className="text-xs font-bold text-rose-300 uppercase tracking-wider">Cabelo:</p>
+              <p className="text-xs font-bold text-blue-300 uppercase tracking-wider">Cabelo:</p>
               <div className="flex flex-wrap gap-2">
                 {CHIPS_CABELO.map(chip => {
                   const sel = servicosSelecionados.find(s => s.nome === chip.nome);
                   return (
                     <button key={chip.nome} onClick={() => toggleServico(chip, 'CABELO')}
                       className={`px-3 py-1.5 rounded-full text-xs font-bold transition-all ${
-                        sel ? 'bg-rose-500 text-white shadow-lg shadow-rose-500/30 animate-chip-pop'
-                             : 'bg-white/10 text-slate-300 hover:bg-white/20'
+                        sel ? 'bg-blue-500 text-white shadow-lg shadow-blue-500/30 animate-chip-pop'
+                             : 'bg-white/10 text-blue-300 hover:bg-white/20'
                       }`}>
                       {chip.nome}
                     </button>
@@ -350,15 +350,15 @@ export default function WizardBemVinda() {
                 })}
               </div>
 
-              <p className="text-xs font-bold text-amber-300 uppercase tracking-wider mt-2">Estética:</p>
+              <p className="text-xs font-bold text-blue-300 uppercase tracking-wider mt-2">Estética:</p>
               <div className="flex flex-wrap gap-2">
                 {CHIPS_ESTETICA.map(chip => {
                   const sel = servicosSelecionados.find(s => s.nome === chip.nome);
                   return (
                     <button key={chip.nome} onClick={() => toggleServico(chip, 'ESTETICA')}
                       className={`px-3 py-1.5 rounded-full text-xs font-bold transition-all ${
-                        sel ? 'bg-amber-500 text-white shadow-lg shadow-amber-500/30 animate-chip-pop'
-                             : 'bg-white/10 text-slate-300 hover:bg-white/20'
+                        sel ? 'bg-blue-500 text-white shadow-lg shadow-blue-500/30 animate-chip-pop'
+                             : 'bg-white/10 text-blue-300 hover:bg-white/20'
                       }`}>
                       {chip.nome}
                     </button>
@@ -374,14 +374,14 @@ export default function WizardBemVinda() {
                       <p className="text-white font-bold text-xs mb-2">{s.tipo === 'CABELO' ? '✂️' : '💅'} {s.nome} — Qual o preço{s.tipo === 'CABELO' ? ' do Curto (P)' : ''}?</p>
                       <div className="flex items-center gap-3">
                         <div className="relative">
-                          <span className="absolute left-2 top-2 text-slate-500 text-sm">R$</span>
-                          <input type="number" step="0.01" className="w-28 bg-white/10 border border-white/10 text-white rounded-lg pl-8 pr-2 py-2 text-sm outline-none focus:border-rose-400 font-bold [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                          <span className="absolute left-2 top-2 text-blue-500 text-sm">R$</span>
+                          <input type="number" step="0.01" className="w-28 bg-white/10 border border-white/10 text-white rounded-lg pl-8 pr-2 py-2 text-sm outline-none focus:border-blue-400 font-bold [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                             value={s.precoP} onChange={e => updatePrecoServico(s.nome, e.target.value)} />
                         </div>
                         {s.tipo === 'CABELO' && (
-                          <div className="text-xs text-slate-400">
-                            <span>Médio: <b className="text-slate-300">{fmt(s.precoP * 1.20)}</b> (+20%)</span>
-                            <span className="ml-2">Longo: <b className="text-slate-300">{fmt(s.precoP * 1.30)}</b> (+30%)</span>
+                          <div className="text-xs text-blue-400">
+                            <span>Médio: <b className="text-blue-300">{fmt(s.precoP * 1.20)}</b> (+20%)</span>
+                            <span className="ml-2">Longo: <b className="text-blue-300">{fmt(s.precoP * 1.30)}</b> (+30%)</span>
                           </div>
                         )}
                       </div>
@@ -414,7 +414,7 @@ export default function WizardBemVinda() {
             <div className="flex items-center gap-3">
               {step > 1 && (
                 <button onClick={() => { setStep(step - 1); setErro(''); }}
-                  className="px-4 py-2 text-slate-400 hover:text-white text-sm font-medium transition-colors">
+                  className="px-4 py-2 text-blue-400 hover:text-white text-sm font-medium transition-colors">
                   ← Voltar
                 </button>
               )}
@@ -422,7 +422,7 @@ export default function WizardBemVinda() {
                 className={`px-6 py-2.5 rounded-xl text-sm font-bold transition-all shadow-lg disabled:opacity-50 ${
                   step === 4
                     ? 'bg-gradient-to-r from-emerald-500 to-emerald-600 text-white shadow-emerald-500/30 hover:from-emerald-600 hover:to-emerald-700'
-                    : 'bg-gradient-to-r from-rose-500 to-amber-500 text-white shadow-rose-500/30 hover:from-rose-600 hover:to-amber-600'
+                    : 'bg-gradient-to-r from-blue-500 to-blue-500 text-white shadow-blue-500/30 hover:from-blue-600 hover:to-blue-600'
                 }`}>
                 {loading ? (
                   <span className="flex items-center gap-2">
@@ -444,12 +444,12 @@ export default function WizardBemVinda() {
 function Field({ label, value, onChange, placeholder, type = 'text', required }) {
   return (
     <div>
-      <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-1.5">
-        {label} {required && <span className="text-rose-400">*</span>}
+      <label className="block text-xs font-bold text-blue-400 uppercase tracking-wider mb-1.5">
+        {label} {required && <span className="text-blue-400">*</span>}
       </label>
       <input type={type} value={value} onChange={e => onChange(e.target.value)}
         placeholder={placeholder}
-        className="w-full bg-white/10 border border-white/10 text-white rounded-xl px-4 py-3 text-sm outline-none focus:border-rose-400 focus:bg-white/[0.12] transition-all placeholder:text-slate-200 font-medium [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none" />
+        className="w-full bg-white/10 border border-white/10 text-white rounded-xl px-4 py-3 text-sm outline-none focus:border-blue-400 focus:bg-white/[0.12] transition-all placeholder:text-blue-200 font-medium [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none" />
     </div>
   );
 }

@@ -12,8 +12,8 @@ const PROF_COLORS = [
   { bg: 'bg-blue-500', light: 'bg-blue-50', text: 'text-blue-700', border: 'border-blue-200', hover: 'hover:bg-blue-50/60' },
   { bg: 'bg-sky-500', light: 'bg-sky-50', text: 'text-sky-700', border: 'border-sky-200', hover: 'hover:bg-sky-50/60' },
   { bg: 'bg-cyan-500', light: 'bg-cyan-50', text: 'text-cyan-700', border: 'border-cyan-200', hover: 'hover:bg-cyan-50/60' },
-  { bg: 'bg-indigo-500', light: 'bg-indigo-50', text: 'text-indigo-700', border: 'border-indigo-200', hover: 'hover:bg-indigo-50/60' },
-  { bg: 'bg-slate-9500', light: 'bg-slate-950', text: 'text-slate-100', border: 'border-slate-700', hover: 'hover:bg-slate-950/60' },
+  { bg: 'bg-blue-500', light: 'bg-blue-50', text: 'text-blue-700', border: 'border-blue-200', hover: 'hover:bg-blue-50/60' },
+  { bg: 'bg-blue-9500', light: 'bg-blue-950', text: 'text-blue-100', border: 'border-blue-700', hover: 'hover:bg-blue-950/60' },
   { bg: 'bg-teal-500', light: 'bg-teal-50', text: 'text-teal-700', border: 'border-teal-200', hover: 'hover:bg-teal-50/60' },
 ];
 
@@ -482,39 +482,39 @@ export default function Agenda({ salaoId, role }) {
       <div className="min-h-screen flex items-center justify-center">
         <div className="flex items-center gap-3">
           <div className="w-5 h-5 border-2 border-blue-500 border-t-transparent rounded-full animate-spin" />
-          <span className="text-slate-400 font-medium text-sm uppercase">Carregando agenda...</span>
+          <span className="text-blue-400 font-medium text-sm uppercase">Carregando agenda...</span>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="p-5 bg-gradient-to-br from-slate-950 via-blue-50/10 to-blue-100/30 min-h-screen font-sans">
+    <div className="p-5 bg-gradient-to-br from-blue-950 via-blue-50/10 to-blue-100/30 min-h-screen font-sans">
       {/* ═══ HEADER COM NAVEGAÇÃO DE DATA ═══ */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-6 gap-3">
         <div>
           <div className="flex items-center gap-2 mb-0.5">
             <Sparkles size={16} className="text-blue-500" />
-            <h1 className="text-2xl font-black bg-gradient-to-r from-blue-950 to-slate-600 bg-clip-text text-transparent uppercase">Agenda</h1>
+            <h1 className="text-2xl font-black bg-gradient-to-r from-blue-950 to-blue-600 bg-clip-text text-transparent uppercase">Agenda</h1>
           </div>
-          <p className="text-slate-400 text-sm uppercase">Clique no horário para lançar o faturamento.</p>
+          <p className="text-blue-400 text-sm uppercase">Clique no horário para lançar o faturamento.</p>
         </div>
 
         <div className="flex items-center gap-2">
-          <button onClick={() => setModalProfAberto(true)} className="p-2 hover:bg-slate-900 rounded-lg transition-all shadow-sm border border-slate-700 bg-slate-900 text-blue-600 font-bold text-sm flex items-center gap-2 uppercase" title="Adicionar Profissional">
+          <button onClick={() => setModalProfAberto(true)} className="p-2 hover:bg-blue-900 rounded-lg transition-all shadow-sm border border-blue-700 bg-blue-900 text-blue-600 font-bold text-sm flex items-center gap-2 uppercase" title="Adicionar Profissional">
             <UserPlus size={16} /> <span className="hidden sm:inline">Equipe</span>
           </button>
-          <button onClick={() => mudarDia(-1)} className="p-2 hover:bg-slate-900 rounded-lg transition-all shadow-sm border border-slate-700 bg-slate-900">
-            <ChevronLeft size={16} className="text-slate-500" />
+          <button onClick={() => mudarDia(-1)} className="p-2 hover:bg-blue-900 rounded-lg transition-all shadow-sm border border-blue-700 bg-blue-900">
+            <ChevronLeft size={16} className="text-blue-500" />
           </button>
           <button onClick={hoje}
-            className={`px-4 py-2.5 rounded-xl text-sm font-bold transition-all shadow-sm uppercase ${ehHoje ? 'bg-gradient-to-r from-blue-600 to-sky-500 text-white shadow-blue-200/50' : 'bg-slate-900 border border-slate-700 text-slate-100 hover:bg-slate-950'}`}>
+            className={`px-4 py-2.5 rounded-xl text-sm font-bold transition-all shadow-sm uppercase ${ehHoje ? 'bg-gradient-to-r from-blue-600 to-sky-500 text-white shadow-blue-200/50' : 'bg-blue-900 border border-blue-700 text-blue-100 hover:bg-blue-950'}`}>
             {ehHoje ? '📅 Hoje' : fmtDataCompleta(dataSelecionada)}
           </button>
           <input type="date" value={dataSelecionada} onChange={e => setDataSelecionada(e.target.value)}
-            className="border border-slate-700 rounded-xl px-3 py-2.5 text-sm outline-none focus:ring-2 focus:ring-blue-400/50 bg-slate-900 shadow-sm" />
-          <button onClick={() => mudarDia(1)} className="p-2 hover:bg-slate-900 rounded-lg transition-all shadow-sm border border-slate-700 bg-slate-900">
-            <ChevronRight size={16} className="text-slate-500" />
+            className="border border-blue-700 rounded-xl px-3 py-2.5 text-sm outline-none focus:ring-2 focus:ring-blue-400/50 bg-blue-900 shadow-sm" />
+          <button onClick={() => mudarDia(1)} className="p-2 hover:bg-blue-900 rounded-lg transition-all shadow-sm border border-blue-700 bg-blue-900">
+            <ChevronRight size={16} className="text-blue-500" />
           </button>
         </div>
       </div>
@@ -522,14 +522,14 @@ export default function Agenda({ salaoId, role }) {
       {/* ═══ GRADE DE AGENDA ═══ */}
       {/* Aviso se a proprietária não está na planilha */}
       {role === 'PROPRIETARIO' && profissionais.length > 0 && !profissionais.some(p => p.cargo === 'PROPRIETARIO') && (
-        <div className="mb-4 bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-200 rounded-2xl p-4 flex items-center justify-between gap-3">
+        <div className="mb-4 bg-gradient-to-r from-blue-50 to-orange-50 border border-blue-200 rounded-2xl p-4 flex items-center justify-between gap-3">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-amber-100 rounded-xl flex items-center justify-center flex-shrink-0">
+            <div className="w-10 h-10 bg-blue-100 rounded-xl flex items-center justify-center flex-shrink-0">
               <span className="text-lg">👑</span>
             </div>
             <div>
-              <p className="text-sm font-bold text-amber-800 uppercase">Você também atende? Adicione-se à agenda!</p>
-              <p className="text-xs text-amber-600 uppercase">Como proprietária, você precisa de uma coluna própria para seus agendamentos.</p>
+              <p className="text-sm font-bold text-blue-800 uppercase">Você também atende? Adicione-se à agenda!</p>
+              <p className="text-xs text-blue-600 uppercase">Como proprietária, você precisa de uma coluna própria para seus agendamentos.</p>
             </div>
           </div>
           <button
@@ -554,7 +554,7 @@ export default function Agenda({ salaoId, role }) {
                 showToast('ERRO: ' + err.message, 'error');
               }
             }}
-            className="flex-shrink-0 px-4 py-2.5 bg-gradient-to-r from-amber-500 to-orange-500 text-white rounded-xl font-bold text-sm hover:from-amber-600 hover:to-orange-600 transition-all shadow-lg shadow-amber-200 uppercase"
+            className="flex-shrink-0 px-4 py-2.5 bg-gradient-to-r from-blue-500 to-orange-500 text-white rounded-xl font-bold text-sm hover:from-blue-600 hover:to-orange-600 transition-all shadow-lg shadow-blue-200 uppercase"
           >
             Adicionar-me 👑
           </button>
@@ -562,10 +562,10 @@ export default function Agenda({ salaoId, role }) {
       )}
 
       {profissionais.length === 0 ? (
-        <div className="bg-slate-900 rounded-2xl border border-slate-700 p-12 text-center">
-          <User size={40} className="text-slate-300 mx-auto mb-3" />
-          <p className="text-slate-500 font-bold uppercase">Nenhum profissional cadastrado</p>
-          <p className="text-xs text-slate-400 mt-1 uppercase">Adicione profissionais nas Configurações</p>
+        <div className="bg-blue-900 rounded-2xl border border-blue-700 p-12 text-center">
+          <User size={40} className="text-blue-300 mx-auto mb-3" />
+          <p className="text-blue-500 font-bold uppercase">Nenhum profissional cadastrado</p>
+          <p className="text-xs text-blue-400 mt-1 uppercase">Adicione profissionais nas Configurações</p>
           {role === 'PROPRIETARIO' && (
             <div className="flex justify-center gap-3 mt-6">
               <button
@@ -580,26 +580,26 @@ export default function Agenda({ salaoId, role }) {
                     setProfissionais(profData || []);
                   } catch (err) { showToast('ERRO: ' + err.message, 'error'); }
                 }}
-                className="px-6 py-3 bg-gradient-to-r from-amber-500 to-orange-500 text-white rounded-xl font-bold text-sm hover:from-amber-600 transition-all shadow-lg shadow-amber-200 uppercase"
+                className="px-6 py-3 bg-gradient-to-r from-blue-500 to-orange-500 text-white rounded-xl font-bold text-sm hover:from-blue-600 transition-all shadow-lg shadow-blue-200 uppercase"
               >
                 👑 Adicionar-me
               </button>
-              <button onClick={() => setModalProfAberto(true)} className="px-6 py-3 bg-slate-900 border border-slate-700 text-slate-100 rounded-xl font-bold text-sm hover:bg-slate-950 transition-all shadow-sm uppercase">
+              <button onClick={() => setModalProfAberto(true)} className="px-6 py-3 bg-blue-900 border border-blue-700 text-blue-100 rounded-xl font-bold text-sm hover:bg-blue-950 transition-all shadow-sm uppercase">
                 + Adicionar Outros
               </button>
             </div>
           )}
         </div>
       ) : (
-        <div className="bg-slate-900 border border-slate-800 rounded-3xl overflow-hidden shadow-2xl shadow-blue-900/5 overflow-x-auto ring-1 ring-slate-200">
+        <div className="bg-blue-900 border border-blue-800 rounded-3xl overflow-hidden shadow-2xl shadow-blue-900/5 overflow-x-auto ring-1 ring-blue-200">
           <table className="w-full border-collapse min-w-[600px]">
             <thead>
               <tr>
-                <th className="p-3 bg-slate-950 border-b border-slate-800 text-[10px] font-bold text-slate-400 uppercase tracking-widest w-16 text-center">Hora</th>
+                <th className="p-3 bg-blue-950 border-b border-blue-800 text-[10px] font-bold text-blue-400 uppercase tracking-widest w-16 text-center">Hora</th>
                 {profissionais.map((p, idx) => {
                   const cor = PROF_COLORS[idx % PROF_COLORS.length];
                   return (
-                    <th key={p.id} className={`p-0 border-b border-slate-800`}>
+                    <th key={p.id} className={`p-0 border-b border-blue-800`}>
                       <div className={`${cor.bg} px-4 py-3 text-white text-center`}>
                         <span className="text-xs font-bold uppercase tracking-wide">{p.nome}</span>
                         <span className="block text-[9px] font-normal text-white/70 mt-0.5 uppercase">
@@ -614,14 +614,14 @@ export default function Agenda({ salaoId, role }) {
             <tbody>
               {HORARIOS.map(hora => (
                 <tr key={hora} className="group">
-                  <td className="p-1.5 border-b border-slate-50 bg-slate-950/50 text-center font-bold text-slate-400 text-[10px]">{hora}</td>
+                  <td className="p-1.5 border-b border-blue-50 bg-blue-950/50 text-center font-bold text-blue-400 text-[10px]">{hora}</td>
                   {profissionais.map((prof, idx) => {
                     const agend = getAgendamento(hora, prof.id);
                     const cor = PROF_COLORS[idx % PROF_COLORS.length];
                     return (
                       <td
                         key={prof.id}
-                        className={`p-1 border-b border-slate-50 h-14 transition-all ${!agend ? cor.hover : ''}`}
+                        className={`p-1 border-b border-blue-50 h-14 transition-all ${!agend ? cor.hover : ''}`}
                       >
                         {agend ? (
                           <div
@@ -680,20 +680,20 @@ export default function Agenda({ salaoId, role }) {
       {/* ═══ MODAL NOVO PROFISSIONAL RÁPIDO ═══ */}
       {modalProfAberto && (
         <div className="fixed inset-0 bg-white/60 backdrop-blur-sm flex justify-center items-center z-50" onClick={() => setModalProfAberto(false)}>
-          <div className="w-full max-w-sm bg-slate-900 rounded-2xl shadow-2xl p-6 animate-fadeIn" onClick={e => e.stopPropagation()}>
+          <div className="w-full max-w-sm bg-blue-900 rounded-2xl shadow-2xl p-6 animate-fadeIn" onClick={e => e.stopPropagation()}>
             <div className="flex justify-between items-center mb-6">
               <h2 className="text-xl font-black text-white uppercase">Novo Profissional</h2>
-              <button onClick={() => setModalProfAberto(false)} className="p-2 hover:bg-slate-800 rounded-full transition-colors"><X size={20} /></button>
+              <button onClick={() => setModalProfAberto(false)} className="p-2 hover:bg-blue-800 rounded-full transition-colors"><X size={20} /></button>
             </div>
 
             <div className="space-y-4">
               <div>
-                <label className="text-[10px] font-black uppercase text-slate-400 mb-1 block">Nome do Profissional</label>
-                <input type="text" value={novoProf.nome} onChange={e => setNovoProf({ ...novoProf, nome: e.target.value })} placeholder="EX: ANA SILVA" className="w-full border-2 border-slate-700 rounded-xl p-3 outline-none focus:border-blue-400 font-bold text-sm uppercase transition-colors" />
+                <label className="text-[10px] font-black uppercase text-blue-400 mb-1 block">Nome do Profissional</label>
+                <input type="text" value={novoProf.nome} onChange={e => setNovoProf({ ...novoProf, nome: e.target.value })} placeholder="EX: ANA SILVA" className="w-full border-2 border-blue-700 rounded-xl p-3 outline-none focus:border-blue-400 font-bold text-sm uppercase transition-colors" />
               </div>
               <div>
-                <label className="text-[10px] font-black uppercase text-slate-400 mb-1 block">Cargo</label>
-                <select value={novoProf.cargo} onChange={e => setNovoProf({ ...novoProf, cargo: e.target.value })} className="w-full border-2 border-slate-700 rounded-xl p-3 outline-none focus:border-blue-400 font-bold text-sm transition-colors bg-slate-900 uppercase">
+                <label className="text-[10px] font-black uppercase text-blue-400 mb-1 block">Cargo</label>
+                <select value={novoProf.cargo} onChange={e => setNovoProf({ ...novoProf, cargo: e.target.value })} className="w-full border-2 border-blue-700 rounded-xl p-3 outline-none focus:border-blue-400 font-bold text-sm transition-colors bg-blue-900 uppercase">
                   <option value="FUNCIONARIO">COLABORADOR</option>
                   <option value="PROPRIETARIO">PROPRIETÁRIO / SÓCIO</option>
                 </select>
@@ -709,43 +709,43 @@ export default function Agenda({ salaoId, role }) {
       {/* ═══ MODAL DETALHES DO ATENDIMENTO ═══ */}
       {modalDetalhesAberto && agendamentoSelecionado && (
         <div className="fixed inset-0 bg-white/60 backdrop-blur-sm flex justify-center items-center z-50" onClick={() => setModalDetalhesAberto(false)}>
-          <div className="w-full max-w-sm bg-slate-900 rounded-2xl shadow-2xl p-6 animate-fadeIn" onClick={e => e.stopPropagation()}>
+          <div className="w-full max-w-sm bg-blue-900 rounded-2xl shadow-2xl p-6 animate-fadeIn" onClick={e => e.stopPropagation()}>
             <div className="flex justify-between items-center mb-6">
               <h2 className="text-xl font-black text-white uppercase">Detalhes</h2>
-              <button onClick={() => setModalDetalhesAberto(false)} className="p-2 hover:bg-slate-800 rounded-full transition-colors"><X size={20} /></button>
+              <button onClick={() => setModalDetalhesAberto(false)} className="p-2 hover:bg-blue-800 rounded-full transition-colors"><X size={20} /></button>
             </div>
 
             <div className="space-y-4 mb-8">
               <div>
-                <p className="text-[10px] font-black uppercase text-slate-400">Cliente</p>
+                <p className="text-[10px] font-black uppercase text-blue-400">Cliente</p>
                 <p className="text-lg font-bold text-white">{agendamentoSelecionado.cliente}</p>
               </div>
               <div>
-                <p className="text-[10px] font-black uppercase text-slate-400">Procedimento</p>
-                <p className="font-medium text-slate-100 uppercase">{agendamentoSelecionado.procedimentos?.nome} {agendamentoSelecionado.comprimento ? `(${agendamentoSelecionado.comprimento})` : ''}</p>
+                <p className="text-[10px] font-black uppercase text-blue-400">Procedimento</p>
+                <p className="font-medium text-blue-100 uppercase">{agendamentoSelecionado.procedimentos?.nome} {agendamentoSelecionado.comprimento ? `(${agendamentoSelecionado.comprimento})` : ''}</p>
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <p className="text-[10px] font-black uppercase text-slate-400">Horário</p>
-                  <p className="font-medium text-slate-100">{agendamentoSelecionado.horario?.substring(0, 5)}</p>
+                  <p className="text-[10px] font-black uppercase text-blue-400">Horário</p>
+                  <p className="font-medium text-blue-100">{agendamentoSelecionado.horario?.substring(0, 5)}</p>
                 </div>
                 <div>
-                  <p className="text-[10px] font-black uppercase text-slate-400">Profissional</p>
-                  <p className="font-medium text-slate-100">{agendamentoSelecionado.profissionais?.nome}</p>
+                  <p className="text-[10px] font-black uppercase text-blue-400">Profissional</p>
+                  <p className="font-medium text-blue-100">{agendamentoSelecionado.profissionais?.nome}</p>
                 </div>
               </div>
               <div>
-                <p className="text-[10px] font-black uppercase text-slate-400">Valor</p>
-                <p className="font-medium text-slate-100">{fmt(agendamentoSelecionado.valor_cobrado)}</p>
+                <p className="text-[10px] font-black uppercase text-blue-400">Valor</p>
+                <p className="font-medium text-blue-100">{fmt(agendamentoSelecionado.valor_cobrado)}</p>
               </div>
 
               {/* PAGO OU NÃO */}
-              <div className={`flex items-center gap-3 p-3 border-2 rounded-xl cursor-pointer transition-colors ${Number(agendamentoSelecionado.valor_pago) > 0 ? 'border-emerald-200 bg-emerald-50 hover:border-emerald-300' : 'border-slate-700 bg-slate-900 hover:border-slate-300'}`} onClick={togglePagamento}>
-                <div className={`w-5 h-5 rounded flex items-center justify-center transition-colors ${Number(agendamentoSelecionado.valor_pago) > 0 ? 'bg-emerald-500 text-white' : 'bg-slate-200 text-transparent'}`}>
+              <div className={`flex items-center gap-3 p-3 border-2 rounded-xl cursor-pointer transition-colors ${Number(agendamentoSelecionado.valor_pago) > 0 ? 'border-emerald-200 bg-emerald-50 hover:border-emerald-300' : 'border-blue-700 bg-blue-900 hover:border-blue-300'}`} onClick={togglePagamento}>
+                <div className={`w-5 h-5 rounded flex items-center justify-center transition-colors ${Number(agendamentoSelecionado.valor_pago) > 0 ? 'bg-emerald-500 text-white' : 'bg-blue-200 text-transparent'}`}>
                   {alterandoPagamento ? <Loader2 size={12} className="animate-spin text-emerald-500" /> : <CheckCircle2 size={14} />}
                 </div>
                 <div className="flex flex-col flex-1">
-                  <span className={`text-sm font-bold leading-none uppercase ${Number(agendamentoSelecionado.valor_pago) > 0 ? 'text-emerald-700' : 'text-slate-100'}`}>
+                  <span className={`text-sm font-bold leading-none uppercase ${Number(agendamentoSelecionado.valor_pago) > 0 ? 'text-emerald-700' : 'text-blue-100'}`}>
                     {Number(agendamentoSelecionado.valor_pago) > 0 ? 'Atendimento Pago' : 'Pagamento Pendente'}
                   </span>
                   <span className="text-[10px] mt-1 opacity-70 uppercase">
@@ -783,30 +783,30 @@ export default function Agenda({ salaoId, role }) {
       {/* ═══ PAINEL LATERAL (MODAL) ═══ */}
       {modalAberto && (
         <div className="fixed inset-0 bg-white/60 backdrop-blur-sm flex justify-end z-50" onClick={() => setModalAberto(false)}>
-          <div className="w-full max-w-md bg-white/95 backdrop-blur-xl h-full shadow-2xl border-l border-slate-800 p-6 overflow-y-auto animate-slideInRight"
+          <div className="w-full max-w-md bg-white/95 backdrop-blur-xl h-full shadow-2xl border-l border-blue-800 p-6 overflow-y-auto animate-slideInRight"
             onClick={e => e.stopPropagation()}>
             <div className="flex justify-between items-center mb-8">
               <div>
                 <h2 className="text-xl font-black text-white uppercase">Novo Atendimento</h2>
-                <p className="text-xs text-slate-500 font-bold uppercase">
+                <p className="text-xs text-blue-500 font-bold uppercase">
                   {selecao.hora} — {selecao.profNome}
-                  <span className="text-slate-300 ml-2">{fmtDataCompleta(dataSelecionada)}</span>
+                  <span className="text-blue-300 ml-2">{fmtDataCompleta(dataSelecionada)}</span>
                 </p>
               </div>
-              <button onClick={() => setModalAberto(false)} className="p-2 hover:bg-slate-800 rounded-full transition-colors"><X /></button>
+              <button onClick={() => setModalAberto(false)} className="p-2 hover:bg-blue-800 rounded-full transition-colors"><X /></button>
             </div>
 
             <div className="space-y-5">
 
               {/* ═══ CLIENTE COM AUTOCOMPLETE + CADASTRO RÁPIDO ═══ */}
               <div>
-                <label className="text-[10px] font-black uppercase text-slate-400 mb-1 block">Cliente</label>
+                <label className="text-[10px] font-black uppercase text-blue-400 mb-1 block">Cliente</label>
                 <div className="relative">
-                  <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-300" />
+                  <Search size={14} className="absolute left-3 top-1/2 -tranblue-y-1/2 text-blue-300" />
                   <input
                     type="text"
                     placeholder="BUSCAR OU DIGITAR NOME..."
-                    className="w-full border-2 border-slate-700 rounded-xl p-3 pl-9 outline-none focus:border-blue-400 font-bold text-sm uppercase transition-colors"
+                    className="w-full border-2 border-blue-700 rounded-xl p-3 pl-9 outline-none focus:border-blue-400 font-bold text-sm uppercase transition-colors"
                     value={buscaCliente}
                     onChange={e => {
                       const val = e.target.value.toUpperCase();
@@ -820,25 +820,25 @@ export default function Agenda({ salaoId, role }) {
 
                   {/* Sugestões de clientes existentes */}
                   {showSugestoes && buscaCliente.trim() && (
-                    <div className="absolute left-0 right-0 top-full mt-1 bg-slate-900 border border-slate-700 rounded-xl shadow-xl z-20 max-h-48 overflow-y-auto">
+                    <div className="absolute left-0 right-0 top-full mt-1 bg-blue-900 border border-blue-700 rounded-xl shadow-xl z-20 max-h-48 overflow-y-auto">
                       {clientesFiltrados.length > 0 ? (
                         <>
                           {clientesFiltrados.map(c => (
                             <button
                               key={c.id}
                               onClick={() => selecionarCliente(c.nome)}
-                              className="w-full text-left px-4 py-3 hover:bg-blue-50 flex items-center justify-between transition-colors border-b border-slate-50 last:border-0"
+                              className="w-full text-left px-4 py-3 hover:bg-blue-50 flex items-center justify-between transition-colors border-b border-blue-50 last:border-0"
                             >
                               <div>
                                 <span className="font-bold text-sm text-white">{c.nome}</span>
-                                {c.telefone && <span className="text-[10px] text-slate-400 ml-2">{c.telefone}</span>}
+                                {c.telefone && <span className="text-[10px] text-blue-400 ml-2">{c.telefone}</span>}
                               </div>
-                              <User size={12} className="text-slate-300" />
+                              <User size={12} className="text-blue-300" />
                             </button>
                           ))}
                           <button
                             onClick={() => { setModoNovoCliente(true); setShowSugestoes(false); }}
-                            className="w-full text-left px-4 py-3 hover:bg-sky-50 flex items-center gap-2 text-sky-600 font-bold text-sm border-t border-slate-800 uppercase"
+                            className="w-full text-left px-4 py-3 hover:bg-sky-50 flex items-center gap-2 text-sky-600 font-bold text-sm border-t border-blue-800 uppercase"
                           >
                             <UserPlus size={14} />
                             Cadastrar "{buscaCliente.trim()}" como nova cliente
@@ -865,11 +865,11 @@ export default function Agenda({ salaoId, role }) {
                     </p>
                     <div className="flex gap-2">
                       <div className="flex-1 relative">
-                        <Phone size={12} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-sky-400" />
+                        <Phone size={12} className="absolute left-2.5 top-1/2 -tranblue-y-1/2 text-sky-400" />
                         <input
                           type="text"
                           placeholder="WHATSAPP (OPCIONAL)"
-                          className="w-full bg-slate-900 border border-sky-200 rounded-lg px-3 py-2 pl-8 text-xs outline-none focus:border-sky-400"
+                          className="w-full bg-blue-900 border border-sky-200 rounded-lg px-3 py-2 pl-8 text-xs outline-none focus:border-sky-400"
                           value={novoClienteTelefone}
                           onChange={e => setNovoClienteTelefone(e.target.value)}
                         />
@@ -889,9 +889,9 @@ export default function Agenda({ salaoId, role }) {
 
               {/* PROCEDIMENTO */}
               <div>
-                <label className="text-[10px] font-black uppercase text-slate-400 mb-1 block">Procedimento</label>
+                <label className="text-[10px] font-black uppercase text-blue-400 mb-1 block">Procedimento</label>
                 <select
-                  className="w-full border-2 border-slate-700 rounded-xl p-3 outline-none focus:border-blue-400 font-bold text-sm bg-slate-900 transition-colors"
+                  className="w-full border-2 border-blue-700 rounded-xl p-3 outline-none focus:border-blue-400 font-bold text-sm bg-blue-900 transition-colors"
                   value={novo.procId}
                   onChange={e => selecionarProcedimento(e.target.value)}
                 >
@@ -905,11 +905,11 @@ export default function Agenda({ salaoId, role }) {
                 const proc = procedimentos.find(p => p.id === novo.procId);
                 if (!proc || proc.categoria !== 'PRODUTO_APLICADO') return null;
                 return (
-                  <div className="mt-2 bg-violet-50 border border-violet-200 rounded-xl p-3">
-                    <p className="text-[10px] font-black uppercase text-violet-600 mb-1 flex items-center gap-1 ">
+                  <div className="mt-2 bg-blue-50 border border-blue-200 rounded-xl p-3">
+                    <p className="text-[10px] font-black uppercase text-blue-600 mb-1 flex items-center gap-1 ">
                       <Package size={12} /> Detalhes do Produto
                     </p>
-                    <div className="flex items-center justify-between text-xs text-violet-800 uppercase">
+                    <div className="flex items-center justify-between text-xs text-blue-800 uppercase">
                       <span>Rende: <b>{proc.aplicacoes_por_frasco} APLICAÇÕES</b></span>
                       <span>Custo/Dose: <b>{fmt(proc.custo_variavel)}</b></span>
                     </div>
@@ -923,14 +923,14 @@ export default function Agenda({ salaoId, role }) {
                 if (!proc || !proc.requer_comprimento) return null;
                 return (
                   <div>
-                    <label className="text-[10px] font-black uppercase text-slate-400 mb-2 block">Comprimento</label>
+                    <label className="text-[10px] font-black uppercase text-blue-400 mb-2 block">Comprimento</label>
                     <div className="flex gap-3">
                       {['P', 'M', 'G'].map(t => (
                         <button key={t}
                           onClick={() => selecionarTamanho(t)}
                           className={`flex-1 py-3 rounded-xl font-black border-2 transition-all ${novo.tamanho === t
                             ? 'bg-blue-600 border-blue-600 text-white shadow-lg shadow-blue-200/50'
-                            : 'border-slate-700 text-slate-400 hover:border-slate-300'
+                            : 'border-blue-700 text-blue-400 hover:border-blue-300'
                             }`}
                         >
                           {t === 'P' ? 'Curto' : t === 'M' ? 'Médio' : 'Longo'}
@@ -944,10 +944,10 @@ export default function Agenda({ salaoId, role }) {
               {/* VALOR + PREVIEW FINANCEIRO */}
               <div className={`p-4 rounded-2xl border-2 transition-all duration-300 ${role === 'PROPRIETARIO' && previewFinanceiro?.prejuizo && !ignorarPrejuizo
                 ? 'bg-red-50 border-red-400'
-                : 'bg-slate-950 border-transparent'
+                : 'bg-blue-950 border-transparent'
                 }`}>
                 <div className="flex justify-between items-start mb-1">
-                  <label className="text-[10px] font-black uppercase text-slate-400">Valor Cobrado (R$)</label>
+                  <label className="text-[10px] font-black uppercase text-blue-400">Valor Cobrado (R$)</label>
                   {(() => {
                     const proc = procedimentos.find(p => p.id === novo.procId);
                     if (!proc) return null;
@@ -964,7 +964,7 @@ export default function Agenda({ salaoId, role }) {
                           className="text-[9px] font-black bg-blue-100 text-blue-600 px-2 py-1 rounded-lg hover:bg-blue-200 transition-colors uppercase">
                           Tabela: {mostrarSugerido ? fmt(sugerido) : '***'}
                         </button>
-                        <button onClick={() => setMostrarSugerido(!mostrarSugerido)} className="p-1 text-slate-400 hover:text-blue-600 transition-colors" title={mostrarSugerido ? "OCULTAR" : "MOSTRAR"}>
+                        <button onClick={() => setMostrarSugerido(!mostrarSugerido)} className="p-1 text-blue-400 hover:text-blue-600 transition-colors" title={mostrarSugerido ? "OCULTAR" : "MOSTRAR"}>
                           {mostrarSugerido ? <EyeOff size={12} /> : <Eye size={12} />}
                         </button>
                       </div>
@@ -980,32 +980,32 @@ export default function Agenda({ salaoId, role }) {
                   onChange={e => setNovo({ ...novo, valor: e.target.value })}
                   placeholder="0,00"
                 />
-                <p className="text-[9px] text-slate-400 mt-1 uppercase">Valor entre R$ 0,01 e R$ 9.999,99 — sistema calcula lucro automaticamente.</p>
+                <p className="text-[9px] text-blue-400 mt-1 uppercase">Valor entre R$ 0,01 e R$ 9.999,99 — sistema calcula lucro automaticamente.</p>
 
                 {/* Desmembramento do Motor Financeiro */}
                 {role === 'PROPRIETARIO' && previewFinanceiro && (
-                  <div className={`mt-4 pt-4 border-t ${previewFinanceiro.prejuizo ? 'border-red-200' : 'border-slate-700'}`}>
+                  <div className={`mt-4 pt-4 border-t ${previewFinanceiro.prejuizo ? 'border-red-200' : 'border-blue-700'}`}>
                     <div className="grid grid-cols-2 gap-3 mb-3">
                       <div>
-                        <p className="text-[10px] font-bold text-slate-400 uppercase">Lucro Líquido</p>
-                        <p className={`text-xl font-black ${ignorarPrejuizo ? 'text-slate-400' : previewFinanceiro.prejuizo ? 'text-red-600' : 'text-emerald-600'}`}>
+                        <p className="text-[10px] font-bold text-blue-400 uppercase">Lucro Líquido</p>
+                        <p className={`text-xl font-black ${ignorarPrejuizo ? 'text-blue-400' : previewFinanceiro.prejuizo ? 'text-red-600' : 'text-emerald-600'}`}>
                           {ignorarPrejuizo ? '—' : fmt(previewFinanceiro.lucroLiquido)}
                         </p>
                       </div>
                       <div className="text-right">
-                        <p className="text-[10px] font-bold text-slate-400 uppercase">Margem</p>
-                        <p className={`text-xl font-black ${previewFinanceiro.margemReal < 0 ? 'text-red-600' : previewFinanceiro.margemReal < 15 ? 'text-amber-500' : 'text-emerald-600'}`}>
+                        <p className="text-[10px] font-bold text-blue-400 uppercase">Margem</p>
+                        <p className={`text-xl font-black ${previewFinanceiro.margemReal < 0 ? 'text-red-600' : previewFinanceiro.margemReal < 15 ? 'text-blue-500' : 'text-emerald-600'}`}>
                           {fmtPct(previewFinanceiro.margemReal)}
                         </p>
                       </div>
                     </div>
 
                     {/* Detalhamento Matemático Óbvio */}
-                    <div className="font-mono text-[11px] text-slate-500 bg-slate-100/50 p-2 rounded flex flex-col gap-0.5 uppercase">
-                      <div className="flex justify-between"><span>Faturamento:</span> <span className="font-bold text-slate-100">{fmt(previewFinanceiro.valorBruto)}</span></div>
+                    <div className="font-mono text-[11px] text-blue-500 bg-blue-100/50 p-2 rounded flex flex-col gap-0.5 uppercase">
+                      <div className="flex justify-between"><span>Faturamento:</span> <span className="font-bold text-blue-100">{fmt(previewFinanceiro.valorBruto)}</span></div>
                       <div className="flex justify-between"><span><span className="text-red-400">(-)</span> Fixo:</span> <span className="text-red-500">-{fmt(previewFinanceiro.custoFixo)}</span></div>
                       <div className="flex justify-between"><span><span className="text-red-400">(-)</span> Material:</span> <span className="text-red-500">-{fmt(previewFinanceiro.custoProduto)}</span></div>
-                      <div className="h-px bg-slate-200 my-1"></div>
+                      <div className="h-px bg-blue-200 my-1"></div>
                       <div className="flex justify-between font-bold"><span><span className="text-emerald-500 font-black">(=)</span> Lucro:</span> <span className="text-emerald-600">{fmt(previewFinanceiro.lucroLiquido)}</span></div>
                     </div>
 
@@ -1017,7 +1017,7 @@ export default function Agenda({ salaoId, role }) {
                           <span className="text-[10px] font-black uppercase">Prejuízo!</span>
                         </div>
                         <button onClick={() => setIgnorarPrejuizo(true)}
-                          className="text-[9px] font-black text-slate-400 hover:text-slate-200 underline uppercase">
+                          className="text-[9px] font-black text-blue-400 hover:text-blue-200 underline uppercase">
                           Ignorar
                         </button>
                       </div>
@@ -1028,20 +1028,20 @@ export default function Agenda({ salaoId, role }) {
 
               {/* OBS */}
               <div>
-                <label className="text-[10px] font-black uppercase text-slate-400 mb-1 block">Observação</label>
+                <label className="text-[10px] font-black uppercase text-blue-400 mb-1 block">Observação</label>
                 <input type="text" placeholder="OPCIONAL..."
-                  className="w-full border-2 border-slate-700 rounded-xl p-3 outline-none focus:border-blue-400 text-sm transition-colors"
+                  className="w-full border-2 border-blue-700 rounded-xl p-3 outline-none focus:border-blue-400 text-sm transition-colors"
                   value={novo.obs} onChange={e => setNovo({ ...novo, obs: e.target.value.toUpperCase() })} />
               </div>
 
               {/* PAGO OU NÃO */}
-              <div className="flex items-center gap-2 p-3 border-2 border-slate-700 rounded-xl bg-slate-900 cursor-pointer transition-colors hover:border-blue-200" onClick={() => setNovo({ ...novo, pago: !novo.pago })}>
-                <div className={`w-5 h-5 rounded flex items-center justify-center transition-colors ${novo.pago ? 'bg-emerald-500 text-white' : 'bg-slate-200 text-transparent'}`}>
+              <div className="flex items-center gap-2 p-3 border-2 border-blue-700 rounded-xl bg-blue-900 cursor-pointer transition-colors hover:border-blue-200" onClick={() => setNovo({ ...novo, pago: !novo.pago })}>
+                <div className={`w-5 h-5 rounded flex items-center justify-center transition-colors ${novo.pago ? 'bg-emerald-500 text-white' : 'bg-blue-200 text-transparent'}`}>
                   <CheckCircle2 size={14} />
                 </div>
                 <div className="flex flex-col">
-                  <span className="text-sm font-bold text-slate-100 leading-none uppercase">Atendimento já foi pago?</span>
-                  <span className="text-[10px] text-slate-400 mt-1 uppercase">Marque se a cliente já realizou o pagamento.</span>
+                  <span className="text-sm font-bold text-blue-100 leading-none uppercase">Atendimento já foi pago?</span>
+                  <span className="text-[10px] text-blue-400 mt-1 uppercase">Marque se a cliente já realizou o pagamento.</span>
                 </div>
               </div>
 
@@ -1049,7 +1049,7 @@ export default function Agenda({ salaoId, role }) {
               <button
                 onClick={salvar}
                 disabled={salvando}
-                className={`w-full py-4 rounded-2xl font-black text-lg transition-all shadow-xl flex items-center justify-center gap-2 ${salvando ? 'bg-slate-300 text-slate-500 cursor-not-allowed' :
+                className={`w-full py-4 rounded-2xl font-black text-lg transition-all shadow-xl flex items-center justify-center gap-2 ${salvando ? 'bg-blue-300 text-blue-500 cursor-not-allowed' :
                   role === 'PROPRIETARIO' && previewFinanceiro?.prejuizo
                     ? 'bg-red-600 text-white shadow-red-200 hover:bg-red-700'
                     : 'bg-gradient-to-r from-blue-600 to-sky-500 text-white shadow-blue-200/50 hover:from-blue-700 hover:to-sky-600'

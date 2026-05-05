@@ -106,23 +106,23 @@ const TableRow = ({ proc, config, custoMaterial, isExpanded, onToggleExpand, sal
 
   return (
     <React.Fragment>
-      <tr className={`border-b border-slate-800 hover:bg-slate-950 transition-colors ${isExpanded ? 'bg-indigo-50/50' : ''}`}>
+      <tr className={`border-b border-blue-800 hover:bg-blue-950 transition-colors ${isExpanded ? 'bg-blue-50/50' : ''}`}>
         <td className="p-3 font-bold text-white">
           {proc.nome}
         </td>
-        <td className="p-3 text-center text-slate-500 font-medium">{fmt(config.custo_fixo_por_atendimento)}</td>
-        <td className="p-3 text-center font-bold text-indigo-600">{fmt(custoMaterial)}</td>
+        <td className="p-3 text-center text-blue-500 font-medium">{fmt(config.custo_fixo_por_atendimento)}</td>
+        <td className="p-3 text-center font-bold text-blue-600">{fmt(custoMaterial)}</td>
         <td className="p-3 text-center">
           <input type="number" step="0.01" value={ganho} onChange={e => handleFieldChange(setGanho, 'ganho_liquido_desejado', e.target.value)} onBlur={handleGanhoBlur}
             onFocus={e => e.target.select()}
             className="w-20 text-center border border-emerald-200 rounded p-1 text-sm outline-none focus:border-emerald-500 font-bold text-emerald-700 bg-emerald-50 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none" />
         </td>
-        <td className="p-3 text-center border-l border-slate-800">
+        <td className="p-3 text-center border-l border-blue-800">
           <input type="number" step="0.01" value={precoP} onChange={e => handleFieldChange(setPrecoP, 'preco_p', e.target.value)}
             onFocus={e => e.target.select()}
-            className="w-20 text-center border border-slate-700 rounded p-1 text-sm outline-none focus:border-slate-500 font-bold text-white bg-slate-900 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none" />
+            className="w-20 text-center border border-blue-700 rounded p-1 text-sm outline-none focus:border-blue-500 font-bold text-white bg-blue-900 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none" />
           {/* MATEMÁTICA ÓBVIA COM MAQUININHA */}
-          <div className="text-[9px] text-slate-400 mt-1 font-bold bg-slate-100/50 rounded py-0.5 px-1 whitespace-nowrap uppercase">
+          <div className="text-[9px] text-blue-400 mt-1 font-bold bg-blue-100/50 rounded py-0.5 px-1 whitespace-nowrap uppercase">
             ({fmt(config.custo_fixo_por_atendimento)} + {fmt(custoMaterial)} + {fmt(ganho || 0)}) ÷ 0.95
           </div>
         </td>
@@ -130,19 +130,19 @@ const TableRow = ({ proc, config, custoMaterial, isExpanded, onToggleExpand, sal
           {proc.requer_comprimento ? (
             <input type="number" step="0.01" value={precoM} onChange={e => handleFieldChange(setPrecoM, 'preco_m', e.target.value)}
               onFocus={e => e.target.select()}
-              className="w-20 text-center border border-slate-700 rounded p-1 text-sm outline-none focus:border-slate-500 font-bold text-slate-200 bg-slate-900 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none" />
+              className="w-20 text-center border border-blue-700 rounded p-1 text-sm outline-none focus:border-blue-500 font-bold text-blue-200 bg-blue-900 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none" />
           ) : '-'}
         </td>
         <td className="p-3 text-center">
           {proc.requer_comprimento ? (
             <input type="number" step="0.01" value={precoG} onChange={e => handleFieldChange(setPrecoG, 'preco_g', e.target.value)}
               onFocus={e => e.target.select()}
-              className="w-20 text-center border border-slate-700 rounded p-1 text-sm outline-none focus:border-slate-500 font-bold text-slate-200 bg-slate-900 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none" />
+              className="w-20 text-center border border-blue-700 rounded p-1 text-sm outline-none focus:border-blue-500 font-bold text-blue-200 bg-blue-900 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none" />
           ) : '-'}
         </td>
-        <td className="p-3 text-center border-l border-slate-800">
+        <td className="p-3 text-center border-l border-blue-800">
           <div className="flex items-center justify-center gap-1">
-            <button onClick={onToggleExpand} className={`p-1.5 rounded transition-colors ${isExpanded ? 'bg-indigo-100 text-indigo-600' : 'text-slate-400 hover:text-indigo-600 hover:bg-indigo-50'}`} title="Produtos Relacionados">
+            <button onClick={onToggleExpand} className={`p-1.5 rounded transition-colors ${isExpanded ? 'bg-blue-100 text-blue-600' : 'text-blue-400 hover:text-blue-600 hover:bg-blue-50'}`} title="Produtos Relacionados">
               <Package size={14} />
             </button>
             <button onClick={recalcular} className="p-1.5 text-blue-400 hover:text-blue-600 hover:bg-blue-50 rounded transition-colors" title="Recalcular P, M e G">
@@ -155,8 +155,8 @@ const TableRow = ({ proc, config, custoMaterial, isExpanded, onToggleExpand, sal
         </td>
       </tr>
       {isExpanded && (
-        <tr className="bg-indigo-50/20">
-          <td colSpan={8} className="p-4 border-b border-indigo-100">
+        <tr className="bg-blue-50/20">
+          <td colSpan={8} className="p-4 border-b border-blue-100">
             <ProdutosRelacionados salaoId={salaoId} servicoId={proc.id} onUpdate={carregar} />
           </td>
         </tr>
@@ -324,7 +324,7 @@ export default function Precificacao({ salaoId }) {
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-pulse text-slate-400 font-medium uppercase">Carregando precificação...</div>
+        <div className="animate-pulse text-blue-400 font-medium uppercase">Carregando precificação...</div>
       </div>
     );
   }
@@ -339,21 +339,21 @@ export default function Precificacao({ salaoId }) {
   const categoriasValidas = ORDEM_CATEGORIAS.filter(c => c !== 'PRODUTO_APLICADO');
 
   return (
-    <div className="p-6 bg-slate-950 min-h-screen font-sans">
+    <div className="p-6 bg-blue-950 min-h-screen font-sans">
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-4 gap-4">
         <div>
           <h1 className="text-2xl font-black text-white uppercase">Precificação Estratégica</h1>
-          <p className="text-sm text-slate-500 mt-1 uppercase">Motor de cálculo baseado na sua planilha real</p>
+          <p className="text-sm text-blue-500 mt-1 uppercase">Motor de cálculo baseado na sua planilha real</p>
         </div>
       </div>
 
-      <div className="flex gap-1 border-b border-slate-700 mb-6">
+      <div className="flex gap-1 border-b border-blue-700 mb-6">
         {ABAS.map(aba => {
           const Icon = aba.icon;
           const ativo = abaAtiva === aba.key;
           return (
             <button key={`tab-${aba.key}`} onClick={() => setAbaAtiva(aba.key)}
-              className={`flex items-center gap-2 px-5 py-3 text-sm font-semibold border-b-2 transition-all -mb-px ${ativo ? 'border-emerald-600 text-emerald-700' : 'border-transparent text-slate-500 hover:text-slate-100 hover:border-slate-300'
+              className={`flex items-center gap-2 px-5 py-3 text-sm font-semibold border-b-2 transition-all -mb-px ${ativo ? 'border-emerald-600 text-emerald-700' : 'border-transparent text-blue-500 hover:text-blue-100 hover:border-blue-300'
                 }`}>
               <Icon size={16} /> {aba.label}
             </button>
@@ -365,37 +365,37 @@ export default function Precificacao({ salaoId }) {
         <div className="flex justify-end mb-4">
           <button
             onClick={() => setSimAberto(!simAberto)}
-            className="flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-violet-600 to-indigo-600 text-white rounded-xl hover:from-violet-700 hover:to-indigo-700 transition-all shadow-lg shadow-violet-200 text-sm font-bold uppercase"
+            className="flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-blue-600 to-blue-600 text-white rounded-xl hover:from-blue-700 hover:to-blue-700 transition-all shadow-lg shadow-blue-200 text-sm font-bold uppercase"
           >
             <Calculator size={16} /> Simulador "E se?"
           </button>
         </div>
 
         {simAberto && (
-          <div className="mb-8 bg-gradient-to-br from-violet-50 to-indigo-50 border border-violet-200 rounded-2xl p-6 shadow-sm">
-            <h3 className="text-sm font-black text-violet-800 uppercase tracking-wider mb-4 flex items-center gap-2">
-              <Zap size={16} className="text-violet-500" /> Simulação Rápida
+          <div className="mb-8 bg-gradient-to-br from-blue-50 to-blue-50 border border-blue-200 rounded-2xl p-6 shadow-sm">
+            <h3 className="text-sm font-black text-blue-800 uppercase tracking-wider mb-4 flex items-center gap-2">
+              <Zap size={16} className="text-blue-500" /> Simulação Rápida
             </h3>
             <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-4">
               <div>
-                <label className="block text-xs font-bold text-slate-200 mb-1 uppercase">Valor Cobrado (R$)</label>
+                <label className="block text-xs font-bold text-blue-200 mb-1 uppercase">Valor Cobrado (R$)</label>
                 <input type="number" step="0.01"
-                  className="w-full border border-violet-200 rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-violet-500 bg-slate-900"
+                  className="w-full border border-blue-200 rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-blue-500 bg-blue-900"
                   value={sim.valorCobrado} onChange={e => setSim({ ...sim, valorCobrado: e.target.value })}
                   placeholder="150.00"
                 />
               </div>
               <div>
-                <label className="block text-xs font-bold text-slate-200 mb-1 uppercase">Custo Material (R$)</label>
+                <label className="block text-xs font-bold text-blue-200 mb-1 uppercase">Custo Material (R$)</label>
                 <input type="number" step="0.01"
-                  className="w-full border border-violet-200 rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-violet-500 bg-slate-900"
+                  className="w-full border border-blue-200 rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-blue-500 bg-blue-900"
                   value={sim.custoProduto} onChange={e => setSim({ ...sim, custoProduto: e.target.value })}
                   placeholder="15.83"
                 />
               </div>
               <div>
-                <label className="block text-xs font-bold text-slate-200 mb-1 uppercase">Categoria</label>
-                <select className="w-full border border-violet-200 rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-violet-500 bg-slate-900"
+                <label className="block text-xs font-bold text-blue-200 mb-1 uppercase">Categoria</label>
+                <select className="w-full border border-blue-200 rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-blue-500 bg-blue-900"
                   value={sim.categoria} onChange={e => setSim({ ...sim, categoria: e.target.value })}>
                   <option value="CABELO">Cabelo</option>
                   <option value="UNHAS">Unhas</option>
@@ -406,31 +406,31 @@ export default function Precificacao({ salaoId }) {
             </div>
 
             {resultadoSim && (
-              <div className="bg-slate-900 rounded-xl border border-violet-200 p-4 mt-2">
+              <div className="bg-blue-900 rounded-xl border border-blue-200 p-4 mt-2">
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-3">
                   <div>
-                    <p className="text-[10px] font-bold text-slate-400 uppercase">Faturamento</p>
+                    <p className="text-[10px] font-bold text-blue-400 uppercase">Faturamento</p>
                     <p className="text-lg font-black text-white">{fmt(resultadoSim.valorBruto)}</p>
                   </div>
                   <div>
-                    <p className="text-[10px] font-bold text-slate-400 uppercase">Lucro Líquido</p>
+                    <p className="text-[10px] font-bold text-blue-400 uppercase">Lucro Líquido</p>
                     <p className={`text-lg font-black ${resultadoSim.prejuizo ? 'text-red-500' : 'text-emerald-600'}`}>
                       {fmt(resultadoSim.lucroLiquido)}
                     </p>
                   </div>
                   <div>
-                    <p className="text-[10px] font-bold text-slate-400 uppercase">Margem Real</p>
-                    <p className={`text-lg font-black ${resultadoSim.margemReal < 0 ? 'text-red-500' : resultadoSim.margemReal < 15 ? 'text-amber-500' : 'text-emerald-600'}`}>
+                    <p className="text-[10px] font-bold text-blue-400 uppercase">Margem Real</p>
+                    <p className={`text-lg font-black ${resultadoSim.margemReal < 0 ? 'text-red-500' : resultadoSim.margemReal < 15 ? 'text-blue-500' : 'text-emerald-600'}`}>
                       {fmtPct(resultadoSim.margemReal)}
                     </p>
                   </div>
                 </div>
-                <div className="flex flex-wrap gap-3 text-xs font-medium text-slate-500 border-t border-slate-800 pt-3 uppercase">
-                  <span>Maquininha: <b className="text-slate-100">{fmt(resultadoSim.valorMaquininha)}</b></span>
+                <div className="flex flex-wrap gap-3 text-xs font-medium text-blue-500 border-t border-blue-800 pt-3 uppercase">
+                  <span>Maquininha: <b className="text-blue-100">{fmt(resultadoSim.valorMaquininha)}</b></span>
                   <span>•</span>
-                  <span>Custo Fixo: <b className="text-slate-100">{fmt(resultadoSim.custoFixo)}</b></span>
+                  <span>Custo Fixo: <b className="text-blue-100">{fmt(resultadoSim.custoFixo)}</b></span>
                   <span>•</span>
-                  <span>Custo Material: <b className="text-slate-100">{fmt(resultadoSim.custoProduto)}</b></span>
+                  <span>Custo Material: <b className="text-blue-100">{fmt(resultadoSim.custoProduto)}</b></span>
                 </div>
                 {resultadoSim.prejuizo && (
                   <div className="mt-3 flex items-center gap-2 text-xs font-bold text-red-600 bg-red-50 px-3 py-2 rounded-lg uppercase">
@@ -443,10 +443,10 @@ export default function Precificacao({ salaoId }) {
         )}
 
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
-          <div className="bg-slate-900 border border-slate-700 rounded-xl p-3 shadow-sm">
-            <p className="text-[9px] font-bold text-slate-400 uppercase tracking-wider mb-1">Custo Fixo / Atend.</p>
+          <div className="bg-blue-900 border border-blue-700 rounded-xl p-3 shadow-sm">
+            <p className="text-[9px] font-bold text-blue-400 uppercase tracking-wider mb-1">Custo Fixo / Atend.</p>
             <div className="flex items-center gap-1">
-              <span className="text-slate-400 text-xs">R$</span>
+              <span className="text-blue-400 text-xs">R$</span>
               <input type="number" step="0.01"
                 className="w-full bg-transparent outline-none text-lg font-black text-white [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                 value={config.custo_fixo_por_atendimento}
@@ -455,8 +455,8 @@ export default function Precificacao({ salaoId }) {
               />
             </div>
           </div>
-          <div className="bg-slate-900 border border-slate-700 rounded-xl p-3 shadow-sm">
-            <p className="text-[9px] font-bold text-slate-400 uppercase tracking-wider mb-1">Atendimentos / Mês</p>
+          <div className="bg-blue-900 border border-blue-700 rounded-xl p-3 shadow-sm">
+            <p className="text-[9px] font-bold text-blue-400 uppercase tracking-wider mb-1">Atendimentos / Mês</p>
             <input type="number" step="1"
               className="w-full bg-transparent outline-none text-lg font-black text-white [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
               value={config.qtd_atendimentos_mes}
@@ -496,13 +496,13 @@ export default function Precificacao({ salaoId }) {
                   key={`cat-${key}`}
                   onClick={() => setCatAtiva(key)}
                   className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold whitespace-nowrap transition-all duration-200 uppercase ${catAtiva === key
-                    ? 'bg-slate-900 text-white shadow-md'
-                    : 'bg-slate-900 border border-slate-700 text-slate-200 hover:bg-slate-950'
+                    ? 'bg-blue-900 text-white shadow-md'
+                    : 'bg-blue-900 border border-blue-700 text-blue-200 hover:bg-blue-950'
                     }`}
                 >
                   <span className="opacity-80">{cat.emoji}</span> {cat.label}
                   {count > 0 && (
-                    <span className={`ml-1 w-5 h-5 rounded-full text-[10px] flex items-center justify-center ${catAtiva === key ? 'bg-white/20' : 'bg-slate-100 text-slate-500'
+                    <span className={`ml-1 w-5 h-5 rounded-full text-[10px] flex items-center justify-center ${catAtiva === key ? 'bg-white/20' : 'bg-blue-100 text-blue-500'
                       }`}>
                       {count}
                     </span>
@@ -517,31 +517,31 @@ export default function Precificacao({ salaoId }) {
               setProdsSelecionados([]);
               setModalProc(true);
             }}
-            className="flex-shrink-0 flex items-center gap-2 px-4 py-2.5 bg-slate-900 text-white rounded-xl hover:bg-slate-800 transition-all shadow-lg shadow-slate-200 text-sm font-bold w-full sm:w-auto justify-center uppercase"
+            className="flex-shrink-0 flex items-center gap-2 px-4 py-2.5 bg-blue-900 text-white rounded-xl hover:bg-blue-800 transition-all shadow-lg shadow-blue-200 text-sm font-bold w-full sm:w-auto justify-center uppercase"
           >
             <Plus size={16} /> Novo Serviço
           </button>
         </div>
 
-        <div className="bg-slate-900 rounded-2xl shadow-sm border border-slate-700 overflow-x-auto">
+        <div className="bg-blue-900 rounded-2xl shadow-sm border border-blue-700 overflow-x-auto">
           <table className="w-full text-left border-collapse text-xs">
             <thead>
-              <tr className="bg-slate-900 text-white text-[10px] uppercase font-bold tracking-wider">
+              <tr className="bg-blue-900 text-white text-[10px] uppercase font-bold tracking-wider">
                 <th className="p-3 whitespace-nowrap">Serviço</th>
                 <th className="p-3 text-center whitespace-nowrap">Custo Fixo</th>
                 <th className="p-3 text-center whitespace-nowrap"><span className="text-emerald-500 font-black mr-1">+</span>Custo Mat.</th>
                 <th className="p-3 text-center whitespace-nowrap"><span className="text-emerald-500 font-black mr-1">+</span>Ganho Liq.</th>
-                <th className="p-3 text-center border-l border-slate-700 whitespace-nowrap">
+                <th className="p-3 text-center border-l border-blue-700 whitespace-nowrap">
                   <span className="text-blue-500 font-black mr-1">=</span>Preço P
                 </th>
                 <th className="p-3 text-center whitespace-nowrap">Preço M</th>
                 <th className="p-3 text-center whitespace-nowrap">Preço G</th>
-                <th className="p-3 text-center border-l border-slate-700 whitespace-nowrap">Ações</th>
+                <th className="p-3 text-center border-l border-blue-700 whitespace-nowrap">Ações</th>
               </tr>
             </thead>
             <tbody>
               {procedimentos.filter(p => p.categoria === catAtiva).length === 0 ? (
-                <tr><td colSpan={8} className="text-center py-12 text-slate-400">
+                <tr><td colSpan={8} className="text-center py-12 text-blue-400">
                   NENHUM SERVIÇO DESTA CATEGORIA CADASTRADO.
                 </td></tr>
               ) : procedimentos.filter(p => p.categoria === catAtiva).map(proc => {
@@ -571,13 +571,13 @@ export default function Precificacao({ salaoId }) {
         <Modal open={modalProc} onClose={() => setModalProc(false)} title="NOVO SERVIÇO">
           <div className="space-y-5 max-h-[75vh] overflow-y-auto pr-2">
             <div>
-              <label className="text-xs font-black text-slate-200 mb-1 block uppercase">Nome do Serviço</label>
-              <input type="text" value={formProc.nome} onChange={e => setFormProc({ ...formProc, nome: e.target.value.toUpperCase() })} placeholder="EX: NUTRIÇÃO" className="w-full border-2 border-slate-700 p-3 rounded-xl focus:border-slate-900 outline-none font-bold uppercase" />
+              <label className="text-xs font-black text-blue-200 mb-1 block uppercase">Nome do Serviço</label>
+              <input type="text" value={formProc.nome} onChange={e => setFormProc({ ...formProc, nome: e.target.value.toUpperCase() })} placeholder="EX: NUTRIÇÃO" className="w-full border-2 border-blue-700 p-3 rounded-xl focus:border-blue-900 outline-none font-bold uppercase" />
             </div>
 
-            <div className="bg-slate-950 border border-slate-700 rounded-xl p-4">
-              <label className="text-xs font-black text-slate-200 mb-2 block uppercase">Produtos Utilizados (Custo Mat.)</label>
-              <select className="w-full border-2 border-slate-700 p-3 rounded-xl text-xs font-bold uppercase mb-3 outline-none" onChange={(e) => {
+            <div className="bg-blue-950 border border-blue-700 rounded-xl p-4">
+              <label className="text-xs font-black text-blue-200 mb-2 block uppercase">Produtos Utilizados (Custo Mat.)</label>
+              <select className="w-full border-2 border-blue-700 p-3 rounded-xl text-xs font-bold uppercase mb-3 outline-none" onChange={(e) => {
                 const id = e.target.value;
                 if (!id) return;
                 const p = catalogo.find(c => c.id === id);
@@ -599,15 +599,15 @@ export default function Precificacao({ salaoId }) {
                     const fb = (Number(p.preco_compra) || 0) / Math.max(Number(p.qtd_aplicacoes) || 1, 1);
                     const c = Number(p.custo_por_uso) || fb;
                     return (
-                      <div key={p.id} className="flex items-center justify-between bg-slate-900 border border-slate-700 p-2 rounded-lg">
-                        <span className="text-xs font-bold text-slate-100 truncate flex-1 uppercase">{p.nome}</span>
+                      <div key={p.id} className="flex items-center justify-between bg-blue-900 border border-blue-700 p-2 rounded-lg">
+                        <span className="text-xs font-bold text-blue-100 truncate flex-1 uppercase">{p.nome}</span>
                         <div className="flex items-center gap-3">
-                          <input type="number" min="0.1" step="0.1" className="w-14 text-center border border-slate-700 rounded text-xs p-1 font-bold"
+                          <input type="number" min="0.1" step="0.1" className="w-14 text-center border border-blue-700 rounded text-xs p-1 font-bold"
                             value={p.qtd_usada} onChange={e => {
                               const val = Number(e.target.value);
                               setProdsSelecionados(prodsSelecionados.map(x => x.id === p.id ? { ...x, qtd_usada: val } : x));
                             }} />
-                          <span className="text-xs font-bold text-indigo-600 w-16 text-right">{fmt(c * p.qtd_usada)}</span>
+                          <span className="text-xs font-bold text-blue-600 w-16 text-right">{fmt(c * p.qtd_usada)}</span>
                           <button onClick={() => setProdsSelecionados(prodsSelecionados.filter(x => x.id !== p.id))} className="text-red-400 hover:text-red-600 p-1">
                             <Trash2 size={14} />
                           </button>
@@ -620,18 +620,18 @@ export default function Precificacao({ salaoId }) {
             </div>
 
             <div>
-              <label className="text-xs font-black text-slate-200 mb-1 block uppercase">Ganho Líquido Desejado (R$)</label>
-              <input type="number" step="0.01" value={formProc.ganho} onChange={e => setFormProc({ ...formProc, ganho: e.target.value })} className="w-full border-2 border-slate-700 p-3 rounded-xl focus:border-emerald-500 outline-none font-bold text-emerald-700 bg-emerald-50" placeholder="50.00" />
+              <label className="text-xs font-black text-blue-200 mb-1 block uppercase">Ganho Líquido Desejado (R$)</label>
+              <input type="number" step="0.01" value={formProc.ganho} onChange={e => setFormProc({ ...formProc, ganho: e.target.value })} className="w-full border-2 border-blue-700 p-3 rounded-xl focus:border-emerald-500 outline-none font-bold text-emerald-700 bg-emerald-50" placeholder="50.00" />
             </div>
 
-            <div className="bg-slate-900 rounded-2xl p-5 text-white shadow-xl">
+            <div className="bg-blue-900 rounded-2xl p-5 text-white shadow-xl">
               <h3 className="text-sm font-black text-emerald-400 uppercase mb-4 flex items-center gap-2"><Calculator size={16} /> Resumo Matemático</h3>
-              <div className="space-y-2 text-xs font-medium text-slate-300 uppercase">
+              <div className="space-y-2 text-xs font-medium text-blue-300 uppercase">
                 <div className="flex justify-between"><span>Custo Fixo:</span> <span className="text-white">{fmt(config.custo_fixo_por_atendimento)} (Automático)</span></div>
                 <div className="flex justify-between"><span>Custo Mat.:</span> <span className="text-white">{fmt(custoMatModal)} (Soma dos {prodsSelecionados.length} Acima)</span></div>
                 <div className="flex justify-between"><span>Ganho Líq.:</span> <span className="text-white">{fmt(ganhoModal)} (Você Digita)</span></div>
-                <div className="border-t border-slate-700 my-2 pt-2 flex justify-between font-black text-sm text-slate-200"><span>SUBTOTAL (BASE):</span> <span>{fmt(baseModal)}</span></div>
-                <div className="flex justify-between text-amber-400"><span>Taxa Maquininha (5%):</span> <span>+ {fmt(valorMaquininhaModal)} (÷ 0,95)</span></div>
+                <div className="border-t border-blue-700 my-2 pt-2 flex justify-between font-black text-sm text-blue-200"><span>SUBTOTAL (BASE):</span> <span>{fmt(baseModal)}</span></div>
+                <div className="flex justify-between text-blue-400"><span>Taxa Maquininha (5%):</span> <span>+ {fmt(valorMaquininhaModal)} (÷ 0,95)</span></div>
               </div>
 
               <div className="mt-4 space-y-2">
@@ -644,12 +644,12 @@ export default function Precificacao({ salaoId }) {
                 </div>
                 {formProc.categoria === 'SERVICO_CABELO' && (
                   <div className="grid grid-cols-2 gap-2 mt-2">
-                    <div className="bg-slate-800 rounded-xl p-2 text-center border border-slate-700 flex justify-between items-center px-3">
-                      <span className="text-[10px] font-bold text-slate-400 uppercase">PREÇO M (+20%)</span>
+                    <div className="bg-blue-800 rounded-xl p-2 text-center border border-blue-700 flex justify-between items-center px-3">
+                      <span className="text-[10px] font-bold text-blue-400 uppercase">PREÇO M (+20%)</span>
                       <span className="font-black text-white">{fmt(precoMModal)}</span>
                     </div>
-                    <div className="bg-slate-800 rounded-xl p-2 text-center border border-slate-700 flex justify-between items-center px-3">
-                      <span className="text-[10px] font-bold text-slate-400 uppercase">PREÇO G (+30%)</span>
+                    <div className="bg-blue-800 rounded-xl p-2 text-center border border-blue-700 flex justify-between items-center px-3">
+                      <span className="text-[10px] font-bold text-blue-400 uppercase">PREÇO G (+30%)</span>
                       <span className="font-black text-white">{fmt(precoGModal)}</span>
                     </div>
                   </div>

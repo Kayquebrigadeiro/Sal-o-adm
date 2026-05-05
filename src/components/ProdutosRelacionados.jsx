@@ -83,20 +83,20 @@ export default function ProdutosRelacionados({ salaoId, servicoId, onUpdate }) {
   };
 
   if (loading) {
-    return <div className="p-4 text-center text-xs font-bold text-indigo-400 uppercase animate-pulse">CARREGANDO PRODUTOS...</div>;
+    return <div className="p-4 text-center text-xs font-bold text-blue-400 uppercase animate-pulse">CARREGANDO PRODUTOS...</div>;
   }
 
   return (
-    <div className="bg-slate-900 rounded-xl border border-indigo-100 p-5 shadow-inner">
-      <h4 className="text-xs font-black text-indigo-800 uppercase mb-4 flex items-center gap-2">
-        <Package size={14} className="text-indigo-500" />
+    <div className="bg-blue-900 rounded-xl border border-blue-100 p-5 shadow-inner">
+      <h4 className="text-xs font-black text-blue-800 uppercase mb-4 flex items-center gap-2">
+        <Package size={14} className="text-blue-500" />
         Composição do Custo de Material
       </h4>
 
       {/* Lista de produtos já vinculados */}
       {vinculos.length === 0 ? (
-        <div className="text-center py-5 bg-slate-950 rounded-xl border border-dashed border-slate-700 mb-4">
-          <p className="text-[10px] font-bold text-slate-400 uppercase">NENHUM PRODUTO VINCULADO A ESTE SERVIÇO</p>
+        <div className="text-center py-5 bg-blue-950 rounded-xl border border-dashed border-blue-700 mb-4">
+          <p className="text-[10px] font-bold text-blue-400 uppercase">NENHUM PRODUTO VINCULADO A ESTE SERVIÇO</p>
         </div>
       ) : (
         <div className="space-y-2 mb-5">
@@ -111,18 +111,18 @@ export default function ProdutosRelacionados({ salaoId, servicoId, onUpdate }) {
             const custoTotal = custoUnitario * Number(v.qtd_usada);
 
             return (
-              <div key={v.produto_id} className="flex items-center justify-between bg-indigo-50/50 border border-indigo-100 p-3 rounded-xl transition-all hover:bg-indigo-50">
+              <div key={v.produto_id} className="flex items-center justify-between bg-blue-50/50 border border-blue-100 p-3 rounded-xl transition-all hover:bg-blue-50">
                 <div className="flex-1">
-                  <p className="text-xs font-bold text-slate-100 uppercase">{p.nome}</p>
-                  <p className="text-[10px] text-slate-500 uppercase">{fmt(custoUnitario)} POR DOSE</p>
+                  <p className="text-xs font-bold text-blue-100 uppercase">{p.nome}</p>
+                  <p className="text-[10px] text-blue-500 uppercase">{fmt(custoUnitario)} POR DOSE</p>
                 </div>
                 <div className="flex items-center gap-5">
                   <div className="text-center">
-                    <p className="text-[9px] font-bold text-slate-400 uppercase">Qtd Usada</p>
-                    <p className="text-xs font-black text-indigo-600">{v.qtd_usada}x</p>
+                    <p className="text-[9px] font-bold text-blue-400 uppercase">Qtd Usada</p>
+                    <p className="text-xs font-black text-blue-600">{v.qtd_usada}x</p>
                   </div>
                   <div className="text-right w-20">
-                    <p className="text-[9px] font-bold text-slate-400 uppercase">Custo</p>
+                    <p className="text-[9px] font-bold text-blue-400 uppercase">Custo</p>
                     <p className="text-xs font-black text-red-500">{fmt(custoTotal)}</p>
                   </div>
                   <button onClick={() => remover(v.produto_id)} className="p-2 text-red-400 hover:bg-red-50 hover:text-red-600 rounded-lg transition-colors" title="REMOVER PRODUTO">
@@ -136,11 +136,11 @@ export default function ProdutosRelacionados({ salaoId, servicoId, onUpdate }) {
       )}
 
       {/* Adicionar novo vínculo */}
-      <div className="flex items-end gap-3 bg-slate-950 p-4 rounded-xl border border-slate-700">
+      <div className="flex items-end gap-3 bg-blue-950 p-4 rounded-xl border border-blue-700">
         <div className="flex-1">
-          <label className="block text-[10px] font-black text-slate-500 uppercase mb-1.5">Vincular Novo Produto</label>
+          <label className="block text-[10px] font-black text-blue-500 uppercase mb-1.5">Vincular Novo Produto</label>
           <select
-            className="w-full border-2 border-slate-700 rounded-xl px-3 py-2.5 text-xs font-bold text-slate-100 uppercase outline-none focus:border-indigo-500 bg-slate-900"
+            className="w-full border-2 border-blue-700 rounded-xl px-3 py-2.5 text-xs font-bold text-blue-100 uppercase outline-none focus:border-blue-500 bg-blue-900"
             value={novoProdutoId}
             onChange={e => setNovoProdutoId(e.target.value)}
           >
@@ -156,10 +156,10 @@ export default function ProdutosRelacionados({ salaoId, servicoId, onUpdate }) {
           </select>
         </div>
         <div className="w-24">
-          <label className="block text-[10px] font-black text-slate-500 uppercase mb-1.5">Doses Usadas</label>
+          <label className="block text-[10px] font-black text-blue-500 uppercase mb-1.5">Doses Usadas</label>
           <input
             type="number" min="0.1" step="0.1"
-            className="w-full border-2 border-slate-700 rounded-xl px-3 py-2.5 text-xs font-bold text-center outline-none focus:border-indigo-500 bg-slate-900"
+            className="w-full border-2 border-blue-700 rounded-xl px-3 py-2.5 text-xs font-bold text-center outline-none focus:border-blue-500 bg-blue-900"
             value={novaQtd}
             onChange={e => setNovaQtd(e.target.value)}
           />
@@ -167,7 +167,7 @@ export default function ProdutosRelacionados({ salaoId, servicoId, onUpdate }) {
         <button
           onClick={adicionar}
           disabled={salvando}
-          className="bg-indigo-600 text-white px-5 py-2.5 rounded-xl font-bold hover:bg-indigo-700 transition-colors flex items-center justify-center disabled:opacity-50 h-[38px] uppercase text-xs shadow-md shadow-indigo-200"
+          className="bg-blue-600 text-white px-5 py-2.5 rounded-xl font-bold hover:bg-blue-700 transition-colors flex items-center justify-center disabled:opacity-50 h-[38px] uppercase text-xs shadow-md shadow-blue-200"
         >
           {salvando ? <Loader2 size={16} className="animate-spin" /> : <><Plus size={16} className="mr-1" /> Vincular</>}
         </button>

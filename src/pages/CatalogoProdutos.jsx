@@ -70,25 +70,25 @@ export default function CatalogoProdutos({ salaoId }) {
   const qtdVal = Number(String(form.qtd_aplicacoes).replace(',', '.')) || 1;
   const custoPorUsoPreview = precoVal / Math.max(qtdVal, 1);
 
-  if (loading) return <div className="p-10 text-center text-slate-400 animate-pulse uppercase">CARREGANDO PRODUTOS...</div>;
+  if (loading) return <div className="p-10 text-center text-blue-400 animate-pulse uppercase">CARREGANDO PRODUTOS...</div>;
 
   return (
     <div className="w-full">
       <div className="flex items-center justify-between mb-6">
         <div>
           <h2 className="text-lg font-black text-white uppercase">Catálogo de Produtos</h2>
-          <p className="text-sm text-slate-500 uppercase">Custo por aplicação calculado automaticamente</p>
+          <p className="text-sm text-blue-500 uppercase">Custo por aplicação calculado automaticamente</p>
         </div>
         <button onClick={() => abrirModalProduto()}
-          className="flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-violet-600 to-indigo-600 text-white rounded-xl hover:from-violet-700 hover:to-indigo-700 transition-all shadow-lg shadow-violet-200 font-bold text-sm uppercase">
+          className="flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-blue-600 to-blue-600 text-white rounded-xl hover:from-blue-700 hover:to-blue-700 transition-all shadow-lg shadow-blue-200 font-bold text-sm uppercase">
           <Plus size={18} /> NOVO PRODUTO
         </button>
       </div>
 
       {/* ═══ TABELA DE PRODUTOS ═══ */}
-      <div className="bg-slate-900 rounded-2xl border border-slate-700 overflow-hidden mb-10">
+      <div className="bg-blue-900 rounded-2xl border border-blue-700 overflow-hidden mb-10">
         <table className="w-full text-sm">
-          <thead className="bg-slate-900 text-white text-[10px] uppercase tracking-wider">
+          <thead className="bg-blue-900 text-white text-[10px] uppercase tracking-wider">
             <tr>
               <th className="text-left px-4 py-3">Produto</th>
               <th className="text-right px-4 py-3">Valor / Frasco</th>
@@ -101,21 +101,21 @@ export default function CatalogoProdutos({ salaoId }) {
           </thead>
           <tbody>
             {produtos.length === 0 ? (
-              <tr><td colSpan={5} className="text-center py-10 text-slate-400 uppercase">NENHUM PRODUTO CADASTRADO</td></tr>
+              <tr><td colSpan={5} className="text-center py-10 text-blue-400 uppercase">NENHUM PRODUTO CADASTRADO</td></tr>
             ) : produtos.map(prod => {
               const fallbackCusto = (Number(prod.preco_compra) || 0) / Math.max(Number(prod.qtd_aplicacoes) || 1, 1);
               const custoExibido = prod.custo_por_uso || fallbackCusto;
               return (
-                <tr key={prod.id} className="border-b border-slate-800 hover:bg-slate-950 transition-colors uppercase">
+                <tr key={prod.id} className="border-b border-blue-800 hover:bg-blue-950 transition-colors uppercase">
                   <td className="px-4 py-3 font-bold text-white flex items-center gap-2">
-                    <Package size={14} className="text-violet-400" />
+                    <Package size={14} className="text-blue-400" />
                     {prod.nome}
                   </td>
-                  <td className="px-4 py-3 text-right text-slate-200">{fmt(prod.preco_compra)}</td>
+                  <td className="px-4 py-3 text-right text-blue-200">{fmt(prod.preco_compra)}</td>
                   <td className="px-4 py-3 text-center">
-                    <span className="bg-slate-100 text-slate-200 px-2 py-0.5 rounded-full text-xs font-bold">{prod.qtd_aplicacoes}x</span>
+                    <span className="bg-blue-100 text-blue-200 px-2 py-0.5 rounded-full text-xs font-bold">{prod.qtd_aplicacoes}x</span>
                   </td>
-                  <td className="px-4 py-3 text-right font-black text-indigo-600">{fmt(custoExibido)}</td>
+                  <td className="px-4 py-3 text-right font-black text-blue-600">{fmt(custoExibido)}</td>
                   <td className="px-4 py-3">
                     <div className="flex items-center justify-center gap-2">
                       <button onClick={() => abrirModalProduto(prod)} className="text-blue-500 hover:text-blue-700"><Pencil size={14} /></button>
@@ -133,34 +133,34 @@ export default function CatalogoProdutos({ salaoId }) {
       <Modal open={modalProd} onClose={() => setModalProd(false)} title={editando ? 'EDITAR PRODUTO' : 'NOVO PRODUTO'}>
         <div className="space-y-4">
           <div>
-            <label className="block text-sm font-bold text-slate-100 mb-1 uppercase">Nome do Produto</label>
-            <input type="text" className="w-full border border-slate-300 rounded-xl px-3 py-2.5 outline-none focus:ring-2 focus:ring-indigo-500 uppercase font-bold"
+            <label className="block text-sm font-bold text-blue-100 mb-1 uppercase">Nome do Produto</label>
+            <input type="text" className="w-full border border-blue-300 rounded-xl px-3 py-2.5 outline-none focus:ring-2 focus:ring-blue-500 uppercase font-bold"
               value={form.nome} onChange={e => setForm({ ...form, nome: e.target.value })} placeholder="EX: BOTOX CAPILAR 500ML" />
           </div>
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-bold text-slate-100 mb-1 uppercase">Valor do Frasco (R$)</label>
-              <input type="number" step="0.01" className="w-full border border-slate-300 rounded-xl px-3 py-2.5 outline-none focus:ring-2 focus:ring-indigo-500"
+              <label className="block text-sm font-bold text-blue-100 mb-1 uppercase">Valor do Frasco (R$)</label>
+              <input type="number" step="0.01" className="w-full border border-blue-300 rounded-xl px-3 py-2.5 outline-none focus:ring-2 focus:ring-blue-500"
                 value={form.preco_compra} onChange={e => setForm({ ...form, preco_compra: e.target.value })} placeholder="190.00" />
             </div>
             <div>
-              <label className="block text-sm font-bold text-slate-100 mb-1 uppercase">Qtd Aplicações</label>
-              <input type="number" className="w-full border border-slate-300 rounded-xl px-3 py-2.5 outline-none focus:ring-2 focus:ring-indigo-500"
+              <label className="block text-sm font-bold text-blue-100 mb-1 uppercase">Qtd Aplicações</label>
+              <input type="number" className="w-full border border-blue-300 rounded-xl px-3 py-2.5 outline-none focus:ring-2 focus:ring-blue-500"
                 value={form.qtd_aplicacoes} onChange={e => setForm({ ...form, qtd_aplicacoes: e.target.value })} placeholder="12" />
             </div>
           </div>
 
           {/* Preview automático */}
-          <div className="bg-indigo-50 border border-indigo-200 rounded-xl p-4 text-center">
-            <p className="text-[10px] font-bold text-indigo-400 uppercase mb-1">Custo por Aplicação (Automático)</p>
-            <p className="text-3xl font-black text-indigo-600">{fmt(custoPorUsoPreview)}</p>
-            <p className="text-[10px] text-indigo-400 mt-1 uppercase">
+          <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 text-center">
+            <p className="text-[10px] font-bold text-blue-400 uppercase mb-1">Custo por Aplicação (Automático)</p>
+            <p className="text-3xl font-black text-blue-600">{fmt(custoPorUsoPreview)}</p>
+            <p className="text-[10px] text-blue-400 mt-1 uppercase">
               R$ {precoVal.toFixed(2)} ÷ {qtdVal} aplicações = R$ {custoPorUsoPreview.toFixed(2)}
             </p>
           </div>
 
           <button onClick={salvarProduto}
-            className="w-full bg-indigo-600 text-white py-3 rounded-xl font-bold hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-200 uppercase">
+            className="w-full bg-blue-600 text-white py-3 rounded-xl font-bold hover:bg-blue-700 transition-all shadow-lg shadow-blue-200 uppercase">
             {editando ? 'SALVAR ALTERAÇÕES' : 'CADASTRAR PRODUTO'}
           </button>
         </div>

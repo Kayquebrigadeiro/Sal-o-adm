@@ -11,7 +11,7 @@ export default function BannerRenovacao({ diasRestantes }) {
   if (diasRestantes > 5 || diasRestantes < 0) return null;
 
   return (
-    <div className="bg-gradient-to-r from-amber-500 to-orange-500 text-white px-4 py-2 flex items-center justify-center gap-3 text-sm font-medium shadow-md z-40 relative">
+    <div className="bg-gradient-to-r from-blue-500 to-orange-500 text-white px-4 py-2 flex items-center justify-center gap-3 text-sm font-medium shadow-md z-40 relative">
       <AlertCircle className="w-5 h-5 animate-pulse" />
       <span>
         ⚠️ Atenção! Sua assinatura vence em <strong>{diasRestantes} dias</strong>. Renove agora para não perder o acesso.

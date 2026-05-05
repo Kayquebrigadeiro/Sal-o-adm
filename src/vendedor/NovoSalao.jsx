@@ -77,7 +77,7 @@ export default function NovoSalao({ userId }) {
           <div
             key={n}
             className={`h-1.5 flex-1 rounded-full transition-colors ${
-              etapa >= n ? 'bg-emerald-500' : 'bg-slate-200'
+              etapa >= n ? 'bg-emerald-500' : 'bg-blue-200'
             }`}
           />
         ))}
@@ -89,7 +89,7 @@ export default function NovoSalao({ userId }) {
           <h2 className="text-xl font-bold text-white">Dados do Salão</h2>
 
           <div>
-            <label className="block text-sm font-medium text-slate-100 mb-1">
+            <label className="block text-sm font-medium text-blue-100 mb-1">
               Nome do Salão *
             </label>
             <input
@@ -102,7 +102,7 @@ export default function NovoSalao({ userId }) {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-slate-100 mb-1">
+            <label className="block text-sm font-medium text-blue-100 mb-1">
               Telefone / WhatsApp *
             </label>
             <input
@@ -131,12 +131,12 @@ export default function NovoSalao({ userId }) {
       {etapa === 2 && (
         <div className="space-y-4">
           <h2 className="text-xl font-bold text-white">Acesso da Proprietária</h2>
-          <p className="text-sm text-slate-500">
+          <p className="text-sm text-blue-500">
             Use o e-mail real da proprietária. Ela receberá um link de ativação.
           </p>
 
           <div>
-            <label className="block text-sm font-medium text-slate-100 mb-1">
+            <label className="block text-sm font-medium text-blue-100 mb-1">
               Nome da Proprietária *
             </label>
             <input
@@ -150,7 +150,7 @@ export default function NovoSalao({ userId }) {
 
           {/* ← CAMPO NOVO: e-mail real obrigatório */}
           <div>
-            <label className="block text-sm font-medium text-slate-100 mb-1">
+            <label className="block text-sm font-medium text-blue-100 mb-1">
               E-mail da Proprietária *
             </label>
             <input
@@ -161,7 +161,7 @@ export default function NovoSalao({ userId }) {
               placeholder="maria@exemplo.com"
               autoComplete="off"
             />
-            <p className="text-xs text-slate-400 mt-1">
+            <p className="text-xs text-blue-400 mt-1">
               Este será o login permanente dela no sistema.
             </p>
           </div>
@@ -169,7 +169,7 @@ export default function NovoSalao({ userId }) {
           <div className="flex gap-3">
             <button
               onClick={() => setEtapa(1)}
-              className="flex-1 py-3 border border-slate-300 text-slate-200 font-medium rounded-xl hover:bg-slate-950"
+              className="flex-1 py-3 border border-blue-300 text-blue-200 font-medium rounded-xl hover:bg-blue-950"
             >
               ← Voltar
             </button>
@@ -195,9 +195,9 @@ export default function NovoSalao({ userId }) {
           <h2 className="text-xl font-bold text-white">Confirmar e Criar</h2>
 
           {/* Resumo */}
-          <div className="bg-slate-950 border border-slate-700 rounded-xl p-4 space-y-1 text-sm">
-            <p><span className="text-slate-500">Salão:</span> <strong>{form.nome_salao}</strong></p>
-            <p><span className="text-slate-500">Proprietária:</span> <strong>{form.nome_proprietaria}</strong></p>
+          <div className="bg-blue-950 border border-blue-700 rounded-xl p-4 space-y-1 text-sm">
+            <p><span className="text-blue-500">Salão:</span> <strong>{form.nome_salao}</strong></p>
+            <p><span className="text-blue-500">Proprietária:</span> <strong>{form.nome_proprietaria}</strong></p>
           </div>
 
           {/* Credenciais geradas */}
@@ -220,9 +220,9 @@ export default function NovoSalao({ userId }) {
           </div>
 
           {/* Aviso sobre e-mail de ativação */}
-          <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 flex gap-3">
-            <span className="text-amber-500 text-lg mt-0.5">⚠️</span>
-            <p className="text-sm text-amber-800">
+          <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 flex gap-3">
+            <span className="text-blue-500 text-lg mt-0.5">⚠️</span>
+            <p className="text-sm text-blue-800">
               <strong>Atenção:</strong> A proprietária receberá um e-mail de ativação do Supabase.{' '}
               <strong>Ela deve clicar no link antes do primeiro login.</strong>{' '}
               Anote a senha acima e entregue pessoalmente.
@@ -232,7 +232,7 @@ export default function NovoSalao({ userId }) {
           <div className="flex gap-3">
             <button
               onClick={() => setEtapa(2)}
-              className="flex-1 py-3 border border-slate-300 text-slate-200 font-medium rounded-xl hover:bg-slate-950"
+              className="flex-1 py-3 border border-blue-300 text-blue-200 font-medium rounded-xl hover:bg-blue-950"
               disabled={carregando}
             >
               ← Voltar
@@ -253,16 +253,16 @@ export default function NovoSalao({ userId }) {
         <div className="text-center space-y-4 py-8">
           <div className="text-5xl">🎉</div>
           <h2 className="text-xl font-bold text-white">Salão criado com sucesso!</h2>
-          <p className="text-sm text-slate-500">
+          <p className="text-sm text-blue-500">
             Um e-mail de ativação foi enviado para{' '}
             <strong>{form.email_proprietaria}</strong>.
           </p>
-          <p className="text-xs text-slate-400">
+          <p className="text-xs text-blue-400">
             Entregue a senha temporária para a proprietária pessoalmente.
           </p>
           <button
             onClick={() => navigate('/admin/saloes')}
-            className="mt-4 px-6 py-3 bg-slate-800 text-white font-bold rounded-xl hover:bg-slate-900"
+            className="mt-4 px-6 py-3 bg-blue-800 text-white font-bold rounded-xl hover:bg-blue-900"
           >
             Voltar para Salões
           </button>

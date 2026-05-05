@@ -117,15 +117,15 @@ export default function Clientes({ salaoId }) {
   );
 
   return (
-    <div className="p-6 bg-slate-950 min-h-screen font-sans">
+    <div className="p-6 bg-blue-950 min-h-screen font-sans">
       <div className="flex justify-between items-center mb-8">
         <div>
           <h1 className="text-2xl font-black text-white tracking-tight">Gestão de Clientes (CRM)</h1>
-          <p className="text-slate-500 text-sm">Histórico e fidelização da base de dados.</p>
+          <p className="text-blue-500 text-sm">Histórico e fidelização da base de dados.</p>
         </div>
         <button
           onClick={() => { setForm({ id: null, nome: '', telefone: '' }); setModalAberto(true); }}
-          className="bg-slate-900 text-white px-4 py-2 rounded-xl font-bold flex items-center gap-2 hover:bg-slate-800 transition-all text-sm shadow-lg"
+          className="bg-blue-900 text-white px-4 py-2 rounded-xl font-bold flex items-center gap-2 hover:bg-blue-800 transition-all text-sm shadow-lg"
         >
           <UserPlus size={18} /> Nova Cliente
         </button>
@@ -133,21 +133,21 @@ export default function Clientes({ salaoId }) {
 
       {/* BARRA DE BUSCA */}
       <div className="relative mb-6">
-        <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={20} />
+        <Search className="absolute left-4 top-1/2 -tranblue-y-1/2 text-blue-400" size={20} />
         <input
           type="text"
           placeholder="Procurar por nome ou telefone..."
-          className="w-full bg-slate-900 border border-slate-700 rounded-2xl py-4 pl-12 pr-4 outline-none focus:ring-2 focus:ring-emerald-500 shadow-sm font-medium"
+          className="w-full bg-blue-900 border border-blue-700 rounded-2xl py-4 pl-12 pr-4 outline-none focus:ring-2 focus:ring-emerald-500 shadow-sm font-medium"
           value={busca}
           onChange={(e) => setBusca(e.target.value)}
         />
       </div>
 
       {/* TABELA DE CLIENTES */}
-      <div className="bg-slate-900 rounded-2xl border border-slate-700 overflow-x-auto shadow-sm">
+      <div className="bg-blue-900 rounded-2xl border border-blue-700 overflow-x-auto shadow-sm">
         <table className="w-full text-left border-collapse min-w-[600px]">
           <thead>
-            <tr className="bg-slate-950 border-b border-slate-700 text-[10px] font-black text-slate-400 uppercase tracking-widest">
+            <tr className="bg-blue-950 border-b border-blue-700 text-[10px] font-black text-blue-400 uppercase tracking-widest">
               <th className="p-4">Nome da Cliente</th>
               <th className="p-4">Contacto</th>
               <th className="p-4 text-right">Total Gasto (LTV)</th>
@@ -157,13 +157,13 @@ export default function Clientes({ salaoId }) {
           </thead>
           <tbody>
             {clientesFiltrados.map(cliente => (
-              <tr key={cliente.id} className="border-b border-slate-50 hover:bg-slate-950/50 transition-colors">
+              <tr key={cliente.id} className="border-b border-blue-50 hover:bg-blue-950/50 transition-colors">
                 <td className="p-4 font-bold text-white">{cliente.nome}</td>
-                <td className="p-4 text-slate-500 font-medium text-sm">{cliente.telefone || '—'}</td>
+                <td className="p-4 text-blue-500 font-medium text-sm">{cliente.telefone || '—'}</td>
                 <td className="p-4 text-right">
                   <span className="font-black text-emerald-600">{fmt(cliente.total_gasto || 0)}</span>
                 </td>
-                <td className="p-4 text-center text-slate-400 text-xs font-bold">
+                <td className="p-4 text-center text-blue-400 text-xs font-bold">
                   {cliente.ultima_visita
                     ? new Date(cliente.ultima_visita + 'T12:00:00').toLocaleDateString('pt-BR')
                     : '—'}
@@ -181,7 +181,7 @@ export default function Clientes({ salaoId }) {
                     <button
                       title="Ver Ficha Completa"
                       onClick={() => abrirFicha(cliente)}
-                      className="p-2 bg-slate-100 text-slate-200 rounded-lg hover:bg-slate-800 hover:text-white transition-all"
+                      className="p-2 bg-blue-100 text-blue-200 rounded-lg hover:bg-blue-800 hover:text-white transition-all"
                     >
                       <FileText size={18} />
                     </button>
@@ -192,7 +192,7 @@ export default function Clientes({ salaoId }) {
 
             {clientesFiltrados.length === 0 && (
               <tr>
-                <td colSpan={5} className="py-12 text-center text-slate-400">
+                <td colSpan={5} className="py-12 text-center text-blue-400">
                   <User size={40} className="mx-auto mb-2 opacity-30" />
                   Nenhum cliente encontrado.
                 </td>
@@ -206,25 +206,25 @@ export default function Clientes({ salaoId }) {
       <Modal open={modalAberto} onClose={() => setModalAberto(false)} title={form.id ? 'Editar Cliente' : 'Novo Cliente'}>
         <div className="space-y-4">
           <div>
-            <label className="text-sm font-bold text-slate-100 mb-1 block">Nome Completo</label>
+            <label className="text-sm font-bold text-blue-100 mb-1 block">Nome Completo</label>
             <input
               type="text"
-              className="w-full border-2 border-slate-800 p-3 rounded-2xl focus:border-slate-900 outline-none"
+              className="w-full border-2 border-blue-800 p-3 rounded-2xl focus:border-blue-900 outline-none"
               value={form.nome}
               onChange={e => setForm({...form, nome: e.target.value.toUpperCase()})}
             />
           </div>
           <div>
-            <label className="text-sm font-bold text-slate-100 mb-1 block">Telemóvel / WhatsApp</label>
+            <label className="text-sm font-bold text-blue-100 mb-1 block">Telemóvel / WhatsApp</label>
             <input
               type="text"
-              className="w-full border-2 border-slate-800 p-3 rounded-2xl focus:border-slate-900 outline-none"
+              className="w-full border-2 border-blue-800 p-3 rounded-2xl focus:border-blue-900 outline-none"
               value={form.telefone}
               onChange={e => setForm({...form, telefone: e.target.value})}
               placeholder="(00) 00000-0000"
             />
           </div>
-          <button onClick={salvarCliente} className="w-full bg-slate-900 text-white py-4 rounded-2xl font-bold hover:bg-slate-800 transition-all mt-4">
+          <button onClick={salvarCliente} className="w-full bg-blue-900 text-white py-4 rounded-2xl font-bold hover:bg-blue-800 transition-all mt-4">
             Guardar Cliente
           </button>
         </div>
@@ -233,13 +233,13 @@ export default function Clientes({ salaoId }) {
       {/* FICHA HISTÓRICA (inline, sem componente Modal) */}
       {clienteSelecionado && (
         <div className="fixed inset-0 bg-white/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <div className="bg-slate-900 w-full max-w-lg rounded-3xl shadow-2xl overflow-hidden">
-            <div className="p-6 border-b border-slate-800 flex justify-between items-start">
+          <div className="bg-blue-900 w-full max-w-lg rounded-3xl shadow-2xl overflow-hidden">
+            <div className="p-6 border-b border-blue-800 flex justify-between items-start">
               <div>
                 <h2 className="text-xl font-black text-white">{clienteSelecionado.nome}</h2>
-                <p className="text-sm text-slate-500 font-bold uppercase tracking-tighter">Histórico Financeiro</p>
+                <p className="text-sm text-blue-500 font-bold uppercase tracking-tighter">Histórico Financeiro</p>
               </div>
-              <button onClick={() => setClienteSelecionado(null)} className="text-slate-400 hover:text-slate-200 text-2xl font-bold">&times;</button>
+              <button onClick={() => setClienteSelecionado(null)} className="text-blue-400 hover:text-blue-200 text-2xl font-bold">&times;</button>
             </div>
 
             <div className="p-6 space-y-4">
@@ -249,15 +249,15 @@ export default function Clientes({ salaoId }) {
               </div>
 
               <div className="space-y-2 max-h-[40vh] overflow-y-auto pr-1">
-                <p className="text-[10px] font-black text-slate-400 uppercase">Últimos Atendimentos</p>
+                <p className="text-[10px] font-black text-blue-400 uppercase">Últimos Atendimentos</p>
                 {historico.length === 0 && (
-                  <p className="text-sm text-slate-400 text-center py-4">Nenhum atendimento registado.</p>
+                  <p className="text-sm text-blue-400 text-center py-4">Nenhum atendimento registado.</p>
                 )}
                 {historico.map((a, i) => (
-                  <div key={i} className="border border-slate-800 rounded-xl p-3 flex justify-between items-center text-sm">
+                  <div key={i} className="border border-blue-800 rounded-xl p-3 flex justify-between items-center text-sm">
                     <div>
                       <p className="font-bold text-white">{a.procedimentos?.nome || 'Procedimento apagado'}</p>
-                      <p className="text-xs text-slate-400">
+                      <p className="text-xs text-blue-400">
                         {new Date(a.data + 'T12:00:00').toLocaleDateString('pt-BR')} às {a.horario?.slice(0, 5)}
                       </p>
                     </div>
@@ -267,10 +267,10 @@ export default function Clientes({ salaoId }) {
               </div>
             </div>
 
-            <div className="p-6 bg-slate-950">
+            <div className="p-6 bg-blue-950">
               <button
                 onClick={() => setClienteSelecionado(null)}
-                className="w-full bg-slate-900 text-white py-3 rounded-xl font-bold hover:bg-slate-800 transition-all"
+                className="w-full bg-blue-900 text-white py-3 rounded-xl font-bold hover:bg-blue-800 transition-all"
               >
                 Fechar Ficha
               </button>

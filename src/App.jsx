@@ -125,6 +125,12 @@ export default function App() {
         if (!mountedRef.current) return;
 
         if (event === 'SIGNED_OUT' || !session) {
+          Object.keys(localStorage).forEach(key => {
+            if (key.startsWith('sb-')) localStorage.removeItem(key);
+          });
+          Object.keys(sessionStorage).forEach(key => {
+            if (key.startsWith('sb-')) sessionStorage.removeItem(key);
+          });
           setSessao(null);
           setPerfil(null);
           setSalaoNome('');

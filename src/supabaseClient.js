@@ -14,7 +14,8 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
   auth: {
     persistSession: true,
     storageKey: 'salao-secreto-auth',
+    storage: window.localStorage,
     autoRefreshToken: true,
     detectSessionInUrl: true,
-  },
+  }
 });

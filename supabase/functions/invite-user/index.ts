@@ -9,9 +9,9 @@ interface InviteBody {
 }
 
 const corsHeaders = {
-  'Access-Control-Allow-Origin': 'https://adiministrador.netlify.app',
-  'Access-Control-Allow-Methods': 'POST, OPTIONS',
+  'Access-Control-Allow-Origin': 'https://adm-salao.vercel.app',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  'Access-Control-Allow-Methods': 'POST, OPTIONS',
 }
 
 serve(async (req) => {

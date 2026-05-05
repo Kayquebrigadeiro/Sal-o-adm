@@ -129,6 +129,7 @@ export default function App() {
           setPerfil(null);
           setSalaoNome('');
           setErroCritico(null);
+          setAssinatura(null);
           setCarregando(false);
           perfilBuscadoRef.current = false;
           return;

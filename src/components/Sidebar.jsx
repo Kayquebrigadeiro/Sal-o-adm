@@ -32,14 +32,25 @@ export default function Sidebar({ role, email, salaoNome }) {
   const handleLogout = async () => {
     try {
       setSaindo(true);
-      const { error } = await supabase.auth.signOut();
-      if (error) {
-        alert('Erro ao sair: ' + error.message);
-        setSaindo(false);
-      }
+
+      // 1. Limpar tudo do localStorage manualmente
+      // (o Supabase às vezes deixa resquícios)
+      Object.keys(localStorage).forEach(key => {
+        if (key.startsWith('sb-') || key.includes('supabase')) {
+          localStorage.removeItem(key);
+        }
+      });
+
+      // 2. Chamar o signOut do Supabase
+      await supabase.auth.signOut({ scope: 'local' });
+
+      // 3. Forçar reload completo para limpar memória do React
+      window.location.href = '/';
+
     } catch (err) {
-      alert('Erro inesperado ao sair');
-      setSaindo(false);
+      console.error('Erro ao sair:', err);
+      // Mesmo com erro, forçar redirect
+      window.location.href = '/';
     }
   };
 

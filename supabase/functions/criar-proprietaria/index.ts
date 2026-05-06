@@ -68,11 +68,11 @@ serve(async (req) => {
 
     if (configError) throw configError
 
-    // 2. Cria a proprietária com e-mail real (email_confirm: true para enviar e-mail de ativação)
+    // 2. Cria a proprietária com e-mail real
     const { data: authData, error: authError } = await supabaseAdmin.auth.admin.createUser({
       email,
       password: senha,
-      email_confirm: true, // ← Envia e-mail de ativação
+      email_confirm: true, // ← "true" significa: APROVA O EMAIL AUTOMATICAMENTE (BURLA O LINK DE ATIVAÇÃO)
       user_metadata: {
         cargo: 'PROPRIETARIO',
         nome,

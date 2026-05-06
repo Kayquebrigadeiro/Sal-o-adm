@@ -219,13 +219,12 @@ export default function NovoSalao({ userId }) {
             </div>
           </div>
 
-          {/* Aviso sobre e-mail de ativação */}
+          {/* Aviso */}
           <div className="bg-sky-50 border border-sky-200 rounded-xl p-4 flex gap-3">
             <span className="text-gray-500 text-lg mt-0.5">⚠️</span>
             <p className="text-sm text-blue-800">
-              <strong>Atenção:</strong> A proprietária receberá um e-mail de ativação do Supabase.{' '}
-              <strong>Ela deve clicar no link antes do primeiro login.</strong>{' '}
-              Anote a senha acima e entregue pessoalmente.
+              <strong>Atenção:</strong> A conta já está ativa e pronta para uso.{' '}
+              <strong>Anote a senha acima e entregue para a proprietária pessoalmente.</strong>
             </p>
           </div>
 
@@ -254,11 +253,10 @@ export default function NovoSalao({ userId }) {
           <div className="text-5xl">🎉</div>
           <h2 className="text-xl font-bold text-gray-800">Salão criado com sucesso!</h2>
           <p className="text-sm text-gray-500">
-            Um e-mail de ativação foi enviado para{' '}
-            <strong>{form.email_proprietaria}</strong>.
+            A conta de <strong>{form.email_proprietaria}</strong> já está ativa.
           </p>
           <p className="text-xs text-gray-500">
-            Entregue a senha temporária para a proprietária pessoalmente.
+            Lembre-se de entregar a senha temporária para a proprietária.
           </p>
           <button
             onClick={() => navigate('/admin/saloes')}

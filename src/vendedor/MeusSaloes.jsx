@@ -33,11 +33,7 @@ export default function MeusSaloes({ userId }) {
   const deletar = async (id, nome) => {
     if (!confirm(`Deletar "${nome}" permanentemente?\n\nTodos os dados serão apagados: profissionais, atendimentos, financeiro. Esta ação não pode ser desfeita.`)) return;
     
-    const { error } = await supabase
-      .from('saloes')
-      .update({ deletado_em: new Date().toISOString(), ativo: false })
-      .eq('id', id)
-      .eq('vendedor_id', userId);
+    const { error } = await supabase.rpc('fn_deletar_salao', { p_salao_id: id });
 
     if (error) {
       alert('Erro ao deletar: ' + error.message);

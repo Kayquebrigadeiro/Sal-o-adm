@@ -29,7 +29,7 @@ const CHIPS_ESTETICA = [
 const fmt = (v) => Number(v || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
 
 // ─── Componente principal ───
-export default function WizardBemVinda() {
+export default function WizardBemVinda({ onConcluido }) {
   const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);
   const [erro, setErro] = useState('');
@@ -214,7 +214,7 @@ export default function WizardBemVinda() {
           .eq('id', salaoId);
         if (errFinal) throw errFinal;
 
-        window.location.reload();
+        if (onConcluido) onConcluido();
         return;
       }
 

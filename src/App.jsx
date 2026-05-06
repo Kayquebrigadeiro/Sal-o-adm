@@ -203,7 +203,7 @@ export default function App() {
 
   // Wizard de primeiro acesso — tela cheia, sem sidebar
   if (role === 'PROPRIETARIO' && !configurado) {
-    return <><BannerOffline /><WizardBemVinda salaoId={salaoId} email={email} /></>;
+    return <><BannerOffline /><WizardBemVinda salaoId={salaoId} email={email} onConcluido={() => setPerfil(prev => ({ ...prev, configurado: true }))} /></>;
   }
 
   // Se proprietária com assinatura vencida → tela de bloqueio

@@ -24,7 +24,7 @@
       ]
     },
     {
-      "source": "/(index\\.html)",
+      "source": "/index.html",
       "headers": [
         {
           "key": "Cache-Control",

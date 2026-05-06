@@ -145,7 +145,6 @@ export default function App() {
 
     return () => {
       mountedRef.current = false;
-      clearTimeout(failsafeTimeout);
       subscription.unsubscribe();
     };
   }, []);

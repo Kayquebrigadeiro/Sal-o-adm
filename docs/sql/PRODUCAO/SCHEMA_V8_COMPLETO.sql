@@ -236,7 +236,8 @@ create table if not exists produtos_catalogo (
   ) stored,
   ativo          boolean not null default true,
   criado_em      timestamptz default now(),
-  atualizado_em  timestamptz default now()
+  atualizado_em  timestamptz default now(),
+  unique(salao_id, nome)
 );
 create index if not exists idx_produtos_salao on produtos_catalogo(salao_id);
 

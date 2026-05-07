@@ -92,7 +92,8 @@ create table if not exists profissionais (
   ativo         boolean not null default true,
   criado_em     timestamptz default now(),
   atualizado_em timestamptz default now(),
-  constraint chk_prof_nome check (length(trim(nome)) > 0)
+  constraint chk_prof_nome check (length(trim(nome)) > 0),
+  unique(salao_id, nome)
 );
 
 create table if not exists procedimentos (

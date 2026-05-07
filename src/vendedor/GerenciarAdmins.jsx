@@ -36,7 +36,7 @@ export default function GerenciarAdmins() {
     setSalvando(true);
 
     const { error } = await supabase.functions.invoke('criar-admin', {
-      body: { email: form.email, senha: form.senha, nome: form.nome }
+      body: { email: form.email, senha: form.senha, nome: form.nome, vendedor_id: meuId }
     });
 
     setSalvando(false);

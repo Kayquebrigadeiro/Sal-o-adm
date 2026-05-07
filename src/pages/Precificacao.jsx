@@ -127,6 +127,7 @@ const TableRow = ({ proc, config, custoMaterial, isExpanded, onToggleExpand, sal
         <td className="p-3 text-center">
           <input type="number" step="0.01" value={ganho} onChange={e => {
             const val = e.target.value;
+            if (val.length > 8) return;
             if (val === '' || (!isNaN(Number(val)) && Number(val) >= 0)) {
               handleFieldChange(setGanho, 'ganho_liquido_desejado', val);
             }
@@ -137,6 +138,7 @@ const TableRow = ({ proc, config, custoMaterial, isExpanded, onToggleExpand, sal
         <td className="p-3 text-center border-l border-gray-200">
           <input type="number" step="0.01" value={precoP} onChange={e => {
             const val = e.target.value;
+            if (val.length > 8) return;
             if (val === '' || (!isNaN(Number(val)) && Number(val) >= 0)) {
               handleFieldChange(setPrecoP, 'preco_p', val);
             }
@@ -152,6 +154,7 @@ const TableRow = ({ proc, config, custoMaterial, isExpanded, onToggleExpand, sal
           {proc.requer_comprimento ? (
             <input type="number" step="0.01" value={precoM} onChange={e => {
               const val = e.target.value;
+              if (val.length > 8) return;
               if (val === '' || (!isNaN(Number(val)) && Number(val) >= 0)) {
                 handleFieldChange(setPrecoM, 'preco_m', val);
               }
@@ -164,6 +167,7 @@ const TableRow = ({ proc, config, custoMaterial, isExpanded, onToggleExpand, sal
           {proc.requer_comprimento ? (
             <input type="number" step="0.01" value={precoG} onChange={e => {
               const val = e.target.value;
+              if (val.length > 8) return;
               if (val === '' || (!isNaN(Number(val)) && Number(val) >= 0)) {
                 handleFieldChange(setPrecoG, 'preco_g', val);
               }
@@ -413,7 +417,9 @@ export default function Precificacao({ salaoId }) {
                 <label className="block text-xs font-bold text-gray-500 mb-1 uppercase">Valor Cobrado (R$)</label>
                 <input type="number" step="0.01"
                   className="w-full border border-sky-200 rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-sky-500 bg-white"
-                  value={sim.valorCobrado} onChange={e => setSim({ ...sim, valorCobrado: e.target.value })}
+                  value={sim.valorCobrado} onChange={e => {
+                    if (e.target.value.length <= 8) setSim({ ...sim, valorCobrado: e.target.value });
+                  }}
                   placeholder="150.00"
                 />
               </div>
@@ -421,7 +427,9 @@ export default function Precificacao({ salaoId }) {
                 <label className="block text-xs font-bold text-gray-500 mb-1 uppercase">Custo Material (R$)</label>
                 <input type="number" step="0.01"
                   className="w-full border border-sky-200 rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-sky-500 bg-white"
-                  value={sim.custoProduto} onChange={e => setSim({ ...sim, custoProduto: e.target.value })}
+                  value={sim.custoProduto} onChange={e => {
+                    if (e.target.value.length <= 8) setSim({ ...sim, custoProduto: e.target.value });
+                  }}
                   placeholder="15.83"
                 />
               </div>
@@ -492,7 +500,9 @@ export default function Precificacao({ salaoId }) {
             <input type="number" step="1"
               className="w-full bg-transparent outline-none text-lg font-black text-gray-800 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
               value={config.qtd_atendimentos_mes}
-              onChange={e => updateConfig('qtd_atendimentos_mes', e.target.value)}
+              onChange={e => {
+                if (e.target.value.length <= 8) updateConfig('qtd_atendimentos_mes', e.target.value);
+              }}
               onBlur={async () => {
                 try {
                   const novaQtd = Number(config.qtd_atendimentos_mes) || 1;
@@ -636,6 +646,7 @@ export default function Precificacao({ salaoId }) {
                         <div className="flex items-center gap-3">
                           <input type="number" min="0.1" step="0.1" className="w-14 text-center border border-gray-200 rounded text-xs p-1 font-bold"
                             value={p.qtd_usada} onChange={e => {
+                              if (e.target.value.length > 8) return;
                               const val = Number(e.target.value);
                               setProdsSelecionados(prodsSelecionados.map(x => x.id === p.id ? { ...x, qtd_usada: val } : x));
                             }} />
@@ -653,7 +664,9 @@ export default function Precificacao({ salaoId }) {
 
             <div>
               <label className="text-xs font-black text-gray-500 mb-1 block uppercase">Ganho Líquido Desejado (R$)</label>
-              <input type="number" step="0.01" value={formProc.ganho} onChange={e => setFormProc({ ...formProc, ganho: e.target.value })} className="w-full border-2 border-gray-200 p-3 rounded-xl focus:border-emerald-500 outline-none font-bold text-emerald-700 bg-emerald-50" placeholder="50.00" />
+              <input type="number" step="0.01" value={formProc.ganho} onChange={e => {
+                if (e.target.value.length <= 8) setFormProc({ ...formProc, ganho: e.target.value });
+              }} className="w-full border-2 border-gray-200 p-3 rounded-xl focus:border-emerald-500 outline-none font-bold text-emerald-700 bg-emerald-50" placeholder="50.00" />
             </div>
 
             <div className="bg-white rounded-2xl p-5 text-gray-800 shadow-xl">

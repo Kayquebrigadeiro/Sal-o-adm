@@ -7,14 +7,14 @@ import { User, X, CheckCircle2, AlertTriangle, UserPlus, ChevronLeft, ChevronRig
 const fmt = (v) => Number(v || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
 const fmtPct = (v) => `${Number(v || 0).toFixed(1)}%`;
 
-// Cores por profissional (inspirado Avec/SalãoVip) — paleta profissional
+// Estilo de planilha — fundo neutro para cabeçalhos e cores pastel para os agendamentos
 const PROF_COLORS = [
-  { bg: 'bg-sky-500', light: 'bg-sky-50', text: 'text-sky-600', border: 'border-sky-200', hover: 'hover:bg-sky-50/60' },
-  { bg: 'bg-sky-500', light: 'bg-sky-50', text: 'text-sky-700', border: 'border-sky-200', hover: 'hover:bg-sky-50/60' },
-  { bg: 'bg-cyan-500', light: 'bg-cyan-50', text: 'text-cyan-700', border: 'border-cyan-200', hover: 'hover:bg-cyan-50/60' },
-  { bg: 'bg-sky-500', light: 'bg-sky-50', text: 'text-sky-600', border: 'border-sky-200', hover: 'hover:bg-sky-50/60' },
-  { bg: 'bg-gray-500', light: 'bg-gray-50', text: 'text-gray-600', border: 'border-gray-200', hover: 'hover:bg-gray-50/60' },
-  { bg: 'bg-teal-500', light: 'bg-teal-50', text: 'text-teal-700', border: 'border-teal-200', hover: 'hover:bg-teal-50/60' },
+  { bg: 'bg-slate-100 border-r border-slate-300', light: 'bg-blue-50', text: 'text-blue-800', border: 'border-blue-300', hover: 'hover:bg-slate-50' },
+  { bg: 'bg-slate-100 border-r border-slate-300', light: 'bg-emerald-50', text: 'text-emerald-800', border: 'border-emerald-300', hover: 'hover:bg-slate-50' },
+  { bg: 'bg-slate-100 border-r border-slate-300', light: 'bg-purple-50', text: 'text-purple-800', border: 'border-purple-300', hover: 'hover:bg-slate-50' },
+  { bg: 'bg-slate-100 border-r border-slate-300', light: 'bg-amber-50', text: 'text-amber-800', border: 'border-amber-300', hover: 'hover:bg-slate-50' },
+  { bg: 'bg-slate-100 border-r border-slate-300', light: 'bg-rose-50', text: 'text-rose-800', border: 'border-rose-300', hover: 'hover:bg-slate-50' },
+  { bg: 'bg-slate-100 border-r border-slate-300', light: 'bg-teal-50', text: 'text-teal-800', border: 'border-teal-300', hover: 'hover:bg-slate-50' },
 ];
 
 const HORARIOS = [
@@ -508,7 +508,7 @@ export default function Agenda({ salaoId, role }) {
             <ChevronLeft size={16} className="text-gray-500" />
           </button>
           <button onClick={hoje}
-            className={`px-4 py-2.5 rounded-xl text-sm font-bold transition-all shadow-sm uppercase ${ehHoje ? 'bg-gradient-to-r from-blue-600 to-sky-500 text-gray-800 shadow-sky-200/50' : 'bg-white border border-gray-200 text-gray-600 hover:bg-gray-50'}`}>
+            className={`px-4 py-2.5 rounded-xl text-sm font-bold transition-all shadow-sm uppercase ${ehHoje ? 'bg-sky-100 text-sky-800 border border-sky-300' : 'bg-white border border-gray-300 text-gray-600 hover:bg-gray-50'}`}>
             {ehHoje ? '📅 Hoje' : fmtDataCompleta(dataSelecionada)}
           </button>
           <input type="date" value={dataSelecionada} onChange={e => setDataSelecionada(e.target.value)}
@@ -522,7 +522,7 @@ export default function Agenda({ salaoId, role }) {
       {/* ═══ GRADE DE AGENDA ═══ */}
       {/* Aviso se a proprietária não está na planilha */}
       {role === 'PROPRIETARIO' && profissionais.length > 0 && !profissionais.some(p => p.cargo === 'PROPRIETARIO') && (
-        <div className="mb-4 bg-gradient-to-r from-blue-50 to-orange-50 border border-sky-200 rounded-2xl p-4 flex items-center justify-between gap-3">
+        <div className="mb-4 bg-sky-50 border border-sky-200 rounded-lg p-4 flex items-center justify-between gap-3">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 bg-sky-50 rounded-xl flex items-center justify-center flex-shrink-0">
               <span className="text-lg">👑</span>
@@ -554,7 +554,7 @@ export default function Agenda({ salaoId, role }) {
                 showToast('ERRO: ' + err.message, 'error');
               }
             }}
-            className="flex-shrink-0 px-4 py-2.5 bg-gradient-to-r from-blue-500 to-orange-500 text-gray-800 rounded-xl font-bold text-sm hover:from-blue-600 hover:to-orange-600 transition-all shadow-lg shadow-sky-200 uppercase"
+            className="flex-shrink-0 px-4 py-2.5 bg-blue-100 text-blue-800 border border-blue-300 rounded-xl font-bold text-sm hover:bg-blue-200 transition-all shadow-sm uppercase"
           >
             Adicionar-me 👑
           </button>
@@ -580,7 +580,7 @@ export default function Agenda({ salaoId, role }) {
                     setProfissionais(profData || []);
                   } catch (err) { showToast('ERRO: ' + err.message, 'error'); }
                 }}
-                className="px-6 py-3 bg-gradient-to-r from-blue-500 to-orange-500 text-gray-800 rounded-xl font-bold text-sm hover:from-blue-600 transition-all shadow-lg shadow-sky-200 uppercase"
+                className="px-6 py-3 bg-blue-100 text-blue-800 border border-blue-300 rounded-xl font-bold text-sm hover:bg-blue-200 transition-all shadow-sm uppercase"
               >
                 👑 Adicionar-me
               </button>
@@ -591,11 +591,11 @@ export default function Agenda({ salaoId, role }) {
           )}
         </div>
       ) : (
-        <div className="bg-white border border-gray-200 rounded-3xl overflow-hidden shadow-2xl shadow-blue-900/5 overflow-x-auto ring-1 ring-blue-200">
+        <div className="bg-white border border-gray-300 rounded-sm overflow-hidden shadow-sm overflow-x-auto">
           <table className="w-full border-collapse min-w-[600px]">
             <thead>
               <tr>
-                <th className="p-3 bg-gray-50 border-b border-gray-200 text-[10px] font-bold text-gray-500 uppercase tracking-widest w-16 text-center">Hora</th>
+                <th className="p-3 bg-gray-100 border-b border-r border-gray-300 text-[10px] font-bold text-gray-600 uppercase tracking-widest w-16 text-center">Hora</th>
                 {profissionais.map((p, idx) => {
                   const cor = PROF_COLORS[idx % PROF_COLORS.length];
                   return (
@@ -614,18 +614,18 @@ export default function Agenda({ salaoId, role }) {
             <tbody>
               {HORARIOS.map(hora => (
                 <tr key={hora} className="group">
-                  <td className="p-1.5 border-b border-blue-50 bg-gray-50/50 text-center font-bold text-gray-500 text-[10px]">{hora}</td>
+                  <td className="p-1.5 border-b border-r border-gray-300 bg-gray-50 text-center font-bold text-gray-600 text-[10px]">{hora}</td>
                   {profissionais.map((prof, idx) => {
                     const agend = getAgendamento(hora, prof.id);
                     const cor = PROF_COLORS[idx % PROF_COLORS.length];
                     return (
                       <td
                         key={prof.id}
-                        className={`p-1 border-b border-blue-50 h-14 transition-all ${!agend ? cor.hover : ''}`}
+                        className={`p-1 border-b border-r border-gray-200 h-14 transition-all ${!agend ? cor.hover : ''}`}
                       >
                         {agend ? (
                           <div
-                            className={`h-full w-full rounded-lg p-1.5 text-[10px] relative overflow-hidden shadow-sm cursor-grab active:cursor-grabbing
+                            className={`h-full w-full rounded p-1.5 text-[10px] relative overflow-hidden shadow-sm cursor-grab active:cursor-grabbing
                               ${dragging?.agendId === agend.id ? 'opacity-40 scale-95' : ''}
                               ${agend.status === 'EXECUTADO' ? 'bg-emerald-500 text-white' : `${cor.light} ${cor.text} border ${cor.border}`}
                               uppercase`}

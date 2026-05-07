@@ -74,14 +74,8 @@ serve(async (req) => {
     // Função de rollback (caso algo dê erro depois de criar no auth)
     const rollback = () => supabaseAdmin.auth.admin.deleteUser(novoUserId)
 
-    // 2. Gerar username único
-    const { data: username, error: usernameError } = await supabaseAdmin
-      .rpc('fn_gerar_username', { p_nome: nome })
-
-    if (usernameError || !username) {
-      await rollback()
-      throw new Error('Falha ao gerar username único')
-    }
+    // 2. Gerar username a partir do email
+    const username = email.split('@')[0]
 
     // 3. Criar perfil de acesso
     const { error: perfilError } = await supabaseAdmin.from('perfis_acesso').insert({

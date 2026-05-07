@@ -489,7 +489,7 @@ export default function Agenda({ salaoId, role }) {
   }
 
   return (
-    <div className="p-5 bg-gradient-to-br from-blue-950 via-blue-50/10 to-blue-100/30 min-h-screen font-sans">
+    <div className="p-5 bg-slate-50 min-h-screen font-sans">
       {/* ═══ HEADER COM NAVEGAÇÃO DE DATA ═══ */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-6 gap-3">
         <div>

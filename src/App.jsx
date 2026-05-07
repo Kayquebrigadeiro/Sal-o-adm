@@ -34,19 +34,20 @@ export default function App() {
   // ─── Carregar perfil do Supabase (extraída para reutilização) ───
   const carregarPerfil = async (userId) => {
     try {
-      const controller = new AbortController();
-      const id = setTimeout(() => controller.abort(), 6000);
-
-      const { data, error } = await supabase
-        .from('perfis_acesso')
-        .select(`salao_id, cargo, saloes(configurado, nome)`)
-        .eq('auth_user_id', userId)
-        .abortSignal(controller.signal)
-        .single();
-
-      clearTimeout(id);
+      // Promise.race envolve TODO o carregarPerfil
+      const resultado = await Promise.race([
+        supabase
+          .from('perfis_acesso')
+          .select(`salao_id, cargo, saloes(configurado, nome)`)
+          .eq('auth_user_id', userId)
+          .single(),
+        new Promise((_, reject) =>
+          setTimeout(() => reject(new Error('TIMEOUT_PERFIL')), 5000)
+        )
+      ]);
 
       if (!mountedRef.current) return;
+      const { data, error } = resultado;
 
       if (error) {
         console.error('Erro ao buscar perfil no Supabase:', error);
@@ -76,7 +77,24 @@ export default function App() {
       }
     } catch (err) {
       if (!mountedRef.current) return;
-      console.error('Erro ao carregar perfil:', err);
+
+      console.error('Erro ao carregar perfil:', err.message);
+
+      if (err.message === 'TIMEOUT_PERFIL' || err.message === 'TIMEOUT_GET_SESSION') {
+        console.warn('Deadlock do Supabase detectado. Limpando sessão...');
+        // Nossa storageKey configurada no supabaseClient.js é salao-secreto-auth
+        localStorage.removeItem('salao-secreto-auth');
+        
+        await supabase.auth.signOut({ scope: 'local' });
+        
+        if (mountedRef.current) {
+          setSessao(null);
+          setPerfil(null);
+          setCarregando(false);
+        }
+        return;
+      }
+
       setErroCritico(err.message || 'Ocorreu um erro desconhecido.');
     } finally {
       if (mountedRef.current) setCarregando(false);
@@ -90,7 +108,7 @@ export default function App() {
       try {
         // Promise race to prevent Supabase getSession deadlock (local storage lock bug)
         const sessionPromise = supabase.auth.getSession();
-        const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error('TIMEOUT_GET_SESSION')), 4000));
+        const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error('TIMEOUT_GET_SESSION')), 3000));
         const { data: { session } } = await Promise.race([sessionPromise, timeoutPromise]);
         
         if (!mountedRef.current) return;
@@ -109,11 +127,14 @@ export default function App() {
       } catch (err) {
         console.error("Erro ao buscar sessão (possível deadlock de cache):", err);
         if (err.message === 'TIMEOUT_GET_SESSION') {
-          // Limpar todos os locks presos no localStorage
-          Object.keys(localStorage).forEach(key => {
-            if (key.startsWith('sb-')) localStorage.removeItem(key);
-          });
-          window.location.reload(); // Recarrega para tentar novamente limpo
+          // Nossa storageKey é salao-secreto-auth
+          localStorage.removeItem('salao-secreto-auth');
+          await supabase.auth.signOut({ scope: 'local' });
+          if (mountedRef.current) {
+            setSessao(null);
+            setPerfil(null);
+            setCarregando(false);
+          }
           return;
         }
         if (mountedRef.current) setCarregando(false);
@@ -128,12 +149,7 @@ export default function App() {
         if (!mountedRef.current) return;
 
         if (event === 'SIGNED_OUT' || !session) {
-          Object.keys(localStorage).forEach(key => {
-            if (key.startsWith('sb-')) localStorage.removeItem(key);
-          });
-          Object.keys(sessionStorage).forEach(key => {
-            if (key.startsWith('sb-')) sessionStorage.removeItem(key);
-          });
+          localStorage.removeItem('salao-secreto-auth');
           setSessao(null);
           setPerfil(null);
           setSalaoNome('');

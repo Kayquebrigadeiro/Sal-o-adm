@@ -87,7 +87,10 @@ export default function App() {
     perfilBuscadoRef.current = false;
     const initSession = async () => {
       try {
-        const { data: { session } } = await supabase.auth.getSession();
+        // Promise race to prevent Supabase getSession deadlock (local storage lock bug)
+        const sessionPromise = supabase.auth.getSession();
+        const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error('TIMEOUT_GET_SESSION')), 4000));
+        const { data: { session } } = await Promise.race([sessionPromise, timeoutPromise]);
         
         if (!mountedRef.current) return;
 
@@ -103,7 +106,15 @@ export default function App() {
           setCarregando(false);
         }
       } catch (err) {
-        console.error("Erro ao buscar sessão:", err);
+        console.error("Erro ao buscar sessão (possível deadlock de cache):", err);
+        if (err.message === 'TIMEOUT_GET_SESSION') {
+          // Limpar todos os locks presos no localStorage
+          Object.keys(localStorage).forEach(key => {
+            if (key.startsWith('sb-')) localStorage.removeItem(key);
+          });
+          window.location.reload(); // Recarrega para tentar novamente limpo
+          return;
+        }
         if (mountedRef.current) setCarregando(false);
       }
     };

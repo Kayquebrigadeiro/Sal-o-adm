@@ -312,7 +312,7 @@ export default function Dashboard({ salaoId }) {
     return (
       <div className="flex flex-col items-center justify-center min-h-screen bg-gradient-to-br from-blue-900 to-blue-800 p-4">
         <div className="bg-gray-50 backdrop-blur-xl p-8 rounded-3xl shadow-2xl border border-gray-200 w-full max-w-sm text-center">
-          <div className="w-16 h-16 bg-gradient-to-br from-sky-400 to-sky-500 text-gray-800 rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-xl">
+          <div className="w-16 h-16 bg-gradient-to-br from-sky-400 to-sky-500 text-white rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-xl">
             <Lock size={28} />
           </div>
           <h2 className="text-2xl font-black text-gray-800 mb-2">Painel Financeiro</h2>
@@ -772,7 +772,7 @@ export default function Dashboard({ salaoId }) {
                 disabled={salvandoFechamento}
                 className={`px-6 py-3 rounded-xl font-bold transition-all shadow-lg text-sm disabled:opacity-50 ${
                   fechamentoExiste
-                    ? 'bg-gradient-to-r from-blue-500 to-orange-500 text-gray-800 hover:opacity-90'
+                    ? 'bg-gradient-to-r from-blue-500 to-orange-500 text-white hover:opacity-90'
                     : 'bg-gradient-to-r from-sky-500 to-sky-600 text-white hover:opacity-90'
                 }`}
               >

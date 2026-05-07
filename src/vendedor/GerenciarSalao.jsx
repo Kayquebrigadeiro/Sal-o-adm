@@ -482,7 +482,7 @@ function AbaUsuarios({ salaoId }) {
     <div className="space-y-4">
       <button
         onClick={() => setModal(true)}
-        className="bg-green-700 text-gray-800 text-sm px-4 py-2 rounded-lg hover:bg-green-800 font-bold"
+        className="bg-green-700 text-white text-sm px-4 py-2 rounded-lg hover:bg-green-800 font-bold"
       >
         + Convidar usuária
       </button>
@@ -626,7 +626,7 @@ function AbaUsuarios({ salaoId }) {
                 <button
                   type="submit"
                   disabled={convidando}
-                  className="flex-1 py-2.5 text-sm bg-green-700 text-gray-800 rounded-lg font-bold hover:bg-green-800 disabled:opacity-50"
+                  className="flex-1 py-2.5 text-sm bg-green-700 text-white rounded-lg font-bold hover:bg-green-800 disabled:opacity-50"
                 >
                   {convidando ? '⏳ Enviando...' : 'Enviar Convite'}
                 </button>

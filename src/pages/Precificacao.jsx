@@ -401,7 +401,7 @@ export default function Precificacao({ salaoId }) {
         <div className="flex justify-end mb-4">
           <button
             onClick={() => setSimAberto(!simAberto)}
-            className="flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-blue-600 to-blue-600 text-gray-800 rounded-xl hover:from-blue-700 hover:to-blue-700 transition-all shadow-lg shadow-sky-200 text-sm font-bold uppercase"
+            className="flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-blue-600 to-blue-600 text-white rounded-xl hover:from-blue-700 hover:to-blue-700 transition-all shadow-lg shadow-sky-200 text-sm font-bold uppercase"
           >
             <Calculator size={16} /> Simulador "E se?"
           </button>
@@ -559,7 +559,7 @@ export default function Precificacao({ salaoId }) {
               setProdsSelecionados([]);
               setModalProc(true);
             }}
-            className="flex-shrink-0 flex items-center gap-2 px-4 py-2.5 bg-white text-gray-800 rounded-xl hover:bg-sky-500 transition-all shadow-lg shadow-sky-200 text-sm font-bold w-full sm:w-auto justify-center uppercase"
+            className="flex-shrink-0 flex items-center gap-2 px-4 py-2.5 bg-white text-gray-800 rounded-xl hover:bg-sky-500 hover:text-white transition-all shadow-lg shadow-sky-200 text-sm font-bold w-full sm:w-auto justify-center uppercase"
           >
             <Plus size={16} /> Novo Serviço
           </button>

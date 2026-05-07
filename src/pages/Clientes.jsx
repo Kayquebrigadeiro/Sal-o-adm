@@ -125,7 +125,7 @@ export default function Clientes({ salaoId }) {
         </div>
         <button
           onClick={() => { setForm({ id: null, nome: '', telefone: '' }); setModalAberto(true); }}
-          className="bg-white text-gray-800 px-4 py-2 rounded-xl font-bold flex items-center gap-2 hover:bg-sky-500 transition-all text-sm shadow-lg"
+          className="bg-white text-gray-800 px-4 py-2 rounded-xl font-bold flex items-center gap-2 hover:bg-sky-500 hover:text-white transition-all text-sm shadow-lg"
         >
           <UserPlus size={18} /> Nova Cliente
         </button>
@@ -174,7 +174,7 @@ export default function Clientes({ salaoId }) {
                       title="Chamar no WhatsApp"
                       onClick={() => abrirWhatsApp(cliente.telefone)}
                       disabled={!cliente.telefone}
-                      className="p-2 bg-emerald-50 text-emerald-600 rounded-lg hover:bg-emerald-600 hover:text-gray-800 transition-all disabled:opacity-30"
+                      className="p-2 bg-emerald-50 text-emerald-600 rounded-lg hover:bg-emerald-600 hover:text-white transition-all disabled:opacity-30"
                     >
                       <MessageCircle size={18} />
                     </button>
@@ -224,7 +224,7 @@ export default function Clientes({ salaoId }) {
               placeholder="(00) 00000-0000"
             />
           </div>
-          <button onClick={salvarCliente} className="w-full bg-white text-gray-800 py-4 rounded-2xl font-bold hover:bg-sky-500 transition-all mt-4">
+          <button onClick={salvarCliente} className="w-full bg-white text-gray-800 py-4 rounded-2xl font-bold hover:bg-sky-500 hover:text-white transition-all mt-4">
             Guardar Cliente
           </button>
         </div>
@@ -270,7 +270,7 @@ export default function Clientes({ salaoId }) {
             <div className="p-6 bg-gray-50">
               <button
                 onClick={() => setClienteSelecionado(null)}
-                className="w-full bg-white text-gray-800 py-3 rounded-xl font-bold hover:bg-sky-500 transition-all"
+                className="w-full bg-white text-gray-800 py-3 rounded-xl font-bold hover:bg-sky-500 hover:text-white transition-all"
               >
                 Fechar Ficha
               </button>

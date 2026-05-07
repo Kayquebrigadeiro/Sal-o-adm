@@ -128,7 +128,7 @@ export default function Configuracoes({ salaoId, role }) {
         {abaAtiva === 'equipe' && (
           <button
             onClick={() => { setEditando(null); setForm({ nome: '', cargo: 'FUNCIONARIO', salario_fixo: '', ativo: true }); setModalProf(true); }}
-            className="bg-white text-gray-800 px-6 py-3 rounded-2xl font-bold flex items-center gap-2 hover:bg-sky-500 transition-all shadow-lg shadow-blue-200 uppercase text-sm"
+            className="bg-white text-gray-800 px-6 py-3 rounded-2xl font-bold flex items-center gap-2 hover:bg-sky-500 hover:text-white transition-all shadow-lg shadow-blue-200 uppercase text-sm"
           >
             <Plus size={18} /> Novo Profissional
           </button>
@@ -241,7 +241,7 @@ export default function Configuracoes({ salaoId, role }) {
 
           <button
             onClick={salvarProfissional}
-            className="w-full bg-white text-gray-800 py-4 rounded-2xl font-bold hover:bg-sky-500 transition-all shadow-lg shadow-blue-200 mt-4 uppercase"
+            className="w-full bg-white text-gray-800 py-4 rounded-2xl font-bold hover:bg-sky-500 hover:text-white transition-all shadow-lg shadow-blue-200 mt-4 uppercase"
           >
             {editando ? "Salvar Alterações" : "Cadastrar na Equipe"}
           </button>
@@ -298,7 +298,7 @@ export default function Configuracoes({ salaoId, role }) {
 
                <button 
                  onClick={() => setModalPix(true)}
-                 className="w-full mt-6 bg-white text-gray-800 py-4 rounded-2xl font-black uppercase text-sm hover:bg-sky-500 transition-all shadow-xl shadow-blue-900/10 flex items-center justify-center gap-2"
+                 className="w-full mt-6 bg-white text-gray-800 py-4 rounded-2xl font-black uppercase text-sm hover:bg-sky-500 hover:text-white transition-all shadow-xl shadow-blue-900/10 flex items-center justify-center gap-2"
                >
                  <CreditCard size={18} /> Renovar Agora
                </button>
@@ -359,7 +359,7 @@ export default function Configuracoes({ salaoId, role }) {
                href={`https://wa.me/55${wpp?.replace(/\D/g, '')}`} 
                target="_blank" 
                rel="noreferrer"
-               className="inline-flex items-center gap-2 bg-white text-gray-800 px-8 py-3 rounded-xl font-bold text-xs hover:bg-sky-500 transition-all shadow-md uppercase tracking-wider"
+               className="inline-flex items-center gap-2 bg-white text-gray-800 px-8 py-3 rounded-xl font-bold text-xs hover:bg-sky-500 hover:text-white transition-all shadow-md uppercase tracking-wider"
              >
                <MessageCircle size={16} /> Falar no WhatsApp
              </a>

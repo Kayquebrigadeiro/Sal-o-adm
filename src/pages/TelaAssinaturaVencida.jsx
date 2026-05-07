@@ -72,7 +72,7 @@ export default function TelaAssinaturaVencida({ salaoNome, dataVencimento, diasR
           <div className="grid grid-cols-2 gap-3 w-full mb-8">
             <button 
               onClick={() => setModalPixAberto(true)}
-              className="flex flex-col items-center justify-center gap-2 bg-gradient-to-br from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-gray-800 p-4 rounded-xl transition-all shadow-lg shadow-emerald-500/20"
+              className="flex flex-col items-center justify-center gap-2 bg-gradient-to-br from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-white p-4 rounded-xl transition-all shadow-lg shadow-emerald-500/20"
             >
               <div className="w-8 h-8 bg-white/20 rounded-full flex items-center justify-center">
                 <svg viewBox="0 0 24 24" fill="currentColor" className="w-4 h-4"><path d="M6.864 10.963a1.442 1.442 0 1 0 0-2.885 1.442 1.442 0 0 0 0 2.885m8.887 2.073a1.442 1.442 0 1 1-2.884 0 1.442 1.442 0 0 1 2.884 0M12 24c6.627 0 12-5.373 12-12S18.627 0 12 0 0 5.373 0 12s5.373 12 12 12m-6.309-8.49L2.83 12l2.86-3.51a4.298 4.298 0 0 1 3.328-1.57h5.964A4.298 4.298 0 0 1 18.31 8.49L21.17 12l-2.86 3.51a4.298 4.298 0 0 1-3.328 1.57H9.018a4.298 4.298 0 0 1-3.327-1.57"/></svg>

@@ -760,7 +760,7 @@ export default function Agenda({ salaoId, role }) {
                 <button
                   onClick={finalizarAtendimento}
                   disabled={cancelando}
-                  className="w-full py-4 rounded-xl font-black text-gray-800 bg-emerald-600 hover:bg-emerald-700 transition-all shadow-lg shadow-emerald-200 flex items-center justify-center gap-2 uppercase"
+                  className="w-full py-4 rounded-xl font-black text-white bg-emerald-600 hover:bg-emerald-700 transition-all shadow-lg shadow-emerald-200 flex items-center justify-center gap-2 uppercase"
                 >
                   {cancelando ? <Loader2 size={18} className="animate-spin" /> : <CheckCircle2 size={18} />}
                   Finalizar Atendimento
@@ -1052,7 +1052,7 @@ export default function Agenda({ salaoId, role }) {
                 className={`w-full py-4 rounded-2xl font-black text-lg transition-all shadow-xl flex items-center justify-center gap-2 ${salvando ? 'bg-sky-200 text-gray-500 cursor-not-allowed' :
                   role === 'PROPRIETARIO' && previewFinanceiro?.prejuizo
                     ? 'bg-red-600 text-white shadow-red-200 hover:bg-red-700'
-                    : 'bg-gradient-to-r from-blue-600 to-sky-500 text-gray-800 shadow-sky-200/50 hover:from-blue-700 hover:to-sky-600'
+                    : 'bg-blue-600 text-white shadow-sky-200/50 hover:bg-blue-700'
                   }`}
               >
                 {salvando ? (

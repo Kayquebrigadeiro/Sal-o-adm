@@ -80,7 +80,7 @@ export default function CatalogoProdutos({ salaoId }) {
           <p className="text-sm text-gray-500 uppercase">Custo por aplicação calculado automaticamente</p>
         </div>
         <button onClick={() => abrirModalProduto()}
-          className="flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-blue-600 to-blue-600 text-gray-800 rounded-xl hover:from-blue-700 hover:to-blue-700 transition-all shadow-lg shadow-sky-200 font-bold text-sm uppercase">
+          className="flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-blue-600 to-blue-600 text-white rounded-xl hover:from-blue-700 hover:to-blue-700 transition-all shadow-lg shadow-sky-200 font-bold text-sm uppercase">
           <Plus size={18} /> NOVO PRODUTO
         </button>
       </div>

@@ -63,13 +63,14 @@ export default function App() {
         });
         setSalaoNome(data.saloes?.nome || '');
 
-        if (data.cargo === 'PROPRIETARIO' && data.salao_id) {
-          const { data: acesso, error: acessoErr } = await supabase
-            .rpc('verificar_acesso_salao', { p_salao_id: data.salao_id });
-          if (!acessoErr && acesso) {
-            setAssinatura(acesso);
-          }
-        }
+        // DESATIVADO TEMPORARIAMENTE
+        // if (data.cargo === 'PROPRIETARIO' && data.salao_id) {
+        //   const { data: acesso, error: acessoErr } = await supabase
+        //     .rpc('verificar_acesso_salao', { p_salao_id: data.salao_id });
+        //   if (!acessoErr && acesso) {
+        //     setAssinatura(acesso);
+        //   }
+        // }
       } else {
         setErroCritico('Perfil não encontrado na tabela perfis_acesso.');
       }

@@ -15,7 +15,11 @@ import {
 // ---------------------------------------------------------------------------
 
 /** Converte reais para centavos (inteiro). */
-const toCents = (reais) => Math.round((Number(reais) || 0) * 100);
+const toCents = (reais) => {
+  const num = Number(reais) || 0;
+  if (isNaN(num) || !isFinite(num)) return 0;
+  return Math.round(num * 100);
+};
 
 /** Converte centavos para reais (2 casas decimais). */
 const toReais = (centavos) => Number((centavos / 100).toFixed(2));

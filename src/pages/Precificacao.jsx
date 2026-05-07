@@ -50,6 +50,12 @@ const TableRow = ({ proc, config, custoMaterial, isExpanded, onToggleExpand, sal
 
   const handleFieldChange = (setter, field, value) => {
     setter(value);
+
+    const numValue = Number(value);
+    if (isNaN(numValue) || !isFinite(numValue) || numValue < 0) {
+      return; // Não salva valores inválidos
+    }
+
     debouncedUpdateAndReload(field, value);
   };
 
@@ -64,6 +70,12 @@ const TableRow = ({ proc, config, custoMaterial, isExpanded, onToggleExpand, sal
 
   const handleGanhoBlur = async () => {
     const numGanho = Number(ganho) || 0;
+    
+    if (isNaN(numGanho) || !isFinite(numGanho) || numGanho < 0) {
+      setGanho(0);
+      return;
+    }
+
     if (numGanho === Number(proc.ganho_liquido_desejado)) return; // nada mudou
 
     try {
@@ -113,12 +125,22 @@ const TableRow = ({ proc, config, custoMaterial, isExpanded, onToggleExpand, sal
         <td className="p-3 text-center text-gray-500 font-medium">{fmt(config.custo_fixo_por_atendimento)}</td>
         <td className="p-3 text-center font-bold text-sky-600">{fmt(custoMaterial)}</td>
         <td className="p-3 text-center">
-          <input type="number" step="0.01" value={ganho} onChange={e => handleFieldChange(setGanho, 'ganho_liquido_desejado', e.target.value)} onBlur={handleGanhoBlur}
+          <input type="number" step="0.01" value={ganho} onChange={e => {
+            const val = e.target.value;
+            if (val === '' || (!isNaN(Number(val)) && Number(val) >= 0)) {
+              handleFieldChange(setGanho, 'ganho_liquido_desejado', val);
+            }
+          }} onBlur={handleGanhoBlur}
             onFocus={e => e.target.select()}
             className="w-20 text-center border border-emerald-200 rounded p-1 text-sm outline-none focus:border-emerald-500 font-bold text-emerald-700 bg-emerald-50 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none" />
         </td>
         <td className="p-3 text-center border-l border-gray-200">
-          <input type="number" step="0.01" value={precoP} onChange={e => handleFieldChange(setPrecoP, 'preco_p', e.target.value)}
+          <input type="number" step="0.01" value={precoP} onChange={e => {
+            const val = e.target.value;
+            if (val === '' || (!isNaN(Number(val)) && Number(val) >= 0)) {
+              handleFieldChange(setPrecoP, 'preco_p', val);
+            }
+          }}
             onFocus={e => e.target.select()}
             className="w-20 text-center border border-gray-200 rounded p-1 text-sm outline-none focus:border-sky-500 font-bold text-gray-800 bg-white [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none" />
           {/* MATEMÁTICA ÓBVIA COM MAQUININHA */}
@@ -128,14 +150,24 @@ const TableRow = ({ proc, config, custoMaterial, isExpanded, onToggleExpand, sal
         </td>
         <td className="p-3 text-center">
           {proc.requer_comprimento ? (
-            <input type="number" step="0.01" value={precoM} onChange={e => handleFieldChange(setPrecoM, 'preco_m', e.target.value)}
+            <input type="number" step="0.01" value={precoM} onChange={e => {
+              const val = e.target.value;
+              if (val === '' || (!isNaN(Number(val)) && Number(val) >= 0)) {
+                handleFieldChange(setPrecoM, 'preco_m', val);
+              }
+            }}
               onFocus={e => e.target.select()}
               className="w-20 text-center border border-gray-200 rounded p-1 text-sm outline-none focus:border-sky-500 font-bold text-gray-500 bg-white [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none" />
           ) : '-'}
         </td>
         <td className="p-3 text-center">
           {proc.requer_comprimento ? (
-            <input type="number" step="0.01" value={precoG} onChange={e => handleFieldChange(setPrecoG, 'preco_g', e.target.value)}
+            <input type="number" step="0.01" value={precoG} onChange={e => {
+              const val = e.target.value;
+              if (val === '' || (!isNaN(Number(val)) && Number(val) >= 0)) {
+                handleFieldChange(setPrecoG, 'preco_g', val);
+              }
+            }}
               onFocus={e => e.target.select()}
               className="w-20 text-center border border-gray-200 rounded p-1 text-sm outline-none focus:border-sky-500 font-bold text-gray-500 bg-white [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none" />
           ) : '-'}

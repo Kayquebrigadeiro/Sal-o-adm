@@ -50,6 +50,7 @@ export default function GerenciarAdmins() {
   const removerAdmin = async (id, nome) => {
     if (!confirm(`Remover o admin "${nome}"?\n\nEle perderá o acesso ao sistema imediatamente.`)) return;
 
+    setLoading(true);
     const { data: { user } } = await supabase.auth.getUser();
 
     const { error } = await supabase.functions.invoke('remover-admin', {

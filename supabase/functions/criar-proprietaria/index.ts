@@ -68,23 +68,28 @@ serve(async (req) => {
 
     if (configError) throw configError
 
-    // 2. Cria a proprietária com e-mail real
-    const { data: authData, error: authError } = await supabaseAdmin.auth.admin.createUser({
-      email,
-      password: senha,
-      email_confirm: true, // ← "true" significa: APROVA O EMAIL AUTOMATICAMENTE (BURLA O LINK DE ATIVAÇÃO)
-      user_metadata: {
-        cargo: 'PROPRIETARIO',
-        nome,
-        salao_id: salao.id
-      },
-      // Opcional: pode passar redirectTo aqui também se necessário
-      // options: { emailRedirectTo: redirectTo }
-    })
-
-
-    if (authError) throw authError
-    if (!authData.user) throw new Error('Falha ao criar usuário de auth')
+    let authData, authError;
+    try {
+      // 2. Cria a proprietária com e-mail real
+      const result = await supabaseAdmin.auth.admin.createUser({
+        email,
+        password: senha,
+        email_confirm: true, // ← "true" significa: APROVA O EMAIL AUTOMATICAMENTE (BURLA O LINK DE ATIVAÇÃO)
+        user_metadata: {
+          cargo: 'PROPRIETARIO',
+          nome,
+          salao_id: salao.id
+        },
+      })
+      authData = result.data
+      authError = result.error
+      if (authError) throw authError
+      if (!authData?.user) throw new Error('Falha ao criar usuário de auth')
+    } catch (err: any) {
+      // Rollback do salão caso a criação do usuário falhe (ex: email duplicado)
+      await supabaseAdmin.from('saloes').delete().eq('id', salao.id)
+      throw err
+    }
 
     const authUserId = authData.user.id // Salva para rollback se necessário
     const rollback = () => supabaseAdmin.auth.admin.deleteUser(authUserId)

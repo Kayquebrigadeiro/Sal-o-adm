@@ -77,12 +77,15 @@ serve(async (req) => {
     // 2. Gerar username a partir do email
     const username = email.split('@')[0]
 
-    // 3. Criar perfil de acesso
-    const { error: perfilError } = await supabaseAdmin.from('perfis_acesso').insert({
-      auth_user_id: novoUserId,
-      cargo: 'VENDEDOR',
-      username
-    })
+    // 3. Criar perfil de acesso (upsert para evitar duplicatas por causa da trigger)
+    const { error: perfilError } = await supabaseAdmin.from('perfis_acesso').upsert(
+      {
+        auth_user_id: novoUserId,
+        cargo: 'VENDEDOR',
+        username
+      },
+      { onConflict: 'auth_user_id' }
+    )
 
     if (perfilError) {
       await rollback()

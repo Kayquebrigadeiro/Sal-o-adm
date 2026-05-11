@@ -42,7 +42,7 @@ export default function App() {
           .eq('auth_user_id', userId)
           .single(),
         new Promise((_, reject) =>
-          setTimeout(() => reject(new Error('TIMEOUT_PERFIL')), 5000)
+          setTimeout(() => reject(new Error('TIMEOUT_PERFIL')), 8000)
         )
       ]);
 
@@ -80,22 +80,11 @@ export default function App() {
 
       console.error('Erro ao carregar perfil:', err.message);
 
-      if (err.message === 'TIMEOUT_PERFIL' || err.message === 'TIMEOUT_GET_SESSION') {
-        console.warn('Deadlock do Supabase detectado. Limpando sessão...');
-        // Nossa storageKey configurada no supabaseClient.js é salao-secreto-auth
-        localStorage.removeItem('salao-secreto-auth');
-        
-        await supabase.auth.signOut({ scope: 'local' });
-        
-        if (mountedRef.current) {
-          setSessao(null);
-          setPerfil(null);
-          setCarregando(false);
-        }
-        return;
+      if (err.message === 'TIMEOUT_PERFIL') {
+        setErroCritico('O servidor demorou muito para responder. Verifique sua conexão e tente novamente.');
+      } else {
+        setErroCritico(err.message || 'Ocorreu um erro desconhecido.');
       }
-
-      setErroCritico(err.message || 'Ocorreu um erro desconhecido.');
     } finally {
       if (mountedRef.current) setCarregando(false);
     }
@@ -106,9 +95,9 @@ export default function App() {
     perfilBuscadoRef.current = false;
     const initSession = async () => {
       try {
-        // Promise race to prevent Supabase getSession deadlock (local storage lock bug)
+        // Promise race to prevent Supabase getSession deadlock
         const sessionPromise = supabase.auth.getSession();
-        const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error('TIMEOUT_GET_SESSION')), 3000));
+        const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error('TIMEOUT_GET_SESSION')), 5000));
         const { data: { session } } = await Promise.race([sessionPromise, timeoutPromise]);
         
         if (!mountedRef.current) return;
@@ -125,19 +114,15 @@ export default function App() {
           setCarregando(false);
         }
       } catch (err) {
-        console.error("Erro ao buscar sessão (possível deadlock de cache):", err);
-        if (err.message === 'TIMEOUT_GET_SESSION') {
-          // Nossa storageKey é salao-secreto-auth
-          localStorage.removeItem('salao-secreto-auth');
-          await supabase.auth.signOut({ scope: 'local' });
-          if (mountedRef.current) {
-            setSessao(null);
-            setPerfil(null);
-            setCarregando(false);
+        console.error("Erro ao buscar sessão (timeout ou falha):", err);
+        // Se a requisição de recuperar sessão for muito lenta, não queremos apagar o login do usuário, 
+        // vamos mostrar um erro que instrui a atualizar a página.
+        if (mountedRef.current) {
+          if (err.message === 'TIMEOUT_GET_SESSION') {
+             setErroCritico('Sua conexão parece instável e não foi possível carregar a sessão a tempo. Por favor, recarregue a página.');
           }
-          return;
+          setCarregando(false);
         }
-        if (mountedRef.current) setCarregando(false);
       }
     };
 
@@ -148,8 +133,7 @@ export default function App() {
       async (event, session) => {
         if (!mountedRef.current) return;
 
-        if (event === 'SIGNED_OUT' || !session) {
-          localStorage.removeItem('salao-secreto-auth');
+        if (event === 'SIGNED_OUT') {
           setSessao(null);
           setPerfil(null);
           setSalaoNome('');
@@ -158,6 +142,13 @@ export default function App() {
           setCarregando(false);
           perfilBuscadoRef.current = false;
           return;
+        }
+
+        if (!session) {
+           setSessao(null);
+           setPerfil(null);
+           setCarregando(false);
+           return;
         }
 
         setSessao(session);

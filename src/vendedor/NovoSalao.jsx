@@ -58,7 +58,17 @@ export default function NovoSalao({ userId }) {
         },
       });
 
-      if (error) throw new Error(error.message);
+      if (error) {
+        let msg = error.message;
+        // Supabase oculta a mensagem real no error.context quando é um erro HTTP 400
+        if (error.context && typeof error.context.json === 'function') {
+           try {
+             const errData = await error.context.json();
+             if (errData.error) msg = errData.error;
+           } catch(e) {}
+        }
+        throw new Error(msg);
+      }
       setEtapa(4);
 
     } catch (err) {

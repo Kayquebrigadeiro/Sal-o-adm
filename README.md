@@ -1,282 +1,119 @@
-# 💇♀️ SaaS Salão de Beleza
+# 💇‍♀️ Salão Secreto: Ecossistema SaaS de Gestão Financeira Avançada
 
-Sistema completo de gerenciamento para salões de beleza com painel administrativo multi-tenant.
+> **Solução integrada para otimização de margens de lucro e controle operacional multi-tenant.**
 
-## 📋 Índice
-
-- [Sobre o Projeto](#sobre-o-projeto)
-- [Tecnologias](#tecnologias)
-- [Instalação](#instalação)
-- [Estrutura do Projeto](#estrutura-do-projeto)
-- [Funcionalidades](#funcionalidades)
-- [Documentação](#documentação)
-- [Deploy](#deploy)
+O **Salão Secreto** é uma plataforma SaaS especializada que atua como um núcleo de inteligência financeira. Projetado para substituir processos manuais e planilhas de alta complexidade, o sistema automatiza a auditoria de cada atendimento, garantindo o controle rigoroso sobre custos e lucratividade.
 
 ---
 
-## 🎯 Sobre o Projeto
+## 🎯 Objetivo: Segurança Operacional e Rentabilidade
 
-Sistema SaaS multi-tenant para gerenciamento completo de salões de beleza:
+O sistema elimina a incerteza financeira comum na gestão de centros de estética através de:
 
-- **Painel Administrativo** - Vendedores gerenciam múltiplos salões
-- **Painel Proprietária** - Gestão completa do salão
-- **Sistema de Login Dual** - Email para admins, username para proprietárias
-- **Dashboard Financeiro** - Controle de receitas, despesas e lucro
-- **Agenda Inteligente** - Agendamentos com horários de 30 em 30 minutos
+- **Auditoria Financeira Automática**: Algoritmos que processam instantaneamente taxas de operadoras, comissões e custos operacionais (fixos e variáveis).
+- **Métricas de Lucratividade**: Visualização clara entre faturamento bruto, lucro líquido real e potencial de ganho baseado no método de pagamento.
+- **Gestão de Fluxo de Caixa Integrada**: Módulo de controle de despesas e retiradas para preservar o capital de giro da empresa.
 
 ---
 
-## 🛠️ Tecnologias
+## 🎭 Estrutura de Acessos e Perfis (RBAC)
 
-- **Frontend:** React 18 + Vite
-- **Estilização:** Tailwind CSS
-- **Roteamento:** React Router v7
-- **Backend:** Supabase (PostgreSQL + Auth)
-- **Gráficos:** Recharts
-- **Ícones:** Lucide React
+A plataforma possui um sistema de permissões baseado em níveis de responsabilidade:
 
----
+### 👑 ADMINISTRADOR GERAL (Vendedor)
+- Gestão centralizada de múltiplos salões (tenants).
+- Monitoramento de indicadores globais de performance.
+- Configuração de infraestrutura e provisionamento de novos acessos.
 
-## 📦 Instalação
+### 👩‍💼 GESTÃO DE UNIDADE (Proprietária)
+- Controle administrativo total do ponto de venda.
+- Configuração de regras de comissionamento e precificação.
+- Acesso a dashboards estratégicos de saúde financeira e performance de equipe.
 
-```bash
-# Clone o repositório
-git clone https://github.com/Kayquebrigadeiro/Salao-secreto.git
-
-# Entre na pasta
-cd Salao-secreto
-
-# Instale as dependências
-npm install
-
-# Configure o banco de dados
-# Execute o arquivo: docs/sql/schema_saas_final_CORRIGIDO.sql no Supabase
-
-# Inicie o servidor
-npm run dev
-```
-
-Acesse: http://localhost:5173
+### ✂️ COLABORADOR OPERACIONAL (Staff)
+- Interface simplificada para gestão de agenda individual.
+- Acesso restrito a informações operacionais pertinentes à função.
+- Foco na excelência do atendimento e organização de horários.
 
 ---
 
-## 📁 Estrutura do Projeto
+## ✨ Diferenciais Tecnológicos
 
-```
-Salao-secreto/
-├── src/
-│   ├── components/          # Componentes reutilizáveis
-│   ├── hooks/              # Custom hooks
-│   ├── pages/              # Páginas principais
-│   ├── vendedor/           # Painel administrativo
-│   ├── App.jsx             # Componente principal
-│   └── supabaseClient.js   # Configuração Supabase
-├── docs/
-│   ├── guias/              # Guias de uso e deploy
-│   ├── sql/                # Scripts SQL e migrations
-│   ├── prompts/            # Prompts de desenvolvimento
-│   └── resumos/            # Resumos de implementações
-├── supabase/
-│   └── functions/          # Edge Functions
-├── backup/                 # Arquivos de backup
-└── README.md
-```
+- **🛡️ Isolamento Multi-Tenant**: Implementação robusta de Row Level Security (RLS) para garantir a total privacidade e segurança dos dados entre unidades.
+- **📈 Inteligência de Dados**: Dashboards em tempo real com ranking de procedimentos e análise de rendimento por profissional.
+- **🕒 Agendamento Inteligente**: Sistema de reserva de horários integrado ao motor financeiro para previsão imediata de margens.
+- **⚙️ Automação de Back-end**: Triggers em PostgreSQL para atualização atômica de indicadores financeiros a cada transação.
 
 ---
 
-## ✨ Funcionalidades
+## 🛠️ Especificações Técnicas
 
-### 🔐 Sistema de Login Dual
+Desenvolvido com tecnologias de vanguarda para garantir escalabilidade e resiliência:
 
-**Admin/Vendedor:**
-- Login com **email + senha**
-- Acesso ao painel administrativo
-- Gerenciamento de múltiplos salões
-
-**Proprietária:**
-- Login com **username + senha**
-- Acesso ao dashboard do salão
-- Gestão completa de atendimentos
-
-### 👨‍💼 Painel do Vendedor (Admin)
-
-- ✅ Criar e gerenciar múltiplos salões
-- ✅ Configurar profissionais e procedimentos
-- ✅ Definir preços e comissões
-- ✅ Gerar credenciais de acesso (username/senha)
-- ✅ Gerenciar outros admins do sistema
-
-### 👩‍💼 Painel da Proprietária
-
-- ✅ Agenda visual (08:00 às 19:00)
-- ✅ Dashboard com gráficos financeiros
-- ✅ Controle de despesas mensais
-- ✅ Gestão de profissionais
-- ✅ Configuração de procedimentos
-- ✅ Relatórios de receita e lucro
-
-### 📊 Dashboard Financeiro
-
-- Receita total e recebida
-- Pendências de pagamento
-- Lucro líquido vs possível
-- Ranking de procedimentos
-- Rendimento por profissional
-- Controle de despesas
+- **Frontend**: [React 18](https://reactjs.org/) + [Vite](https://vitejs.dev/)
+- **Estilização**: [Tailwind CSS](https://tailwindcss.com/)
+- **Infraestrutura**: [Supabase](https://supabase.com/) (PostgreSQL & Auth)
+- **Análise Visual**: [Recharts](https://recharts.org/)
+- **Segurança**: Row Level Security (RLS) & JWT Authentication
 
 ---
 
-## 📚 Documentação
+## 🚀 Implementação
 
-### Guias Principais
+### Pré-requisitos
+- Node.js 18+
+- Projeto Supabase configurado
 
-- **[Guia de Deploy](docs/guias/GUIA_DEPLOY.md)** - Como fazer deploy do sistema
-- **[Guia de Criação de Vendedor](docs/guias/GUIA_CRIAR_VENDEDOR_ADMIN.md)** - Como criar o primeiro admin
-- **[Guia de Testes](docs/guias/GUIA_TESTES_PRATICO.md)** - Como testar o sistema
+### Procedimento de Instalação
 
-### Arquitetura
+1. **Repositório e Dependências**:
+   ```bash
+   git clone https://github.com/Kayquebrigadeiro/Salao-secreto.git
+   cd Salao-secreto
+   npm install
+   ```
 
-- **[Arquitetura do Sistema](docs/ARQUITETURA_VENDEDOR_ADMIN.md)** - Visão geral da arquitetura
-- **[Fluxo de Criação de Salão](docs/FLUXO_CRIACAO_SALAO_COMPLETO.md)** - Passo a passo detalhado
+2. **Variáveis de Ambiente**:
+   Configure o arquivo `.env` com as credenciais do Supabase:
+   ```env
+   VITE_SUPABASE_URL=seu_projeto.supabase.co
+   VITE_SUPABASE_ANON_KEY=sua_chave_anon
+   ```
 
-### SQL
+3. **Esquema de Banco de Dados**:
+   Importe o script `docs/sql/schema_saas_final_CORRIGIDO.sql` via SQL Editor no Supabase.
 
-- **[Schema Principal](docs/sql/schema_saas_final_CORRIGIDO.sql)** - Schema completo do banco
-- **[Migrations](docs/sql/)** - Histórico de alterações
-
-### Resumos de Implementação
-
-- **[Resumo de Alterações](docs/resumos/RESUMO_ALTERACOES.md)**
-- **[Implementação de Admins](docs/resumos/RESUMO_IMPLEMENTACAO_ADMINS.md)**
-- **[Sistema de Username](docs/resumos/RESUMO_USERNAME.md)**
-
----
-
-## 🚀 Deploy
-
-### Supabase
-
-1. Crie um projeto no [Supabase](https://supabase.com)
-2. Execute o SQL: `docs/sql/schema_saas_final_CORRIGIDO.sql`
-3. Configure as variáveis de ambiente:
-
-```env
-VITE_SUPABASE_URL=sua_url_aqui
-VITE_SUPABASE_ANON_KEY=sua_chave_aqui
-```
-
-### Vercel (Recomendado)
-
-```bash
-npm run build
-vercel --prod
-```
-
-Ou use o botão:
-
-[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/Kayquebrigadeiro/Salao-secreto)
+4. **Execução**:
+   ```bash
+   npm run dev
+   ```
 
 ---
 
-## 🔑 Credenciais de Teste
+## 📂 Documentação e Suporte
 
-Após configurar o banco, crie um vendedor manualmente:
+Acesse os documentos técnicos para orientações detalhadas:
 
-```sql
--- 1. Crie um usuário no Supabase Authentication
--- 2. Execute:
-INSERT INTO perfis_acesso (auth_user_id, salao_id, cargo)
-VALUES (
-  'UUID_DO_USUARIO',
-  '00000000-0000-0000-0000-000000000000',
-  'VENDEDOR'
-);
-```
+- 📑 **[Guia de Deploy](docs/guias/GUIA_DEPLOY.md)**: Procedimentos para publicação.
+- 🏗️ **[Arquitetura do Sistema](docs/ARQUITETURA_VENDEDOR_ADMIN.md)**: Documentação técnica da infraestrutura.
+- 🧠 **[Lógica Financeira](docs/CONTEXTO_COMPLETO_IA.md)**: Detalhamento das regras de negócio e cálculos.
+- 🔐 **[Gestão de Acessos](docs/resumos/RESUMO_IMPLEMENTACAO_ADMINS.md)**: Estrutura de permissões e segurança.
 
 ---
 
-## 🗄️ Banco de Dados
+## 🤝 Roadmap de Evolução
 
-### Tabelas Principais
-
-- `saloes` - Dados dos salões
-- `perfis_acesso` - Usuários e permissões
-- `logins_gerados` - Credenciais de proprietárias
-- `profissionais` - Funcionários
-- `procedimentos` - Serviços oferecidos
-- `atendimentos` - Agendamentos
-- `despesas` - Controle financeiro
-
-### Views
-
-- `fechamento_mensal` - Resumo financeiro mensal
-- `ranking_procedimentos` - Procedimentos mais rentáveis
-- `rendimento_por_profissional` - Performance da equipe
+- [ ] Aplicativo Nativo (iOS/Android)
+- [ ] Módulo de Comunicação Automatizada (WhatsApp API)
+- [ ] Sistema de Retenção e Fidelidade
+- [ ] Relatórios Executivos em PDF
 
 ---
 
-## 🔐 Segurança
+## 📄 Termos e Licença
 
-- ✅ Row Level Security (RLS) em todas as tabelas
-- ✅ Isolamento multi-tenant
-- ✅ Autenticação via Supabase Auth
-- ✅ Senhas geradas com 12 caracteres seguros
-- ✅ Triggers automáticos para integridade
+Software de uso privado. Todos os direitos reservados para **Kayque Brigadeiro**.
 
 ---
 
-## 🤝 Contribuindo
-
-1. Crie uma branch: `git checkout -b feature/nova-funcionalidade`
-2. Commit: `git commit -m 'Adiciona nova funcionalidade'`
-3. Push: `git push origin feature/nova-funcionalidade`
-4. Abra um Pull Request
-
----
-
-## 📝 Notas Importantes
-
-### Para Desenvolvedores
-
-- O sistema usa **2 tipos de login**: email (admin) e username (proprietária)
-- Triggers automáticos criam perfis e registram logins
-- Edge Functions precisam ser deployadas separadamente
-- RLS protege todos os dados por salão
-
-### Para Vendedores
-
-- Anote as credenciais ao criar um salão
-- Username e senha são gerados automaticamente
-- Entregue credenciais em papel (não por WhatsApp)
-- Cada salão é isolado dos demais
-
----
-
-## 🆘 Suporte
-
-Para dúvidas:
-
-1. Consulte a [documentação](docs/)
-2. Verifique os [guias](docs/guias/)
-3. Entre em contato com o desenvolvedor
-
----
-
-## 📄 Licença
-
-Projeto privado - Todos os direitos reservados
-
----
-
-## 🎯 Roadmap
-
-- [ ] App mobile (React Native)
-- [ ] Notificações por WhatsApp
-- [ ] Integração com pagamento online
-- [ ] Sistema de fidelidade
-- [ ] Relatórios em PDF
-
----
-
-**Desenvolvido para salões de beleza**
-
+**Solução tecnológica voltada para a excelência operacional no setor de beleza.**

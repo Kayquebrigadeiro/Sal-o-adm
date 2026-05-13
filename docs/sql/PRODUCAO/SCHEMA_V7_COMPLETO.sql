@@ -24,7 +24,7 @@ drop table if exists despesas cascade;
 drop table if exists clientes cascade;
 drop table if exists procedimentos_paralelos cascade;
 drop table if exists homecare cascade;
-drop table if exists atendimentos cascade;
+drop table if exists atendimentos cascade;    
 drop table if exists procedimentos cascade;
 drop table if exists profissionais cascade;
 drop table if exists configuracoes cascade;

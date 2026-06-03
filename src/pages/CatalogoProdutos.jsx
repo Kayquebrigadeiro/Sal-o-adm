@@ -6,7 +6,7 @@ import { Plus, Trash2, Pencil, Package, Calculator } from 'lucide-react';
 
 const fmt = (v) => Number(v || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
 
-export default function CatalogoProdutos({ salaoId }) {
+export default function CatalogoProdutos({ salaoId, onChange }) {
   const { showToast } = useToast();
   const [produtos, setProdutos] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -55,14 +55,20 @@ export default function CatalogoProdutos({ salaoId }) {
       ({ error } = await supabase.from('produtos_catalogo').upsert([dados], { onConflict: 'salao_id,nome' }));
     }
     if (error) showToast('ERRO: ' + error.message, 'error');
-    else { showToast('PRODUTO SALVO!', 'success'); setModalProd(false); carregar(); }
+    else {
+      showToast('PRODUTO SALVO!', 'success');
+      setModalProd(false);
+      await carregar();
+      if (onChange) onChange();
+    }
   };
 
   const deletarProduto = async (id) => {
     if (!window.confirm('REMOVER ESTE PRODUTO?')) return;
     await supabase.from('produtos_catalogo').update({ ativo: false }).eq('id', id).eq('salao_id', salaoId);
     showToast('PRODUTO REMOVIDO', 'success');
-    carregar();
+    await carregar();
+    if (onChange) onChange();
   };
 
   // Preview no modal

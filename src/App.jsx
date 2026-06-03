@@ -11,7 +11,6 @@ import Precificacao from './pages/Precificacao';
 import HomeCar from './pages/HomeCar';
 import Paralelos from './pages/Paralelos';
 import Configuracoes from './pages/Configuracoes';
-import WizardBemVinda from './pages/WizardBemVinda';
 
 import VendedorApp from './vendedor/VendedorApp';
 import BannerOffline from './components/BannerOffline';
@@ -206,7 +205,6 @@ export default function App() {
 
   const salaoId = perfil?.salao_id;
   const role = perfil?.cargo;
-  const configurado = perfil?.configurado;
   const email = sessao.user.email;
   const ctx = { salaoId, role };
 
@@ -218,11 +216,6 @@ export default function App() {
         <VendedorApp email={email} userId={sessao.user.id} />
       </BrowserRouter>
     );
-  }
-
-  // Wizard de primeiro acesso — tela cheia, sem sidebar
-  if (role === 'PROPRIETARIO' && !configurado) {
-    return <><BannerOffline /><WizardBemVinda salaoId={salaoId} email={email} onConcluido={() => setPerfil(prev => ({ ...prev, configurado: true }))} /></>;
   }
 
   // Se proprietária com assinatura vencida → tela de bloqueio

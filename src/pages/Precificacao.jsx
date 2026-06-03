@@ -277,6 +277,22 @@ export default function Precificacao({ salaoId }) {
     }
   };
 
+  const refreshCatalogo = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('produtos_catalogo')
+        .select('id, nome, preco_compra, qtd_aplicacoes, custo_por_uso, ativo')
+        .eq('salao_id', salaoId)
+        .eq('ativo', true)
+        .order('nome');
+
+      if (error) throw error;
+      setCatalogo(data || []);
+    } catch (err) {
+      showToast('ERRO AO ATUALIZAR CATÁLOGO DE PRODUTOS', 'error');
+    }
+  };
+
   useEffect(() => {
     if (salaoId) carregar(true);
   }, [salaoId]);
@@ -554,7 +570,8 @@ export default function Precificacao({ salaoId }) {
             })}
           </div>
           <button
-            onClick={() => {
+            onClick={async () => {
+              await refreshCatalogo();
               setFormProc({ nome: '', categoria: catAtiva, ganho: '' });
               setProdsSelecionados([]);
               setModalProc(true);
@@ -722,7 +739,7 @@ export default function Precificacao({ salaoId }) {
       )}
 
       {abaAtiva === 'catalogo' && (
-        <CatalogoProdutos salaoId={salaoId} />
+        <CatalogoProdutos salaoId={salaoId} onChange={refreshCatalogo} />
       )}
     </div>
   );

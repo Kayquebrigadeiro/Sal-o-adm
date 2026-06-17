@@ -8,6 +8,7 @@ const CURRENT_APP_VERSION = 'v8.1.1';
 const storedVersion = localStorage.getItem('app_version');
 
 if (storedVersion !== CURRENT_APP_VERSION) {
+  // Log informativo: notifica sobre cache-busting automático em nova versão
   console.log('🔄 Nova versão detectada. Limpando cache antigo...');
   try {
     localStorage.clear();

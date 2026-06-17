@@ -60,6 +60,10 @@ export default function Agenda({ salaoId, role }) {
   const [ignorarPrejuizo, setIgnorarPrejuizo] = useState(false);
   const [mostrarSugerido, setMostrarSugerido] = useState(false);
 
+  // ─── Sprint 3: Múltiplos Serviços ───
+  const [servicos, setServicos] = useState([]);
+  const [edicaoServico, setEdicaoServico] = useState(null);
+
   // ─── Modal Novo Profissional (Atalho) ───
   const [modalProfAberto, setModalProfAberto] = useState(false);
   const [novoProf, setNovoProf] = useState({ nome: '', cargo: 'FUNCIONARIO' });
@@ -124,17 +128,16 @@ export default function Agenda({ salaoId, role }) {
   }, [salaoId, dataSelecionada]);
 
   const carregarAtendimentos = async () => {
-    // 🛡️ FIX: FUNCIONARIO não recebe campos financeiros no response HTTP
+    // 🛡️ Sprint 3: Usar v_atendimentos_completo para obter múltiplos procedimentos
     const colunas = role === 'PROPRIETARIO'
-      ? 'id, data, horario, cliente, comprimento, valor_cobrado, valor_pago, valor_pendente, status, obs, profissional_id, procedimento_id, lucro_liquido, lucro_possivel, custo_fixo, custo_variavel, valor_maquininha, valor_profissional, profissionais(nome, cargo), procedimentos(nome, categoria)'
-      : 'id, data, horario, cliente, comprimento, valor_cobrado, valor_pago, valor_pendente, status, obs, profissional_id, procedimento_id, profissionais(nome, cargo), procedimentos(nome, categoria)';
+      ? 'id, data, horario, cliente, valor_cobrado, valor_pago, valor_pendente, status, obs, profissional_id, lucro_liquido, lucro_possivel, custo_fixo, custo_variavel, valor_maquininha, valor_profissional, profissionais(nome, cargo), procedimentos'
+      : 'id, data, horario, cliente, valor_cobrado, valor_pago, valor_pendente, status, obs, profissional_id, profissionais(nome, cargo), procedimentos';
 
     const { data, error } = await supabase
-      .from('atendimentos')
+      .from('v_atendimentos_completo')
       .select(colunas)
       .eq('salao_id', salaoId)
       .eq('data', dataSelecionada)
-      .neq('status', 'CANCELADO')
       .order('horario');
 
     if (error) {
@@ -226,6 +229,8 @@ export default function Agenda({ salaoId, role }) {
     setNovoClienteTelefone('');
     setIgnorarPrejuizo(false);
     setMostrarSugerido(false);
+    setServicos([]);
+    setEdicaoServico(null);
     setModalAberto(true);
   };
 
@@ -284,43 +289,148 @@ export default function Agenda({ salaoId, role }) {
     }
   };
 
+  // ─── Sprint 3: Adicionar Serviço à Lista ───
+  const adicionarServico = () => {
+    const nomeCliente = novo.cliente.trim() || buscaCliente.trim();
+    if (!nomeCliente) return showToast('DIGITE O NOME DA CLIENTE!', 'error');
+    if (!novo.procId) return showToast('SELECIONE O PROCEDIMENTO!', 'error');
+    if (!novo.valor || !validarValorMonetario(novo.valor)) {
+      return showToast('VALOR DEVE ESTAR ENTRE R$ 0,01 E R$ 9.999,99', 'error');
+    }
+
+    // 🛡️ CORREÇÃO CRÍTICA: Validar se procedimento já foi adicionado
+    if (edicaoServico === null) {
+      const jaExiste = servicos.some(s => s.procId === novo.procId);
+      if (jaExiste) {
+        return showToast('⚠️ ESTE PROCEDIMENTO JÁ FOI ADICIONADO À LISTA!', 'error');
+      }
+    }
+
+    const proc = procedimentos.find(p => p.id === novo.procId);
+    
+    // Calcular preço sugerido (indicado pelo sistema)
+    let precoSugerido = 0;
+    if (proc) {
+      const precoP = Number(proc.preco_p) || 0;
+      if (novo.tamanho === 'P') precoSugerido = precoP;
+      else if (novo.tamanho === 'M') precoSugerido = Number(proc.preco_m) || (precoP * 1.20);
+      else if (novo.tamanho === 'G') precoSugerido = Number(proc.preco_g) || (precoP * 1.30);
+    }
+    
+    const novoServico = {
+      id: edicaoServico !== null ? servicos[edicaoServico].id : Date.now().toString(),
+      procId: novo.procId,
+      procNome: proc?.nome,
+      tamanho: novo.tamanho,
+      valor_indicado: precoSugerido,
+      valor_cobrado: Number(novo.valor),
+      categoria: proc?.categoria,
+      requer_comprimento: proc?.requer_comprimento,
+    };
+
+    if (edicaoServico !== null) {
+      // Atualizando serviço existente
+      const novoServicos = [...servicos];
+      novoServicos[edicaoServico] = novoServico;
+      setServicos(novoServicos);
+      setEdicaoServico(null);
+      showToast('✏️ SERVIÇO ATUALIZADO NA LISTA', 'success');
+    } else {
+      // Adicionando novo serviço
+      setServicos([...servicos, novoServico]);
+      showToast('➕ SERVIÇO ADICIONADO À LISTA', 'success');
+    }
+
+    // Limpar formulário para próximo serviço
+    setNovo({ cliente: novo.cliente, procId: '', tamanho: 'P', valor: '', obs: novo.obs, pago: false });
+  };
+
+  // ─── Sprint 3: Editar Serviço da Lista ───
+  const editarServico = (indice) => {
+    const servico = servicos[indice];
+    setNovo({
+      cliente: buscaCliente || novo.cliente,
+      procId: servico.procId,
+      tamanho: servico.tamanho,
+      valor: String(servico.valor_cobrado),
+      obs: novo.obs,
+      pago: novo.pago,
+    });
+    setEdicaoServico(indice);
+    showToast('📝 EDITANDO SERVIÇO DA LISTA', 'info');
+  };
+
+  // ─── Sprint 3: Remover Serviço da Lista ───
+  const removerServico = (indice) => {
+    setServicos(servicos.filter((_, i) => i !== indice));
+    if (edicaoServico === indice) {
+      setEdicaoServico(null);
+      setNovo({ cliente: novo.cliente, procId: '', tamanho: 'P', valor: '', obs: novo.obs, pago: false });
+    }
+    showToast('🗑️ SERVIÇO REMOVIDO DA LISTA', 'success');
+  };
+
   // ─── Salvar atendimento ───
   const salvar = async () => {
     const nomeCliente = novo.cliente.trim() || buscaCliente.trim();
     if (!nomeCliente) return showToast('DIGITE O NOME DA CLIENTE!', 'error');
-    if (!novo.procId) return showToast('SELECIONE O PROCEDIMENTO!', 'error');
-
-    // 🛡️ Validar valor monetário
-    if (!novo.valor || !validarValorMonetario(novo.valor)) {
-      showToast('VALOR DEVE ESTAR ENTRE R$ 0,01 E R$ 9.999,99', 'error');
-      return;
-    }
+      
+    // Sprint 3: Validar se há serviços na lista
+    if (servicos.length === 0) return showToast('ADICIONE PELO MENOS UM SERVIÇO!', 'error');
 
     setSalvando(true);
+    let atendimentoId = null; // Guarda o ID para rollback
+    
     try {
-      const proc = procedimentos.find(p => p.id === novo.procId);
-
+      // 1. Criar atendimento base
       const dados = {
         salao_id: salaoId,
         data: dataSelecionada,
         horario: selecao.hora,
         profissional_id: selecao.profId,
-        procedimento_id: novo.procId,
-        comprimento: proc?.requer_comprimento ? novo.tamanho : null,
+        procedimento_id: servicos[0].procId, // Para compatibilidade com queries antigas
         cliente: nomeCliente.toUpperCase(),
-        valor_cobrado: Number(novo.valor) || 0,
-        valor_pago: novo.pago ? (Number(novo.valor) || 0) : 0,
+        valor_cobrado: 0, // Será calculado pela trigger
+        valor_pago: novo.pago ? servicos.reduce((sum, s) => sum + s.valor_cobrado, 0) : 0,
         status: 'AGENDADO',
         obs: novo.obs || null,
       };
 
-      const { error } = await supabase.from('atendimentos').insert(dados);
-      if (error) throw error;
+      const { data: atendimentoData, error: atendError } = await supabase.from('atendimentos').insert(dados).select();
+      if (atendError) throw atendError;
 
-      // Toast informativo com detalhes do atendimento (viciante!)
-      const lucroEstimado = previewFinanceiro?.lucroLiquido || 0;
+      atendimentoId = atendimentoData[0].id; // Salva para rollback
+
+      // 2. Inserir cada serviço em atendimento_procedimentos
+      const dadosServicos = servicos.map((s, idx) => ({
+        atendimento_id: atendimentoId,
+        procedimento_id: s.procId,
+        comprimento: s.requer_comprimento ? s.tamanho : null,
+        valor_indicado: s.valor_indicado,
+        valor_cobrado: s.valor_cobrado,
+        valor_pago: novo.pago ? s.valor_cobrado : 0,
+        sequencia: idx + 1,
+      }));
+
+      const { error: procError } = await supabase.from('atendimento_procedimentos').insert(dadosServicos);
+      if (procError) {
+        // ROLLBACK: deleta o atendimento criado no passo 1
+        await supabase
+          .from('atendimentos')
+          .delete()
+          .eq('id', atendimentoId);
+        
+        throw procError; // Relança o erro para o catch
+      }
+
+      // Toast com resumo dos serviços
+      const totalCobrado = servicos.reduce((sum, s) => sum + s.valor_cobrado, 0);
+      const resumoServicos = servicos.length === 1 
+        ? servicos[0].procNome
+        : `${servicos.length} SERVIÇOS`;
+       
       showToast(
-        `✅ ${nomeCliente} ÀS ${selecao.hora} | ${proc.nome} | LUCRO: ${fmt(lucroEstimado)}`,
+        `✅ ${nomeCliente} ÀS ${selecao.hora} | ${resumoServicos} | TOTAL: ${fmt(totalCobrado)}`,
         'success'
       );
       setModalAberto(false);
@@ -337,6 +447,13 @@ export default function Agenda({ salaoId, role }) {
   const [agendamentoSelecionado, setAgendamentoSelecionado] = useState(null);
   const [cancelando, setCancelando] = useState(false);
   const [alterandoPagamento, setAlterandoPagamento] = useState(false);
+
+  // ─── Sprint 5: Modal Customizado para Mover Agendamento ───
+  const [modalMoverAberto, setModalMoverAberto] = useState(false);
+  const [moverDados, setMoverDados] = useState(null);
+
+  // ─── Sprint 5: Modal Customizado para Cancelar Agendamento ───
+  const [modalCancelarAberto, setModalCancelarAberto] = useState(false);
 
   const abrirDetalhes = (agend) => {
     setAgendamentoSelecionado(agend);
@@ -369,9 +486,15 @@ export default function Agenda({ salaoId, role }) {
     }
   };
 
-  const cancelarAgendamento = async () => {
+  const cancelarAgendamento = () => {
     if (!agendamentoSelecionado) return;
-    if (!window.confirm('TEM CERTEZA QUE DESEJA CANCELAR ESTE ATENDIMENTO?')) return;
+    // Abre o modal de confirmação em vez de usar window.confirm
+    setModalCancelarAberto(true);
+  };
+
+  // ─── Confirmar cancelamento do agendamento ───
+  const confirmarCancelarAgendamento = async () => {
+    if (!agendamentoSelecionado) return;
 
     setCancelando(true);
     try {
@@ -384,6 +507,7 @@ export default function Agenda({ salaoId, role }) {
       if (error) throw error;
 
       showToast('ATENDIMENTO CANCELADO COM SUCESSO!', 'success');
+      setModalCancelarAberto(false);
       setModalDetalhesAberto(false);
       carregarAtendimentos();
     } catch (err) {
@@ -444,10 +568,18 @@ export default function Agenda({ salaoId, role }) {
     // Confirmar mudança de profissional (só se mudou)
     if (novoProfId !== profOrigem) {
       const profDestino = profissionais.find(p => p.id === novoProfId);
-      const confirmar = window.confirm(
-        `Mover para ${profDestino?.nome} às ${novaHora}?`
-      );
-      if (!confirmar) { setDragging(null); setDragOver(null); return; }
+      const nomeCliente = dragging.cliente;
+      
+      // Sprint 5: Usar modal customizado em vez de window.confirm
+      setMoverDados({
+        agendId,
+        novoProfId,
+        novaHora,
+        profDestino: profDestino?.nome,
+        nomeCliente,
+      });
+      setModalMoverAberto(true);
+      return;
     }
 
     try {
@@ -472,7 +604,32 @@ export default function Agenda({ salaoId, role }) {
     }
   };
 
-  // ─── Encontrar agendamento na grade ───
+  // ─── Sprint 5: Confirmar movimento de agendamento ───
+  const confirmarMover = async () => {
+    if (!moverDados) return;
+    
+    try {
+      const { error } = await supabase
+        .from('atendimentos')
+        .update({
+          profissional_id: moverDados.novoProfId,
+          horario: moverDados.novaHora + ':00',
+        })
+        .eq('id', moverDados.agendId)
+        .eq('salao_id', salaoId);
+
+      if (error) throw error;
+
+      showToast('✅ AGENDAMENTO MOVIDO COM SUCESSO!', 'success');
+      setModalMoverAberto(false);
+      setMoverDados(null);
+      setDragging(null);
+      setDragOver(null);
+      carregarAtendimentos();
+    } catch (err) {
+      showToast(`ERRO AO MOVER: ${err.message}`, 'error');
+    }
+  };
   const getAgendamento = (hora, profId) => {
     return agendamentos.find(a => a.horario?.substring(0, 5) === hora && a.profissional_id === profId);
   };
@@ -489,7 +646,8 @@ export default function Agenda({ salaoId, role }) {
   }
 
   return (
-    <div className="p-5 bg-slate-50 min-h-screen font-sans">
+    <div className="p-5 bg-slate-50 min-h-screen font-sans flex flex-col">
+      <div className="mx-auto w-full max-w-[1400px] flex flex-col">
       {/* ═══ HEADER COM NAVEGAÇÃO DE DATA ═══ */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-6 gap-3">
         <div>
@@ -639,7 +797,10 @@ export default function Agenda({ salaoId, role }) {
                           >
                             <div className="font-bold truncate">{agend.cliente}</div>
                             <div className="truncate text-[9px] opacity-70">
-                              {agend.procedimentos?.nome} {agend.comprimento ? `(${agend.comprimento})` : ''}
+                              {agend.procedimentos?.length > 1 
+                                ? `${agend.procedimentos.length} SERVIÇOS`
+                                : agend.procedimentos?.[0]?.procedimento_nome + (agend.procedimentos?.[0]?.comprimento ? ` (${agend.procedimentos[0].comprimento})` : '')
+                              }
                             </div>
                             {role === 'PROPRIETARIO' && (
                               <div className={`absolute bottom-0.5 right-1 px-1.5 py-0.5 rounded-full text-[8px] font-black
@@ -721,8 +882,14 @@ export default function Agenda({ salaoId, role }) {
                 <p className="text-lg font-bold text-gray-800">{agendamentoSelecionado.cliente}</p>
               </div>
               <div>
-                <p className="text-[10px] font-black uppercase text-gray-500">Procedimento</p>
-                <p className="font-medium text-gray-600 uppercase">{agendamentoSelecionado.procedimentos?.nome} {agendamentoSelecionado.comprimento ? `(${agendamentoSelecionado.comprimento})` : ''}</p>
+                <p className="text-[10px] font-black uppercase text-gray-500">Procedimentos ({agendamentoSelecionado.procedimentos?.length || 0})</p>
+                <div className="space-y-1 max-h-[200px] overflow-y-auto">
+                  {agendamentoSelecionado.procedimentos?.map((p, idx) => (
+                    <p key={idx} className="font-medium text-gray-600 uppercase text-sm">
+                      {p.procedimento_nome} {p.comprimento ? `(${p.comprimento})` : ''} - {fmt(p.valor_cobrado)}
+                    </p>
+                  ))}
+                </div>
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
@@ -1026,7 +1193,94 @@ export default function Agenda({ salaoId, role }) {
                 )}
               </div>
 
-              {/* OBS */}
+              {/* ═══ SPRINT 3: LISTAGEM DE SERVIÇOS ADICIONADOS ═══ */}
+              {edicaoServico !== null && (
+                <div className="bg-yellow-50 border border-yellow-400 text-yellow-800 rounded-lg px-3 py-2 text-xs flex items-center gap-2">
+                  ✏️ <span className="font-bold uppercase">Editando serviço {edicaoServico + 1} da lista</span> — altere os dados e clique em salvar
+                </div>
+              )}
+
+              {servicos.length > 0 && (
+                <div className={`border-2 rounded-xl p-4 space-y-3 transition-colors ${edicaoServico !== null ? 'bg-yellow-50 border-yellow-400' : 'bg-blue-50 border-blue-200'}`}>
+                  <div className="flex items-center gap-2 mb-2">
+                    <Package size={16} className="text-blue-600" />
+                    <p className="text-sm font-black text-blue-800 uppercase">SERVIÇOS ADICIONADOS ({servicos.length})</p>
+                  </div>
+                  
+                  <div className="space-y-2 max-h-[400px] overflow-y-auto">
+                    {servicos.map((s, idx) => (
+                      <div key={s.id} className="bg-white border-l-4 border-blue-400 p-3 rounded-lg flex items-center justify-between hover:bg-gray-50 transition-colors">
+                        <div className="flex-1">
+                          <p className="font-bold text-sm text-gray-800">{s.procNome}</p>
+                          <div className="flex items-center gap-2 mt-1 text-[10px] text-gray-600 uppercase">
+                            {s.requer_comprimento && <span className="bg-gray-100 px-2 py-0.5 rounded">{s.tamanho}</span>}
+                            <span className="font-bold text-gray-800">{fmt(s.valor_cobrado)}</span>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <button
+                            onClick={() => editarServico(idx)}
+                            className="p-2 hover:bg-sky-100 rounded transition-colors text-sky-600 hover:text-sky-700"
+                            title="Editar serviço"
+                          >
+                            <Package size={14} />
+                          </button>
+                          <button
+                            onClick={() => removerServico(idx)}
+                            className="p-2 hover:bg-red-100 rounded transition-colors text-red-600 hover:text-red-700"
+                            title="Remover serviço"
+                          >
+                            <Trash2 size={14} />
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* Botão Adicionar/Salvar Serviço */}
+                  {novo.procId && novo.valor && (
+                    <div className="flex flex-col gap-1">
+                      <button
+                        onClick={adicionarServico}
+                        className={`w-full mt-2 py-2 text-white font-bold text-sm rounded-lg flex items-center justify-center gap-2 transition-colors uppercase ${edicaoServico !== null ? 'bg-yellow-500 hover:bg-yellow-600' : 'bg-blue-600 hover:bg-blue-700'}`}
+                      >
+                        <Plus size={14} />
+                        {edicaoServico !== null ? '✏️ SALVAR EDIÇÃO DO SERVIÇO' : 'Adicionar Serviço'}
+                      </button>
+                      {edicaoServico !== null && (
+                        <button
+                          onClick={() => {
+                            setEdicaoServico(null);
+                            setNovo(prev => ({ ...prev, procId: '', valor: '', tamanho: 'P' }));
+                          }}
+                          className="text-xs text-gray-500 underline text-center hover:text-gray-700 transition-colors"
+                        >
+                          Cancelar edição
+                        </button>
+                      )}
+                    </div>
+                  )}
+
+                  {/* Resumo de Totais */}
+                  <div className="mt-3 pt-3 border-t-2 border-blue-200 bg-gradient-to-r from-blue-50 to-cyan-50 p-2 rounded">
+                    <div className="flex justify-between items-center text-sm font-bold">
+                      <span className="text-gray-700">TOTAL A COBRAR:</span>
+                      <span className="text-lg text-blue-600">{fmt(servicos.reduce((sum, s) => sum + s.valor_cobrado, 0))}</span>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Botão para adicionar primeiro serviço (quando não há nenhum) */}
+              {servicos.length === 0 && novo.procId && novo.valor && (
+                <button
+                  onClick={adicionarServico}
+                  className="w-full py-3 bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700 text-white font-black text-base rounded-xl flex items-center justify-center gap-2 transition-all transform hover:scale-105 uppercase"
+                >
+                  <Plus size={16} />
+                  ➕ Adicionar Serviço À Lista
+                </button>
+              )}
               <div>
                 <label className="text-[10px] font-black uppercase text-gray-500 mb-1 block">Observação</label>
                 <input type="text" placeholder="OPCIONAL..."
@@ -1048,25 +1302,121 @@ export default function Agenda({ salaoId, role }) {
               {/* BOTÃO SALVAR */}
               <button
                 onClick={salvar}
-                disabled={salvando}
-                className={`w-full py-4 rounded-2xl font-black text-lg transition-all shadow-xl flex items-center justify-center gap-2 ${salvando ? 'bg-sky-200 text-gray-500 cursor-not-allowed' :
-                  role === 'PROPRIETARIO' && previewFinanceiro?.prejuizo
-                    ? 'bg-red-600 text-white shadow-red-200 hover:bg-red-700'
-                    : 'bg-blue-600 text-white shadow-sky-200/50 hover:bg-blue-700'
+                disabled={salvando || servicos.length === 0}
+                className={`w-full py-4 rounded-2xl font-black text-lg transition-all shadow-xl flex items-center justify-center gap-2 ${salvando ? 'bg-sky-200 text-gray-500 cursor-not-allowed' : servicos.length === 0 ? 'bg-gray-300 text-gray-500 cursor-not-allowed' :
+                  'bg-emerald-600 text-white shadow-emerald-200 hover:bg-emerald-700'
                   }`}
               >
                 {salvando ? (
                   <><Loader2 size={20} className="animate-spin" /> SALVANDO...</>
-                ) : role === 'PROPRIETARIO' && previewFinanceiro?.prejuizo ? (
-                  'CONFIRMAR MESMO COM PREJUÍZO'
+                ) : servicos.length === 0 ? (
+                  'ADICIONE UM SERVIÇO PARA CONTINUAR'
                 ) : (
-                  'CONFIRMAR ATENDIMENTO'
+                  `✅ CONFIRMAR AGENDAMENTO (${servicos.length} SERVIÇO${servicos.length > 1 ? 'S' : ''})`
                 )}
               </button>
             </div>
           </div>
         </div>
       )}
+
+      {/* ═══ SPRINT 5: MODAL CUSTOMIZADO PARA MOVER AGENDAMENTO ═══ */}
+      {modalMoverAberto && moverDados && (
+        <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50" onClick={() => { setModalMoverAberto(false); setDragging(null); setDragOver(null); }}>
+          <div className="bg-white rounded-2xl shadow-2xl p-8 max-w-md w-full mx-4 animate-fadeIn" onClick={e => e.stopPropagation()}>
+            {/* Ícone */}
+            <div className="flex justify-center mb-6">
+              <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center">
+                <ChevronRight size={32} className="text-blue-600" />
+              </div>
+            </div>
+
+            {/* Conteúdo */}
+            <h2 className="text-2xl font-black text-center text-gray-800 uppercase mb-2">Mover Agendamento</h2>
+            
+            <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 my-6 text-center">
+              <p className="text-gray-600 font-bold uppercase mb-2">
+                Deseja mover o agendamento de
+              </p>
+              <p className="text-2xl font-black text-blue-700 mb-3">{moverDados.nomeCliente}</p>
+              <p className="text-sm text-gray-600 uppercase">
+                para <span className="font-bold text-blue-600">{moverDados.profDestino}</span> às <span className="font-bold text-blue-600">{moverDados.novaHora}</span>?
+              </p>
+            </div>
+
+            {/* Botões */}
+            <div className="flex gap-3">
+              <button
+                onClick={() => {
+                  setModalMoverAberto(false);
+                  setMoverDados(null);
+                  setDragging(null);
+                  setDragOver(null);
+                }}
+                className="flex-1 py-3 rounded-xl font-bold text-gray-700 border-2 border-gray-200 hover:bg-gray-50 transition-colors uppercase text-sm"
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={confirmarMover}
+                className="flex-1 py-3 rounded-xl font-bold text-white bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-700 hover:to-blue-600 transition-all shadow-lg uppercase text-sm"
+              >
+                ✅ Confirmar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ═══ SPRINT 5: MODAL CUSTOMIZADO PARA CANCELAR AGENDAMENTO ═══ */}
+      {modalCancelarAberto && agendamentoSelecionado && (
+        <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50" onClick={() => setModalCancelarAberto(false)}>
+          <div className="bg-white rounded-2xl shadow-2xl p-8 max-w-md w-full mx-4 animate-fadeIn" onClick={e => e.stopPropagation()}>
+            {/* Ícone de alerta */}
+            <div className="flex justify-center mb-6">
+              <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center">
+                <AlertTriangle size={32} className="text-red-600" />
+              </div>
+            </div>
+
+            {/* Conteúdo */}
+            <h2 className="text-2xl font-black text-center text-gray-800 uppercase mb-2">Cancelar Agendamento</h2>
+            
+            <div className="bg-red-50 border border-red-200 rounded-xl p-4 my-6 text-center">
+              <p className="text-gray-600 font-bold uppercase mb-2">
+                Deseja cancelar o agendamento de
+              </p>
+              <p className="text-2xl font-black text-red-700 mb-3">{agendamentoSelecionado.cliente}</p>
+              <p className="text-sm text-gray-600 uppercase">
+                às <span className="font-bold text-red-600">{agendamentoSelecionado.horario?.substring(0, 5)}</span>?
+              </p>
+              <p className="text-xs text-red-600 mt-3 font-bold">
+                ⚠️ Esta ação não pode ser desfeita.
+              </p>
+            </div>
+
+            {/* Botões */}
+            <div className="flex gap-3">
+              <button
+                onClick={() => setModalCancelarAberto(false)}
+                disabled={cancelando}
+                className="flex-1 py-3 rounded-xl font-bold text-gray-700 border-2 border-gray-200 hover:bg-gray-50 transition-colors uppercase text-sm disabled:opacity-50"
+              >
+                Voltar
+              </button>
+              <button
+                onClick={confirmarCancelarAgendamento}
+                disabled={cancelando}
+                className="flex-1 py-3 rounded-xl font-bold text-white bg-gradient-to-r from-red-600 to-red-500 hover:from-red-700 hover:to-red-600 transition-all shadow-lg uppercase text-sm disabled:opacity-50 flex items-center justify-center gap-2"
+              >
+                {cancelando ? <Loader2 size={16} className="animate-spin" /> : '🚫'}
+                Sim, Cancelar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+      </div>
     </div>
   );
 }

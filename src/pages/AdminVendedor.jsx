@@ -57,10 +57,9 @@ export default function AdminVendedor({ email, userId }) {
         ])
         .select()
         .single();
-
+      if (error) throw error;
       if (error) throw error;
 
-      console.log('[AdminVendedor] ✅ Salão criado:', data);
       alert('✅ Salão criado com sucesso!');
       setNovoSalao({ nome: '', telefone: '' });
       carregarSaloes();
@@ -78,10 +77,9 @@ export default function AdminVendedor({ email, userId }) {
     try {
       const { data, error } = await supabase
         .rpc('fn_deletar_salao', { p_salao_id: salaoId });
-
+      if (error) throw error;
       if (error) throw error;
 
-      console.log('[AdminVendedor] Resultado:', data);
       alert('✅ Salão deletado.');
       carregarSaloes();
     } catch (err) {
@@ -320,7 +318,6 @@ function CadastroPropietaria({ salao, vendedorId, onSuccess }) {
 
       if (rpcError) throw rpcError;
 
-      console.log('[CadastroPropietaria] ✅ Login gerado');
       
       // Mostrar senha apenas uma vez (não em alert, evita captura por malware/extensões)
       setSenhaVisivel({

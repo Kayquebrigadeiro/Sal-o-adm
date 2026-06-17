@@ -93,10 +93,10 @@ export default function Clientes({ salaoId }) {
   const abrirFicha = async (cliente) => {
     setClienteSelecionado(cliente);
 
-    // Busca por nome (campo texto no atendimentos) — filtra por salao_id para isolamento
+    // Busca por nome na v_atendimentos_completo para obter múltiplos procedimentos
     const { data } = await supabase
-      .from('atendimentos')
-      .select('data, horario, valor_cobrado, status, procedimentos(nome)')
+      .from('v_atendimentos_completo')
+      .select('data, horario, valor_cobrado, status, procedimentos')
       .eq('salao_id', salaoId)
       .eq('cliente', cliente.nome)
       .order('data', { ascending: false });

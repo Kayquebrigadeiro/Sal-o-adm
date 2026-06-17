@@ -2,7 +2,7 @@ import { useState, useEffect, useMemo } from 'react';
 import { supabase } from '../supabaseClient';
 import { useToast } from '../components/Toast';
 import { FinancialEngine } from '../services/FinancialEngine';
-import { User, X, CheckCircle2, AlertTriangle, UserPlus, ChevronLeft, ChevronRight, Loader2, Sparkles, Search, Phone, Plus, Eye, EyeOff, Trash2, Package } from 'lucide-react';
+import { User, X, CheckCircle2, AlertTriangle, UserPlus, ChevronLeft, ChevronRight, Loader2, Sparkles, Search, Phone, Plus, Eye, EyeOff, Trash2, Package, Pencil } from 'lucide-react';
 
 const fmt = (v) => Number(v || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
 const fmtPct = (v) => `${Number(v || 0).toFixed(1)}%`;
@@ -130,8 +130,8 @@ export default function Agenda({ salaoId, role }) {
   const carregarAtendimentos = async () => {
     // 🛡️ Sprint 3: Usar v_atendimentos_completo para obter múltiplos procedimentos
     const colunas = role === 'PROPRIETARIO'
-      ? 'id, data, horario, cliente, valor_cobrado, valor_pago, valor_pendente, status, obs, profissional_id, lucro_liquido, lucro_possivel, custo_fixo, custo_variavel, valor_maquininha, valor_profissional, profissionais(nome, cargo), procedimentos'
-      : 'id, data, horario, cliente, valor_cobrado, valor_pago, valor_pendente, status, obs, profissional_id, profissionais(nome, cargo), procedimentos';
+      ? 'id, data, horario, cliente, valor_cobrado, valor_pago, valor_pendente, status, obs, profissional_id, lucro_liquido, lucro_possivel, custo_fixo, custo_variavel, valor_maquininha, valor_profissional, profissionais, procedimentos'
+      : 'id, data, horario, cliente, valor_cobrado, valor_pago, valor_pendente, status, obs, profissional_id, profissionais, procedimentos';
 
     const { data, error } = await supabase
       .from('v_atendimentos_completo')
@@ -448,6 +448,102 @@ export default function Agenda({ salaoId, role }) {
   const [cancelando, setCancelando] = useState(false);
   const [alterandoPagamento, setAlterandoPagamento] = useState(false);
 
+  // ─── Edição de serviços do agendamento ───
+  const [modoEdicao, setModoEdicao] = useState(false);
+  const [servicosEdicao, setServicosEdicao] = useState([]);
+  const [edicaoServicoIdx, setEdicaoServicoIdx] = useState(null);
+  const [formEdicao, setFormEdicao] = useState({ procId: '', tamanho: 'P', valor: '' });
+  const [salvandoEdicao, setSalvandoEdicao] = useState(false);
+
+  const abrirModoEdicao = () => {
+    const lista = (agendamentoSelecionado.procedimentos || []).map(p => ({
+      id: p.id, // id da linha em atendimento_procedimentos
+      procId: p.procedimento_id,
+      procNome: p.procedimento_nome,
+      tamanho: p.comprimento || 'P',
+      valor_indicado: p.valor_indicado,
+      valor_cobrado: p.valor_cobrado,
+      requer_comprimento: procedimentos.find(pr => pr.id === p.procedimento_id)?.requer_comprimento ?? true,
+    }));
+    setServicosEdicao(lista);
+    setEdicaoServicoIdx(null);
+    setFormEdicao({ procId: '', tamanho: 'P', valor: '' });
+    setModoEdicao(true);
+  };
+
+  const adicionarServicoEdicao = () => {
+    if (!formEdicao.procId || !formEdicao.valor || !validarValorMonetario(formEdicao.valor))
+      return showToast('SELECIONE O PROCEDIMENTO E INFORME O VALOR', 'error');
+    if (edicaoServicoIdx === null && servicosEdicao.some(s => s.procId === formEdicao.procId))
+      return showToast('⚠️ PROCEDIMENTO JÁ ADICIONADO', 'error');
+
+    const proc = procedimentos.find(p => p.id === formEdicao.procId);
+    const precoP = Number(proc?.preco_p) || 0;
+    let valor_indicado = precoP;
+    if (formEdicao.tamanho === 'M') valor_indicado = Number(proc?.preco_m) || precoP * 1.2;
+    if (formEdicao.tamanho === 'G') valor_indicado = Number(proc?.preco_g) || precoP * 1.3;
+
+    const item = {
+      id: edicaoServicoIdx !== null ? servicosEdicao[edicaoServicoIdx].id : null,
+      procId: formEdicao.procId,
+      procNome: proc?.nome,
+      tamanho: formEdicao.tamanho,
+      valor_indicado,
+      valor_cobrado: Number(formEdicao.valor),
+      requer_comprimento: proc?.requer_comprimento ?? true,
+    };
+
+    if (edicaoServicoIdx !== null) {
+      const nova = [...servicosEdicao];
+      nova[edicaoServicoIdx] = item;
+      setServicosEdicao(nova);
+    } else {
+      setServicosEdicao(prev => [...prev, item]);
+    }
+    setEdicaoServicoIdx(null);
+    setFormEdicao({ procId: '', tamanho: 'P', valor: '' });
+  };
+
+  const removerServicoEdicao = (idx) => {
+    setServicosEdicao(prev => prev.filter((_, i) => i !== idx));
+    if (edicaoServicoIdx === idx) { setEdicaoServicoIdx(null); setFormEdicao({ procId: '', tamanho: 'P', valor: '' }); }
+  };
+
+  const salvarEdicaoServicos = async () => {
+    if (servicosEdicao.length === 0) return showToast('ADICIONE PELO MENOS UM SERVIÇO', 'error');
+    setSalvandoEdicao(true);
+    try {
+      const atendId = agendamentoSelecionado.id;
+      // Apaga todos os procedimentos do atendimento e reinserere
+      const { error: delErr } = await supabase.from('atendimento_procedimentos').delete().eq('atendimento_id', atendId);
+      if (delErr) throw delErr;
+
+      const novos = servicosEdicao.map((s, idx) => ({
+        atendimento_id: atendId,
+        procedimento_id: s.procId,
+        comprimento: s.requer_comprimento ? s.tamanho : null,
+        valor_indicado: s.valor_indicado,
+        valor_cobrado: s.valor_cobrado,
+        valor_pago: 0,
+        sequencia: idx + 1,
+      }));
+      const { error: insErr } = await supabase.from('atendimento_procedimentos').insert(novos);
+      if (insErr) throw insErr;
+
+      // Atualiza procedimento_id principal para compatibilidade
+      await supabase.from('atendimentos').update({ procedimento_id: servicosEdicao[0].procId }).eq('id', atendId);
+
+      showToast('✅ SERVIÇOS ATUALIZADOS COM SUCESSO!', 'success');
+      setModoEdicao(false);
+      setModalDetalhesAberto(false);
+      carregarAtendimentos();
+    } catch (err) {
+      showToast('ERRO: ' + err.message, 'error');
+    } finally {
+      setSalvandoEdicao(false);
+    }
+  };
+
   // ─── Sprint 5: Modal Customizado para Mover Agendamento ───
   const [modalMoverAberto, setModalMoverAberto] = useState(false);
   const [moverDados, setMoverDados] = useState(null);
@@ -457,6 +553,7 @@ export default function Agenda({ salaoId, role }) {
 
   const abrirDetalhes = (agend) => {
     setAgendamentoSelecionado(agend);
+    setModoEdicao(false);
     setModalDetalhesAberto(true);
   };
 
@@ -867,22 +964,108 @@ export default function Agenda({ salaoId, role }) {
           </div>
         </div>
       )}
-      {/* ═══ MODAL DETALHES DO ATENDIMENTO ═══ */}
       {modalDetalhesAberto && agendamentoSelecionado && (
-        <div className="fixed inset-0 bg-white/60 backdrop-blur-sm flex justify-center items-center z-50" onClick={() => setModalDetalhesAberto(false)}>
+        <div className="fixed inset-0 bg-white/60 backdrop-blur-sm flex justify-center items-center z-50" onClick={() => { setModalDetalhesAberto(false); setModoEdicao(false); }}>
           <div className="w-full max-w-sm bg-white rounded-2xl shadow-2xl p-6 animate-fadeIn" onClick={e => e.stopPropagation()}>
             <div className="flex justify-between items-center mb-6">
-              <h2 className="text-xl font-black text-gray-800 uppercase">Detalhes</h2>
-              <button onClick={() => setModalDetalhesAberto(false)} className="p-2 hover:bg-sky-500 rounded-full transition-colors"><X size={20} /></button>
+              <h2 className="text-xl font-black text-gray-800 uppercase">{modoEdicao ? 'Editar Serviços' : 'Detalhes'}</h2>
+              <button onClick={() => { setModalDetalhesAberto(false); setModoEdicao(false); }} className="p-2 hover:bg-sky-500 rounded-full transition-colors"><X size={20} /></button>
             </div>
 
-            <div className="space-y-4 mb-8">
+            {modoEdicao ? (
+              <div className="space-y-4">
+                {/* Lista de serviços editáveis */}
+                <div className="space-y-2 max-h-48 overflow-y-auto">
+                  {servicosEdicao.map((s, idx) => (
+                    <div key={idx} className="bg-gray-50 border border-gray-200 rounded-lg p-3 flex items-center justify-between">
+                      <div>
+                        <p className="font-bold text-sm text-gray-800">{s.procNome}</p>
+                        <p className="text-[10px] text-gray-500 uppercase">{s.requer_comprimento ? s.tamanho + ' • ' : ''}{fmt(s.valor_cobrado)}</p>
+                      </div>
+                      <div className="flex gap-1">
+                        <button onClick={() => { setEdicaoServicoIdx(idx); setFormEdicao({ procId: s.procId, tamanho: s.tamanho, valor: String(s.valor_cobrado) }); }} className="p-1.5 hover:bg-sky-100 rounded text-sky-600"><Pencil size={13} /></button>
+                        <button onClick={() => removerServicoEdicao(idx)} className="p-1.5 hover:bg-red-100 rounded text-red-500"><Trash2 size={13} /></button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Formulário para adicionar/editar serviço */}
+                <div className="border-t pt-4 space-y-3">
+                  {edicaoServicoIdx !== null && (
+                    <p className="text-[10px] font-black text-yellow-700 bg-yellow-50 border border-yellow-300 rounded px-2 py-1 uppercase">✏️ Editando serviço {edicaoServicoIdx + 1}</p>
+                  )}
+                  <select
+                    className="w-full border-2 border-gray-200 rounded-xl p-3 outline-none focus:border-sky-400 font-bold text-sm bg-white"
+                    value={formEdicao.procId}
+                    onChange={e => {
+                      const proc = procedimentos.find(p => p.id === e.target.value);
+                      setFormEdicao(prev => ({ ...prev, procId: e.target.value, valor: String(Number(proc?.preco_p) || '') }));
+                    }}
+                  >
+                    <option value="">SELECIONE O PROCEDIMENTO...</option>
+                    {procedimentos.map(p => <option key={p.id} value={p.id}>{p.nome}</option>)}
+                  </select>
+
+                  {formEdicao.procId && procedimentos.find(p => p.id === formEdicao.procId)?.requer_comprimento && (
+                    <div className="flex gap-2">
+                      {['P', 'M', 'G'].map(t => (
+                        <button key={t} onClick={() => {
+                          const proc = procedimentos.find(p => p.id === formEdicao.procId);
+                          const precoP = Number(proc?.preco_p) || 0;
+                          const val = t === 'P' ? precoP : t === 'M' ? (Number(proc?.preco_m) || precoP * 1.2) : (Number(proc?.preco_g) || precoP * 1.3);
+                          setFormEdicao(prev => ({ ...prev, tamanho: t, valor: String(val) }));
+                        }}
+                        className={`flex-1 py-2 rounded-xl font-black border-2 text-sm transition-all ${formEdicao.tamanho === t ? 'bg-sky-500 border-sky-600 text-white' : 'border-gray-200 text-gray-500'}`}>
+                          {t === 'P' ? 'Curto' : t === 'M' ? 'Médio' : 'Longo'}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+
+                  <input
+                    type="number" step="0.01" placeholder="VALOR (R$)"
+                    className="w-full border-2 border-gray-200 rounded-xl p-3 outline-none focus:border-sky-400 font-bold text-sm"
+                    value={formEdicao.valor}
+                    onChange={e => setFormEdicao(prev => ({ ...prev, valor: e.target.value }))}
+                  />
+
+                  <div className="flex gap-2">
+                    <button onClick={adicionarServicoEdicao} className="flex-1 py-2 bg-blue-600 hover:bg-blue-700 text-white font-bold text-sm rounded-xl flex items-center justify-center gap-1 uppercase">
+                      <Plus size={14} />{edicaoServicoIdx !== null ? 'Salvar Edição' : 'Adicionar'}
+                    </button>
+                    {edicaoServicoIdx !== null && (
+                      <button onClick={() => { setEdicaoServicoIdx(null); setFormEdicao({ procId: '', tamanho: 'P', valor: '' }); }} className="px-3 py-2 border-2 border-gray-200 text-gray-500 font-bold text-sm rounded-xl uppercase">Cancelar</button>
+                    )}
+                  </div>
+                </div>
+
+                <div className="pt-2 border-t flex justify-between items-center">
+                  <span className="text-sm font-bold text-gray-600">Total: <span className="text-blue-600">{fmt(servicosEdicao.reduce((s, i) => s + i.valor_cobrado, 0))}</span></span>
+                </div>
+
+                <div className="flex gap-2">
+                  <button onClick={() => { setModoEdicao(false); }} className="flex-1 py-3 border-2 border-gray-200 text-gray-600 font-bold rounded-xl text-sm uppercase">Voltar</button>
+                  <button onClick={salvarEdicaoServicos} disabled={salvandoEdicao || servicosEdicao.length === 0} className="flex-1 py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-black rounded-xl text-sm uppercase flex items-center justify-center gap-2 disabled:opacity-50">
+                    {salvandoEdicao ? <Loader2 size={16} className="animate-spin" /> : <CheckCircle2 size={16} />}
+                    Salvar
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <>
+            <div className="space-y-4 mb-6">
               <div>
                 <p className="text-[10px] font-black uppercase text-gray-500">Cliente</p>
                 <p className="text-lg font-bold text-gray-800">{agendamentoSelecionado.cliente}</p>
               </div>
               <div>
-                <p className="text-[10px] font-black uppercase text-gray-500">Procedimentos ({agendamentoSelecionado.procedimentos?.length || 0})</p>
+                <div className="flex items-center justify-between mb-1">
+                  <p className="text-[10px] font-black uppercase text-gray-500">Procedimentos ({agendamentoSelecionado.procedimentos?.length || 0})</p>
+                  <button onClick={abrirModoEdicao} className="flex items-center gap-1 text-[10px] font-black text-sky-600 bg-sky-50 hover:bg-sky-100 px-2 py-1 rounded-lg uppercase transition-colors">
+                    <Pencil size={11} /> Editar
+                  </button>
+                </div>
                 <div className="space-y-1 max-h-[200px] overflow-y-auto">
                   {agendamentoSelecionado.procedimentos?.map((p, idx) => (
                     <p key={idx} className="font-medium text-gray-600 uppercase text-sm">
@@ -943,6 +1126,8 @@ export default function Agenda({ salaoId, role }) {
                 Cancelar Atendimento
               </button>
             </div>
+            </>
+            )}
           </div>
         </div>
       )}

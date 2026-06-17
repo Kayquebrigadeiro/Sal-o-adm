@@ -816,6 +816,13 @@ export default function Agenda({ salaoId, role }) {
         </div>
       )}
 
+      {/* ═══ AVISO MOBILE ═══ */}
+      <div className="block sm:hidden mb-4 bg-sky-50 border border-sky-200 rounded-xl p-4 text-center">
+        <p className="text-2xl mb-2">📱</p>
+        <p className="text-sm font-black text-blue-800 uppercase">Melhor no computador</p>
+        <p className="text-xs text-sky-600 mt-1">A agenda funciona melhor em telas maiores. Gire o celular na horizontal ou acesse pelo computador para ver todos os horários.</p>
+      </div>
+
       {profissionais.length === 0 ? (
         <div className="bg-white rounded-2xl border border-gray-200 p-12 text-center">
           <User size={40} className="text-gray-600 mx-auto mb-3" />

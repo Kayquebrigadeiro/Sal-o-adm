@@ -2,7 +2,8 @@ import { useState, useEffect, useMemo } from 'react';
 import { supabase } from '../supabaseClient';
 import { useToast } from '../components/Toast';
 import { FinancialEngine } from '../services/FinancialEngine';
-import { User, X, CheckCircle2, AlertTriangle, UserPlus, ChevronLeft, ChevronRight, Loader2, Sparkles, Search, Phone, Plus, Eye, EyeOff, Trash2, Package, Pencil } from 'lucide-react';
+import { User, X, CheckCircle2, AlertTriangle, UserPlus, ChevronLeft, ChevronRight, Loader2, Sparkles, Search, Phone, Plus, Eye, EyeOff, Trash2, Package, Pencil, HelpCircle } from 'lucide-react';
+import Tooltip from '../components/Tooltip';
 
 const fmt = (v) => Number(v || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
 const fmtPct = (v) => `${Number(v || 0).toFixed(1)}%`;
@@ -54,6 +55,7 @@ export default function Agenda({ salaoId, role }) {
   const [modalAberto, setModalAberto] = useState(false);
   const [selecao, setSelecao] = useState({ hora: '', profId: null, profNome: '' });
   const [salvando, setSalvando] = useState(false);
+  const [highlightId, setHighlightId] = useState(null);
 
   // ─── Formulário ───
   const [novo, setNovo] = useState({ cliente: '', procId: '', tamanho: 'P', valor: '', obs: '', pago: false });
@@ -591,10 +593,19 @@ export default function Agenda({ salaoId, role }) {
   // ─── Sprint 5: Modal Customizado para Cancelar Agendamento ───
   const [modalCancelarAberto, setModalCancelarAberto] = useState(false);
 
-  const abrirDetalhes = (agend) => {
+  const abrirDetalhes = (agend, e) => {
     setAgendamentoSelecionado(agend);
     setModoEdicao(false);
     setModalDetalhesAberto(true);
+    setHighlightId(agend.id);
+    setTimeout(() => setHighlightId(null), 2500);
+    if (e && e.currentTarget) {
+      e.currentTarget.scrollIntoView({
+        behavior: 'smooth',
+        block: 'center',
+        inline: 'center'
+      });
+    }
   };
 
   const togglePagamento = async () => {
@@ -893,8 +904,20 @@ export default function Agenda({ salaoId, role }) {
           )}
         </div>
       ) : (
-        <div className="bg-white border border-gray-300 rounded-sm overflow-hidden shadow-sm overflow-x-auto">
-          <table className="w-full border-collapse min-w-[600px]">
+        <>
+          {agendamentos.length === 0 && !loading && (
+            <div className="mb-4 bg-sky-50 border border-sky-100 rounded-2xl p-4 flex items-center gap-3 animate-fadeIn">
+              <div className="w-10 h-10 bg-sky-100 rounded-full flex items-center justify-center flex-shrink-0">
+                <Sparkles size={20} className="text-sky-500" />
+              </div>
+              <div>
+                <p className="text-sm font-black text-sky-800 uppercase tracking-tight">Agenda livre hoje</p>
+                <p className="text-xs font-medium text-sky-600 mt-0.5">Nenhum agendamento para esta data. Que tal divulgar promoções aos clientes?</p>
+              </div>
+            </div>
+          )}
+          <div className="bg-white border border-gray-300 rounded-sm overflow-hidden shadow-sm overflow-x-auto pb-safe">
+            <table className="w-full border-collapse min-w-[600px]">
             <thead>
               <tr>
                 <th className="p-3 bg-gray-100 border-b border-r border-gray-300 text-[10px] font-bold text-gray-600 uppercase tracking-widest w-16 text-center">Hora</th>
@@ -927,9 +950,10 @@ export default function Agenda({ salaoId, role }) {
                       >
                         {agend ? (
                           <div
-                            className={`h-full w-full rounded p-1.5 text-[10px] relative overflow-hidden shadow-sm cursor-grab active:cursor-grabbing
+                            className={`h-full w-full rounded p-1.5 text-[10px] relative overflow-hidden shadow-sm cursor-grab active:cursor-grabbing transition-all duration-500
                               ${dragging?.agendId === agend.id ? 'opacity-40 scale-95' : ''}
-                              ${agend.status === 'EXECUTADO' ? 'bg-emerald-500 text-white' : `${cor.light} ${cor.text} border ${cor.border}`}
+                              ${agend.status === 'EXECUTADO' ? 'bg-emerald-500 text-white border-transparent' : `${cor.light} ${cor.text} border ${cor.border}`}
+                              ${highlightId === agend.id ? 'animate-highlight-pulse z-10 border-2' : ''}
                               uppercase`}
                             draggable
                             onDragStart={(e) => {
@@ -937,7 +961,7 @@ export default function Agenda({ salaoId, role }) {
                               setDragging({ agendId: agend.id, profId: prof.id, hora });
                             }}
                             onDragEnd={() => { setDragging(null); setDragOver(null); }}
-                            onClick={() => abrirDetalhes(agend)}
+                            onClick={(e) => abrirDetalhes(agend, e)}
                           >
                             <div className="font-bold truncate">{agend.cliente}</div>
                             <div className="truncate text-[9px] opacity-70">
@@ -980,6 +1004,7 @@ export default function Agenda({ salaoId, role }) {
             </tbody>
           </table>
         </div>
+        </>
       )}
 
       {/* ═══ MODAL NOVO PROFISSIONAL RÁPIDO ═══ */}
@@ -1012,11 +1037,11 @@ export default function Agenda({ salaoId, role }) {
         </div>
       )}
       {modalDetalhesAberto && agendamentoSelecionado && (
-        <div className="fixed inset-0 bg-white/60 backdrop-blur-sm flex justify-center items-center z-50" onClick={() => { setModalDetalhesAberto(false); setModoEdicao(false); }}>
-          <div className="w-full max-w-sm bg-white rounded-2xl shadow-2xl p-6 animate-fadeIn" onClick={e => e.stopPropagation()}>
+        <div className="fixed inset-0 bg-white/60 backdrop-blur-sm flex justify-center items-center z-50 p-4" onClick={() => { setModalDetalhesAberto(false); setModoEdicao(false); }}>
+          <div className="w-full max-w-sm bg-white rounded-2xl shadow-2xl p-6 animate-fadeIn max-h-[95vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
             <div className="flex justify-between items-center mb-6">
               <h2 className="text-xl font-black text-gray-800 uppercase">{modoEdicao ? 'Editar Serviços' : 'Detalhes'}</h2>
-              <button onClick={() => { setModalDetalhesAberto(false); setModoEdicao(false); }} className="p-2 hover:bg-sky-500 rounded-full transition-colors"><X size={20} /></button>
+              <button onClick={() => { setModalDetalhesAberto(false); setModoEdicao(false); }} className="p-2 hover:bg-gray-100 rounded-full transition-colors"><X size={20} /></button>
             </div>
 
             {modoEdicao ? (
@@ -1024,14 +1049,17 @@ export default function Agenda({ salaoId, role }) {
                 {/* Lista de serviços editáveis */}
                 <div className="space-y-2 max-h-48 overflow-y-auto">
                   {servicosEdicao.map((s, idx) => (
-                    <div key={idx} className="bg-gray-50 border border-gray-200 rounded-lg p-3 flex items-center justify-between">
+                    <div key={idx} className="bg-gray-50 border border-gray-200 rounded-lg p-3 flex flex-col gap-2">
                       <div>
-                        <p className="font-bold text-sm text-gray-800">{s.procNome}</p>
-                        <p className="text-[10px] text-gray-500 uppercase">{s.requer_comprimento ? s.tamanho + ' • ' : ''}{fmt(s.valor_cobrado)}</p>
+                        <p className="font-bold text-sm text-gray-800">{s.procNome} {s.requer_comprimento ? `(${s.tamanho})` : ''}</p>
+                        <div className="flex gap-4 mt-1">
+                          <p className="text-[10px] text-gray-500 font-bold uppercase">Sugerido: {fmt(s.valor_indicado || s.valor_cobrado)}</p>
+                          <p className="text-[10px] text-gray-800 font-black uppercase">Cobrado: {fmt(s.valor_cobrado)}</p>
+                        </div>
                       </div>
-                      <div className="flex gap-1">
-                        <button onClick={() => { setEdicaoServicoIdx(idx); setFormEdicao({ procId: s.procId, tamanho: s.tamanho, valor: String(s.valor_cobrado) }); }} className="p-1.5 hover:bg-sky-100 rounded text-sky-600"><Pencil size={13} /></button>
-                        <button onClick={() => removerServicoEdicao(idx)} className="p-1.5 hover:bg-red-100 rounded text-red-500"><Trash2 size={13} /></button>
+                      <div className="flex items-center gap-2 border-t border-gray-100 pt-2">
+                        <button onClick={() => { setEdicaoServicoIdx(idx); setFormEdicao({ procId: s.procId, tamanho: s.tamanho, valor: String(s.valor_cobrado) }); }} className="flex-1 flex justify-center items-center gap-1.5 py-1.5 hover:bg-sky-100 rounded text-sky-600 font-bold text-xs uppercase transition-colors"><Pencil size={14} /> Editar</button>
+                        <button onClick={() => removerServicoEdicao(idx)} className="flex-1 flex justify-center items-center gap-1.5 py-1.5 hover:bg-red-100 rounded text-red-500 font-bold text-xs uppercase transition-colors"><Trash2 size={14} /> Remover</button>
                       </div>
                     </div>
                   ))}
@@ -1182,7 +1210,7 @@ export default function Agenda({ salaoId, role }) {
       {/* ═══ PAINEL LATERAL (MODAL) ═══ */}
       {modalAberto && (
         <div className="fixed inset-0 bg-white/60 backdrop-blur-sm flex justify-end z-50" onClick={() => setModalAberto(false)}>
-          <div className="w-full max-w-md bg-white/95 backdrop-blur-xl h-full shadow-2xl border-l border-gray-200 p-6 overflow-y-auto animate-slideInRight"
+          <div className="w-full sm:max-w-md bg-white/95 backdrop-blur-xl h-full shadow-2xl border-l border-gray-200 p-6 overflow-y-auto animate-slideInRight"
             onClick={e => e.stopPropagation()}>
             <div className="flex justify-between items-center mb-8">
               <div>
@@ -1192,7 +1220,7 @@ export default function Agenda({ salaoId, role }) {
                   <span className="text-gray-600 ml-2">{fmtDataCompleta(dataSelecionada)}</span>
                 </p>
               </div>
-              <button onClick={() => setModalAberto(false)} className="p-2 hover:bg-sky-500 rounded-full transition-colors"><X /></button>
+              <button onClick={() => setModalAberto(false)} className="p-2 hover:bg-gray-100 text-gray-500 hover:text-gray-800 rounded-full transition-colors"><X /></button>
             </div>
 
             <div className="space-y-5">
@@ -1343,10 +1371,10 @@ export default function Agenda({ salaoId, role }) {
               {/* VALOR + PREVIEW FINANCEIRO */}
               <div className={`p-4 rounded-2xl border-2 transition-all duration-300 ${role === 'PROPRIETARIO' && previewFinanceiro?.prejuizo && !ignorarPrejuizo
                 ? 'bg-red-50 border-red-400'
-                : 'bg-gray-50 border-transparent'
+                : 'bg-white border-sky-300 shadow-sm'
                 }`}>
-                <div className="flex justify-between items-start mb-1">
-                  <label className="text-[10px] font-black uppercase text-gray-500">Valor Cobrado (R$)</label>
+                <div className="flex justify-between items-start mb-2">
+                  <label className="text-[11px] font-black uppercase text-sky-800">Valor Final Cobrado do Cliente</label>
                   {(() => {
                     const proc = procedimentos.find(p => p.id === novo.procId);
                     if (!proc) return null;
@@ -1360,11 +1388,11 @@ export default function Agenda({ salaoId, role }) {
                     return (
                       <div className="flex items-center gap-1">
                         <button onClick={() => setNovo(prev => ({ ...prev, valor: sugerido }))}
-                          className="text-[9px] font-black bg-sky-50 text-sky-600 px-2 py-1 rounded-lg hover:bg-sky-100 transition-colors uppercase">
-                          Tabela: {mostrarSugerido ? fmt(sugerido) : '***'}
+                          className="text-[9px] font-black bg-sky-50 text-sky-700 px-2 py-1 rounded-lg hover:bg-sky-100 transition-colors uppercase border border-sky-200">
+                          Sugestão: {mostrarSugerido ? fmt(sugerido) : '***'}
                         </button>
-                        <button onClick={() => setMostrarSugerido(!mostrarSugerido)} className="p-1 text-gray-500 hover:text-sky-600 transition-colors" title={mostrarSugerido ? "OCULTAR" : "MOSTRAR"}>
-                          {mostrarSugerido ? <EyeOff size={12} /> : <Eye size={12} />}
+                        <button onClick={() => setMostrarSugerido(!mostrarSugerido)} className="p-1 text-gray-500 hover:text-sky-600 transition-colors">
+                          {mostrarSugerido ? <EyeOff size={14} /> : <Eye size={14} />}
                         </button>
                       </div>
                     );
@@ -1372,14 +1400,19 @@ export default function Agenda({ salaoId, role }) {
                 </div>
                 <input
                   type="number" step="0.01"
-                  className={`w-full bg-transparent text-3xl font-black outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none ${role === 'PROPRIETARIO' && previewFinanceiro?.prejuizo ? 'text-red-600' : 'text-gray-800'
+                  className={`w-full bg-transparent text-4xl font-black outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none ${role === 'PROPRIETARIO' && previewFinanceiro?.prejuizo ? 'text-red-600' : 'text-gray-800'
                     }`}
                   onFocus={e => e.target.select()}
                   value={novo.valor}
                   onChange={e => setNovo({ ...novo, valor: e.target.value })}
                   placeholder="0,00"
                 />
-                <p className="text-[9px] text-gray-500 mt-1 uppercase">Valor entre R$ 0,01 e R$ 9.999,99 — sistema calcula lucro automaticamente.</p>
+                <div className="flex items-center gap-1.5 mt-2 border-t pt-2 border-gray-100">
+                  <p className="text-[10px] text-gray-500 uppercase font-bold">O sistema sugere o valor. Você define o preço final.</p>
+                  <Tooltip content="O valor sugerido é apenas uma referência calculada para garantir sua margem. O salão define o valor final cobrado da cliente.">
+                    <HelpCircle size={13} className="text-gray-400 hover:text-sky-500 transition-colors" />
+                  </Tooltip>
+                </div>
 
                 {/* Desmembramento do Motor Financeiro */}
                 {role === 'PROPRIETARIO' && previewFinanceiro && (
@@ -1439,30 +1472,28 @@ export default function Agenda({ salaoId, role }) {
                     <p className="text-sm font-black text-blue-800 uppercase">SERVIÇOS ADICIONADOS ({servicos.length})</p>
                   </div>
                   
-                  <div className="space-y-2 max-h-[400px] overflow-y-auto">
+                  <div className="space-y-2 max-h-[400px] overflow-y-auto pr-1">
                     {servicos.map((s, idx) => (
-                      <div key={s.id} className="bg-white border-l-4 border-blue-400 p-3 rounded-lg flex items-center justify-between hover:bg-gray-50 transition-colors">
-                        <div className="flex-1">
-                          <p className="font-bold text-sm text-gray-800">{s.procNome}</p>
-                          <div className="flex items-center gap-2 mt-1 text-[10px] text-gray-600 uppercase">
-                            {s.requer_comprimento && <span className="bg-gray-100 px-2 py-0.5 rounded">{s.tamanho}</span>}
-                            <span className="font-bold text-gray-800">{fmt(s.valor_cobrado)}</span>
+                      <div key={s.id} className="bg-white border-l-4 border-blue-400 p-3 rounded-lg flex flex-col hover:bg-gray-50 transition-colors gap-2 shadow-sm">
+                        <div>
+                          <p className="font-bold text-sm text-gray-800">{s.procNome} {s.requer_comprimento && <span className="bg-gray-100 px-2 py-0.5 rounded text-[10px] ml-1">{s.tamanho}</span>}</p>
+                          <div className="flex gap-4 mt-1 text-[10px] uppercase">
+                            <p className="text-gray-500 font-bold">Sugerido: {fmt(s.valor_indicado || s.valor_cobrado)}</p>
+                            <p className="text-gray-800 font-black">Cobrado: {fmt(s.valor_cobrado)}</p>
                           </div>
                         </div>
-                        <div className="flex items-center gap-2">
+                        <div className="flex items-center gap-2 border-t border-gray-100 pt-2">
                           <button
                             onClick={() => editarServico(idx)}
-                            className="p-2 hover:bg-sky-100 rounded transition-colors text-sky-600 hover:text-sky-700"
-                            title="Editar serviço"
+                            className="flex-1 flex items-center justify-center gap-1.5 py-1.5 hover:bg-sky-50 rounded transition-colors text-sky-600 font-bold text-xs uppercase"
                           >
-                            <Package size={14} />
+                            <Pencil size={14} /> Editar
                           </button>
                           <button
                             onClick={() => removerServico(idx)}
-                            className="p-2 hover:bg-red-100 rounded transition-colors text-red-600 hover:text-red-700"
-                            title="Remover serviço"
+                            className="flex-1 flex items-center justify-center gap-1.5 py-1.5 hover:bg-red-50 rounded transition-colors text-red-500 font-bold text-xs uppercase"
                           >
-                            <Trash2 size={14} />
+                            <Trash2 size={14} /> Remover
                           </button>
                         </div>
                       </div>
@@ -1552,32 +1583,43 @@ export default function Agenda({ salaoId, role }) {
         </div>
       )}
 
-      {/* ═══ SPRINT 5: MODAL CUSTOMIZADO PARA MOVER AGENDAMENTO ═══ */}
+      {/* ═══ SPRINT 7: MODAL PREMIUM PARA MOVER AGENDAMENTO ═══ */}
       {modalMoverAberto && moverDados && (
-        <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50" onClick={() => { setModalMoverAberto(false); setDragging(null); setDragOver(null); }}>
-          <div className="bg-white rounded-2xl shadow-2xl p-8 max-w-md w-full mx-4 animate-fadeIn" onClick={e => e.stopPropagation()}>
-            {/* Ícone */}
-            <div className="flex justify-center mb-6">
-              <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center">
-                <ChevronRight size={32} className="text-blue-600" />
+        <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50 p-4" onClick={() => { setModalMoverAberto(false); setDragging(null); setDragOver(null); }}>
+          <div className="bg-white rounded-3xl shadow-2xl p-6 w-full max-w-lg mx-4 animate-fadeIn flex flex-col" onClick={e => e.stopPropagation()}>
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-xl font-black text-gray-800 uppercase tracking-tight">Mover Agendamento</h2>
+              <button onClick={() => { setModalMoverAberto(false); setDragging(null); setDragOver(null); }} className="p-2 bg-gray-50 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-full transition-colors"><X size={18} /></button>
+            </div>
+
+            <div className="mb-6">
+              <p className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-1">Cliente</p>
+              <p className="text-2xl font-black text-gray-800">{moverDados.nomeCliente}</p>
+            </div>
+
+            <div className="flex items-center justify-between gap-2 mb-8 bg-gray-50 p-4 rounded-2xl border border-gray-100">
+              {/* De */}
+              <div className="flex-1 flex flex-col items-center text-center">
+                <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Horário Atual</p>
+                <p className="text-lg font-black text-gray-600">{dragging?.hora}</p>
+                <p className="text-xs font-bold text-gray-500 truncate w-full max-w-[120px]">{profissionais.find(p => p.id === dragging?.profId)?.nome}</p>
+              </div>
+
+              {/* Seta */}
+              <div className="flex-shrink-0 text-sky-400 bg-sky-50 p-2 rounded-full">
+                <ChevronRight size={24} className="animate-pulse" />
+              </div>
+
+              {/* Para */}
+              <div className="flex-1 flex flex-col items-center text-center bg-sky-50 rounded-xl p-3 border border-sky-200">
+                <p className="text-[10px] font-bold text-sky-600 uppercase tracking-widest mb-1">Novo Horário</p>
+                <p className="text-xl font-black text-blue-700">{moverDados.novaHora}</p>
+                <p className="text-xs font-bold text-blue-800 truncate w-full max-w-[120px]">{moverDados.profDestino}</p>
               </div>
             </div>
 
-            {/* Conteúdo */}
-            <h2 className="text-2xl font-black text-center text-gray-800 uppercase mb-2">Mover Agendamento</h2>
-            
-            <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 my-6 text-center">
-              <p className="text-gray-600 font-bold uppercase mb-2">
-                Deseja mover o agendamento de
-              </p>
-              <p className="text-2xl font-black text-blue-700 mb-3">{moverDados.nomeCliente}</p>
-              <p className="text-sm text-gray-600 uppercase">
-                para <span className="font-bold text-blue-600">{moverDados.profDestino}</span> às <span className="font-bold text-blue-600">{moverDados.novaHora}</span>?
-              </p>
-            </div>
-
             {/* Botões */}
-            <div className="flex gap-3">
+            <div className="flex gap-3 mt-auto">
               <button
                 onClick={() => {
                   setModalMoverAberto(false);
@@ -1585,15 +1627,15 @@ export default function Agenda({ salaoId, role }) {
                   setDragging(null);
                   setDragOver(null);
                 }}
-                className="flex-1 py-3 rounded-xl font-bold text-gray-700 border-2 border-gray-200 hover:bg-gray-50 transition-colors uppercase text-sm"
+                className="flex-1 py-3.5 rounded-xl font-bold text-gray-600 bg-gray-100 hover:bg-gray-200 transition-colors uppercase text-sm"
               >
                 Cancelar
               </button>
               <button
                 onClick={confirmarMover}
-                className="flex-1 py-3 rounded-xl font-bold text-white bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-700 hover:to-blue-600 transition-all shadow-lg uppercase text-sm"
+                className="flex-[2] py-3.5 rounded-xl font-black text-white bg-blue-600 hover:bg-blue-700 transition-all shadow-lg shadow-blue-200 uppercase text-sm"
               >
-                ✅ Confirmar
+                Confirmar Mudança
               </button>
             </div>
           </div>

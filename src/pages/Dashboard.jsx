@@ -5,11 +5,12 @@ import ConfirmModal from '../components/ConfirmModal';
 import {
   Lock, AlertCircle, ShieldCheck, CalendarDays,
   Sparkles, Bookmark, CheckCircle, TrendingUp,
-  DollarSign, Activity, Users, Package
+  DollarSign, Activity, Users, Package, HelpCircle
 } from 'lucide-react';
+import InfoTooltip from '../components/Tooltip';
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid,
-  Tooltip, ResponsiveContainer, Cell, LabelList,
+  Tooltip as RechartsTooltip, ResponsiveContainer, Cell, LabelList,
   ReferenceLine
 } from 'recharts';
 
@@ -372,24 +373,49 @@ export default function Dashboard({ salaoId }) {
           <div className="w-6 h-6 border-2 border-blue-400 border-t-transparent rounded-full animate-spin mr-3" />
           <span className="text-gray-500 font-medium">Carregando dados...</span>
         </div>
+      ) : fechamento.length === 0 && (!mesAtual || Number(mesAtual.faturamento_bruto) === 0) ? (
+        <div className="bg-white rounded-3xl shadow-sm border border-gray-100 p-12 flex flex-col items-center justify-center text-center mt-6 animate-fadeIn">
+          <div className="w-20 h-20 bg-blue-50 rounded-full flex items-center justify-center mb-6">
+            <Activity size={32} className="text-blue-500" />
+          </div>
+          <h2 className="text-2xl font-black text-gray-800 uppercase tracking-tight mb-3">Ainda não há dados financeiros</h2>
+          <p className="text-gray-500 max-w-md mx-auto mb-8 leading-relaxed font-medium">
+            O painel financeiro é construído automaticamente com base nos seus agendamentos executados. Comece a registrar agendamentos na agenda para ver seus resultados!
+          </p>
+        </div>
       ) : (<>
 
         {/* ════════════════════════════════════════════════════
             BLOCO 1 — KPIs PRINCIPAIS (igual cabeçalho da planilha)
         ════════════════════════════════════════════════════ */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-          <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-5 col-span-2 lg:col-span-1">
-            <p className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">Total Faturado</p>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+          <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-5 col-span-1 sm:col-span-2 lg:col-span-1">
+            <div className="flex items-center gap-1.5">
+              <p className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">Total Faturado</p>
+              <InfoTooltip content="Soma de todos os valores cobrados dos clientes em atendimentos executados.">
+                <HelpCircle size={12} className="text-gray-400 hover:text-sky-500 transition-colors" />
+              </InfoTooltip>
+            </div>
             <p className="text-3xl font-black text-gray-800 mt-1">{fmt(totalFaturamento)}</p>
             <p className="text-[10px] text-gray-500 mt-1">Acumulado dos {fechamento.length} meses</p>
           </div>
           <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-5">
-            <p className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">Lucro Possível</p>
+            <div className="flex items-center gap-1.5">
+              <p className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">Lucro Possível</p>
+              <InfoTooltip content="Quanto sobraria se não houvesse taxa de maquininha. Incentive pagamento via PIX para aumentar este valor.">
+                <HelpCircle size={12} className="text-gray-400 hover:text-sky-500 transition-colors" />
+              </InfoTooltip>
+            </div>
             <p className="text-2xl font-black text-sky-600 mt-1">{fmt(totalPossivel)}</p>
             <p className="text-[10px] text-gray-500 mt-1">Sem taxa maquininha</p>
           </div>
           <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-5">
-            <p className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">Lucro Real</p>
+            <div className="flex items-center gap-1.5">
+              <p className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">Lucro Real</p>
+              <InfoTooltip content="Quanto realmente sobrou depois de taxas, custos fixos e custos variáveis de cada procedimento.">
+                <HelpCircle size={12} className="text-gray-400 hover:text-sky-500 transition-colors" />
+              </InfoTooltip>
+            </div>
             <p className={`text-2xl font-black mt-1 ${totalReal >= 0 ? 'text-emerald-600' : 'text-red-600'}`}>
               {fmt(totalReal)}
             </p>
@@ -401,9 +427,12 @@ export default function Dashboard({ salaoId }) {
                 ? <ShieldCheck size={14} className="text-emerald-600" />
                 : <AlertCircle size={14} className="text-red-600" />}
               <p className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">Saúde</p>
+              <InfoTooltip content="Resultado geral: Lucro Real + HomeCare − Despesas − Salários − Retiradas pessoais." position="bottom">
+                <HelpCircle size={12} className="text-gray-400 hover:text-sky-500 transition-colors" />
+              </InfoTooltip>
             </div>
             <p className={`text-2xl font-black ${resultado >= 0 ? 'text-emerald-700' : 'text-red-700'}`}>
-              {resultado >= 0 ? '✅ Saudável' : '⚠️ No vermelho'}
+              {resultado >= 0 ? 'Saudável' : 'No vermelho'}
             </p>
             <p className={`text-sm font-bold mt-1 ${resultado >= 0 ? 'text-emerald-600' : 'text-red-600'}`}>
               {fmt(resultado)}
@@ -445,7 +474,7 @@ export default function Dashboard({ salaoId }) {
                   <YAxis axisLine={false} tickLine={false}
                     tick={{ fill: '#475569', fontSize: 10 }}
                     tickFormatter={fmtK} />
-                  <Tooltip content={<TooltipMoeda />} cursor={{ fill: 'rgba(255,255,255,0.05)' }} />
+                  <RechartsTooltip content={<TooltipMoeda />} cursor={{ fill: 'rgba(255,255,255,0.05)' }} />
                   <Bar dataKey="faturamento" name="Faturamento" fill={COR_BARRA_PRINCIPAL}
                     radius={[4, 4, 0, 0]} maxBarSize={55}>
                     <LabelList dataKey="qtd" content={<LabelQtd />} />
@@ -498,7 +527,7 @@ export default function Dashboard({ salaoId }) {
                     <XAxis type="number" hide />
                     <YAxis dataKey="nome" type="category" axisLine={false} tickLine={false}
                       tick={{ fill: '#e2e8f0', fontSize: 11, fontWeight: '600' }} width={110} />
-                    <Tooltip content={<TooltipMoeda />} cursor={{ fill: 'rgba(255,255,255,0.05)' }} />
+                    <RechartsTooltip content={<TooltipMoeda />} cursor={{ fill: 'rgba(255,255,255,0.05)' }} />
                     <Bar dataKey="valor" name="Lucro Possível" fill={COR_POSITIVO}
                       radius={[0, 4, 4, 0]} barSize={20}>
                       <LabelList dataKey="valor" position="right"
@@ -536,7 +565,7 @@ export default function Dashboard({ salaoId }) {
                     <ReferenceLine x={0} stroke="#475569" strokeWidth={1} />
                     <YAxis dataKey="nome" type="category" axisLine={false} tickLine={false}
                       tick={{ fill: '#e2e8f0', fontSize: 11, fontWeight: '600' }} width={110} />
-                    <Tooltip content={<TooltipMoeda />} cursor={{ fill: 'rgba(255,255,255,0.05)' }} />
+                    <RechartsTooltip content={<TooltipMoeda />} cursor={{ fill: 'rgba(255,255,255,0.05)' }} />
                     <Bar dataKey="valor" name="Lucro Real" barSize={20} radius={[0, 4, 4, 0]}>
                       {dadosLucroReal.map((entry, index) => (
                         <Cell key={`cell-${index}`}
@@ -584,7 +613,7 @@ export default function Dashboard({ salaoId }) {
                   tick={{ fill: '#e2e8f0', fontSize: 12, fontWeight: 'bold' }} />
                 <YAxis axisLine={false} tickLine={false}
                   tick={{ fill: '#475569', fontSize: 10 }} tickFormatter={fmtK} />
-                <Tooltip content={<TooltipMoeda />} cursor={{ fill: 'rgba(255,255,255,0.05)' }} />
+                <RechartsTooltip content={<TooltipMoeda />} cursor={{ fill: 'rgba(255,255,255,0.05)' }} />
                 <Bar dataKey="valor" maxBarSize={120} radius={[6, 6, 0, 0]}>
                   <Cell fill={COR_LARANJA} />
                   <Cell fill={COR_BARRA_PRINCIPAL} />
@@ -619,7 +648,7 @@ export default function Dashboard({ salaoId }) {
                     tick={{ fill: '#e2e8f0', fontSize: 11, fontWeight: 'bold' }} />
                   <YAxis axisLine={false} tickLine={false}
                     tick={{ fill: '#475569', fontSize: 10 }} tickFormatter={fmtK} />
-                  <Tooltip content={<TooltipMoeda />} cursor={{ fill: 'rgba(255,255,255,0.05)' }} />
+                  <RechartsTooltip content={<TooltipMoeda />} cursor={{ fill: 'rgba(255,255,255,0.05)' }} />
                   <Bar dataKey="valor" name="Rendimento" fill={COR_FUNCIONARIA}
                     radius={[4, 4, 0, 0]} maxBarSize={60}>
                     <LabelList dataKey="valor" position="top"
@@ -678,7 +707,7 @@ export default function Dashboard({ salaoId }) {
                       tick={{ fill: '#94a3b8', fontSize: 10 }} />
                     <YAxis axisLine={false} tickLine={false}
                       tick={{ fill: '#475569', fontSize: 10 }} tickFormatter={fmtK} />
-                    <Tooltip content={<TooltipMoeda />} cursor={{ fill: 'rgba(255,255,255,0.05)' }} />
+                    <RechartsTooltip content={<TooltipMoeda />} cursor={{ fill: 'rgba(255,255,255,0.05)' }} />
                     <Bar dataKey="venda" name="Venda" fill={COR_LARANJA}
                       radius={[4, 4, 0, 0]} maxBarSize={40} />
                   </BarChart>
@@ -693,7 +722,7 @@ export default function Dashboard({ salaoId }) {
                       tick={{ fill: '#94a3b8', fontSize: 10 }} />
                     <YAxis axisLine={false} tickLine={false}
                       tick={{ fill: '#475569', fontSize: 10 }} tickFormatter={fmtK} />
-                    <Tooltip content={<TooltipMoeda />} cursor={{ fill: 'rgba(255,255,255,0.05)' }} />
+                    <RechartsTooltip content={<TooltipMoeda />} cursor={{ fill: 'rgba(255,255,255,0.05)' }} />
                     <Bar dataKey="lucro" name="Lucro" fill={COR_BARRA_PRINCIPAL}
                       radius={[4, 4, 0, 0]} maxBarSize={40} />
                   </BarChart>
@@ -798,13 +827,18 @@ export default function Dashboard({ salaoId }) {
           {/* Resumo do que será salvo */}
           <div className="mt-4 grid grid-cols-2 md:grid-cols-4 gap-3">
             {[
-              ['Faturamento', Number(mesAtual?.faturamento_bruto) || 0],
-              ['Lucro Líquido', Number(mesAtual?.lucro_real) || 0],
-              ['Despesas', despesasDados.total],
-              ['Resultado', (Number(mesAtual?.lucro_real) || 0) + homecareDados.lucro - despesasDados.total - gastosPessoais - salariosFixos],
-            ].map(([label, val]) => (
+              ['Faturamento', Number(mesAtual?.faturamento_bruto) || 0, 'Total cobrado dos clientes.'],
+              ['Lucro Líquido', Number(mesAtual?.lucro_real) || 0, 'Valor restante após taxas, comissões e custos.'],
+              ['Despesas', despesasDados.total, 'Despesas fixas e variáveis do salão.'],
+              ['Resultado', (Number(mesAtual?.lucro_real) || 0) + homecareDados.lucro - despesasDados.total - gastosPessoais - salariosFixos, 'Lucro após despesas, salários e retiradas.'],
+            ].map(([label, val, tip]) => (
               <div key={label} className="bg-gray-50 rounded-xl px-3 py-2 border border-gray-200">
-                <p className="text-[9px] font-bold text-gray-500 uppercase">{label}</p>
+                <div className="flex items-center gap-1">
+                  <p className="text-[9px] font-bold text-gray-500 uppercase">{label}</p>
+                  <InfoTooltip content={tip} position="top">
+                    <HelpCircle size={10} className="text-gray-400 hover:text-sky-500 transition-colors" />
+                  </InfoTooltip>
+                </div>
                 <p className={`text-sm font-black ${Number(val) >= 0 ? 'text-gray-600' : 'text-red-600'}`}>{fmt(val)}</p>
               </div>
             ))}

@@ -192,9 +192,12 @@ export default function Clientes({ salaoId }) {
 
             {clientesFiltrados.length === 0 && (
               <tr>
-                <td colSpan={5} className="py-12 text-center text-gray-500">
-                  <User size={40} className="mx-auto mb-2 opacity-30" />
-                  Nenhum cliente encontrado.
+                <td colSpan={5} className="py-16 text-center text-gray-500">
+                  <div className="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <User size={32} className="text-gray-400" />
+                  </div>
+                  <p className="text-lg font-black text-gray-800 uppercase mb-1">Nenhum cliente encontrado</p>
+                  <p className="text-sm font-medium text-gray-500">Adicione o primeiro cliente para começar a construir seu CRM!</p>
                 </td>
               </tr>
             )}

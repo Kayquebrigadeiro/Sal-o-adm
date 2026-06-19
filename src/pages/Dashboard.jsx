@@ -120,6 +120,7 @@ export default function Dashboard({ salaoId }) {
   const [homecareMensal, setHomecareMensal] = useState([]);
   const [homecareDados, setHomecareDados] = useState({ lucro: 0, pendencia: 0, vendas: 0, total: 0 });
   const [despesasDados, setDespesasDados] = useState({ total: 0 });
+  const [custosFixosDados, setCustosFixosDados] = useState({ total: 0 });
   const [gastosPessoais, setGastosPessoais] = useState(0);
   const [salariosFixos, setSalariosFixos] = useState(0);
   const [fechamentoExiste, setFechamentoExiste] = useState(false);
@@ -157,7 +158,7 @@ export default function Dashboard({ salaoId }) {
       const inicioMes = `${ano}-${mes}-01`;
       const fimMes = new Date(Number(ano), Number(mes), 0).toISOString().split('T')[0];
 
-      const [fechRes, rankRes, rendRes, hcRes, despRes, gpRes, profRes, fecRes] = await Promise.all([
+      const [fechRes, rankRes, rendRes, hcRes, despRes, cfixRes, gpRes, profRes, fecRes] = await Promise.all([
         supabase.from('fechamento_mensal')
           .select('mes, faturamento_bruto, lucro_real, lucro_possivel, total_atendimentos, total_pendente')
           .eq('salao_id', salaoId)
@@ -186,6 +187,11 @@ export default function Dashboard({ salaoId }) {
           .eq('salao_id', salaoId)
           .gte('data', inicioMes).lte('data', fimMes),
 
+        supabase.from('custos_fixos_itens')
+          .select('valor_mensal')
+          .eq('salao_id', salaoId)
+          .eq('ativo', true),
+
         supabase.from('gastos_pessoais')
           .select('valor')
           .eq('salao_id', salaoId),
@@ -212,6 +218,7 @@ export default function Dashboard({ salaoId }) {
       });
 
       setDespesasDados({ total: (despRes.data ?? []).reduce((a, v) => a + Number(v.valor || 0), 0) });
+      setCustosFixosDados({ total: (cfixRes.data ?? []).reduce((a, v) => a + Number(v.valor_mensal || 0), 0) });
       setGastosPessoais((gpRes.data ?? []).reduce((a, v) => a + Number(v.valor || 0), 0));
       setSalariosFixos((profRes.data ?? []).reduce((a, v) => a + Number(v.salario_fixo || 0), 0));
       setFechamentoExiste(!!fecRes.data);
@@ -307,7 +314,7 @@ export default function Dashboard({ salaoId }) {
   // ─── Saúde financeira ───
   const resultado = useMemo(() => {
     const lucro = Number(mesAtual?.lucro_real) || 0;
-    return lucro + homecareDados.lucro - despesasDados.total - gastosPessoais - salariosFixos;
+    return lucro + homecareDados.lucro - custosFixosDados.total - gastosPessoais - salariosFixos;
   }, [mesAtual, homecareDados, despesasDados, gastosPessoais, salariosFixos]);
 
   // ────────────────────────────────────────────────────────────
@@ -775,7 +782,7 @@ export default function Dashboard({ salaoId }) {
                         const possivel = Number(mesAtual?.lucro_possivel) || lucro;
                         const atendimentos = Number(mesAtual?.total_atendimentos) || 0;
                         const pendente = Number(mesAtual?.total_pendente) || 0;
-                        const resultadoFinal = lucro + homecareDados.lucro - despesasDados.total - gastosPessoais - salariosFixos;
+                        const resultadoFinal = lucro + homecareDados.lucro - custosFixosDados.total - gastosPessoais - salariosFixos;
 
                         const payload = {
                           salao_id: salaoId,
@@ -785,7 +792,7 @@ export default function Dashboard({ salaoId }) {
                           lucro_possivel: possivel,
                           total_atendimentos: atendimentos,
                           total_pendente: pendente,
-                          total_despesas: despesasDados.total,
+                          total_despesas: custosFixosDados.total,
                           total_gastos_pessoais: gastosPessoais,
                           lucro_homecare: homecareDados.lucro,
                           resultado_final: resultadoFinal,
@@ -829,8 +836,8 @@ export default function Dashboard({ salaoId }) {
             {[
               ['Faturamento', Number(mesAtual?.faturamento_bruto) || 0, 'Total cobrado dos clientes.'],
               ['Lucro Líquido', Number(mesAtual?.lucro_real) || 0, 'Valor restante após taxas, comissões e custos.'],
-              ['Despesas', despesasDados.total, 'Despesas fixas e variáveis do salão.'],
-              ['Resultado', (Number(mesAtual?.lucro_real) || 0) + homecareDados.lucro - despesasDados.total - gastosPessoais - salariosFixos, 'Lucro após despesas, salários e retiradas.'],
+              ['Custo Fixo', custosFixosDados.total, 'Total dos custos fixos mensais cadastrados em Precificação.'],
+              ['Resultado', (Number(mesAtual?.lucro_real) || 0) + homecareDados.lucro - custosFixosDados.total - gastosPessoais - salariosFixos, 'Lucro após despesas, salários e retiradas.'],
             ].map(([label, val, tip]) => (
               <div key={label} className="bg-gray-50 rounded-xl px-3 py-2 border border-gray-200">
                 <div className="flex items-center gap-1">

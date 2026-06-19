@@ -2,6 +2,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { supabase } from '../supabaseClient';
 import { useToast } from '../components/Toast';
 import Modal from '../components/Modal';
+import ConfirmModal from '../components/ConfirmModal';
 import { FinancialEngine } from '../services/FinancialEngine';
 import CatalogoProdutos from './CatalogoProdutos';
 import BaseCustos from '../components/BaseCustos';
@@ -20,7 +21,7 @@ const debounce = (func, delay) => {
   };
 };
 
-const TableRow = ({ proc, config, custoMaterial, isExpanded, onToggleExpand, salaoId, carregar, deletarProc }) => {
+const TableRow = ({ proc, config, custoMaterial, isExpanded, onToggleExpand, salaoId, carregar, onRequestDelete }) => {
   const [ganho, setGanho] = useState(proc.ganho_liquido_desejado || '');
   const [precoP, setPrecoP] = useState(proc.preco_p || '');
   const [precoM, setPrecoM] = useState(proc.preco_m || '');
@@ -184,7 +185,7 @@ const TableRow = ({ proc, config, custoMaterial, isExpanded, onToggleExpand, sal
             <button onClick={recalcular} className="p-1.5 text-gray-500 hover:text-sky-600 hover:bg-sky-50 rounded transition-colors" title="Recalcular P, M e G">
               <RefreshCw size={14} />
             </button>
-            <button onClick={() => deletarProc(proc.id)} className="p-1.5 text-red-400 hover:text-red-600 hover:bg-red-50 rounded transition-colors" title="REMOVER">
+            <button onClick={() => onRequestDelete(proc)} className="p-1.5 text-red-400 hover:text-red-600 hover:bg-red-50 rounded transition-colors" title="REMOVER">
               <Trash2 size={14} />
             </button>
           </div>
@@ -218,6 +219,7 @@ export default function Precificacao({ salaoId }) {
   const [expandido, setExpandido] = useState(null);
 
   const [modalProc, setModalProc] = useState(false);
+  const [confirmacao, setConfirmacao] = useState(null);
   const [formProc, setFormProc] = useState({
     nome: '',
     categoria: 'SERVICO_CABELO',
@@ -302,7 +304,6 @@ export default function Precificacao({ salaoId }) {
   };
 
   const deletarProc = async (id) => {
-    if (!window.confirm('EXCLUIR ESTE PROCEDIMENTO?')) return;
     try {
       await supabase.from('procedimentos').update({ ativo: false }).eq('id', id).eq('salao_id', salaoId);
       showToast('EXCLUÍDO COM SUCESSO', 'success');
@@ -619,7 +620,16 @@ export default function Precificacao({ salaoId }) {
                     onToggleExpand={() => setExpandido(isExpanded ? null : proc.id)}
                     salaoId={salaoId}
                     carregar={carregar}
-                    deletarProc={deletarProc}
+                    onRequestDelete={(procItem) => setConfirmacao({
+                      title: 'EXCLUIR PROCEDIMENTO',
+                      message: `EXCLUIR "${procItem.nome}"?`,
+                      confirmLabel: 'EXCLUIR',
+                      tone: 'danger',
+                      onConfirm: async () => {
+                        setConfirmacao(null);
+                        await deletarProc(procItem.id);
+                      },
+                    })}
                   />
                 );
               })}
@@ -724,6 +734,16 @@ export default function Precificacao({ salaoId }) {
             </button>
           </div>
         </Modal>
+
+      <ConfirmModal
+        open={!!confirmacao}
+        title={confirmacao?.title || ''}
+        message={confirmacao?.message || ''}
+        confirmLabel={confirmacao?.confirmLabel || 'CONFIRMAR'}
+        tone={confirmacao?.tone || 'danger'}
+        onCancel={() => setConfirmacao(null)}
+        onConfirm={confirmacao?.onConfirm || (() => setConfirmacao(null))}
+      />
 
       </>)}
 

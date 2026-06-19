@@ -1,5 +1,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import { supabase } from '../supabaseClient';
+import { useToast } from '../components/Toast';
+import ConfirmModal from '../components/ConfirmModal';
 import {
   Lock, AlertCircle, ShieldCheck, CalendarDays,
   Sparkles, Bookmark, CheckCircle, TrendingUp,
@@ -98,6 +100,7 @@ const ExplicacaoGrafico = ({ texto, dica }) => (
 
 // ════════════════════════════════════════════════════════════════
 export default function Dashboard({ salaoId }) {
+  const { showToast } = useToast();
 
   // ─── PIN ───
   const [unlocked, setUnlocked] = useState(false);
@@ -120,6 +123,7 @@ export default function Dashboard({ salaoId }) {
   const [salariosFixos, setSalariosFixos] = useState(0);
   const [fechamentoExiste, setFechamentoExiste] = useState(false);
   const [salvandoFechamento, setSalvandoFechamento] = useState(false);
+  const [confirmacao, setConfirmacao] = useState(null);
 
   // ─── Montar lista de meses ───
   useEffect(() => {
@@ -317,7 +321,7 @@ export default function Dashboard({ salaoId }) {
           </div>
           <h2 className="text-2xl font-black text-gray-800 mb-2">Painel Financeiro</h2>
           <p className="text-gray-500 mb-8 text-sm">Acesso restrito à gestão financeira.</p>
-          <form onSubmit={e => { e.preventDefault(); if (pin === (import.meta.env.VITE_DASHBOARD_PIN || '8239')) setUnlocked(true); else { alert('PIN incorreto'); setPin(''); } }}>
+          <form onSubmit={e => { e.preventDefault(); if (pin === (import.meta.env.VITE_DASHBOARD_PIN || '8239')) setUnlocked(true); else { showToast('PIN INCORRETO', 'error'); setPin(''); } }}>
             <input
               type="password" maxLength={4} placeholder="PIN"
               className="w-full text-center text-4xl tracking-[0.5em] font-black bg-gray-50 border border-gray-200 text-gray-800 rounded-xl py-4 outline-none focus:ring-2 focus:ring-sky-500 mb-4"
@@ -724,50 +728,56 @@ export default function Dashboard({ salaoId }) {
                 </div>
               )}
               <button
-                onClick={async () => {
+                onClick={() => {
                   const [ano, mes] = mesSelecionado.split('-');
                   const mesLabel = new Date(`${ano}-${mes}-01`).toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' });
+                  const acao = fechamentoExiste ? 'ATUALIZAR' : 'FECHAR';
+                  setConfirmacao({
+                    title: `${acao} MÊS`,
+                    message: `DESEJA ${acao} O MÊS DE ${mesLabel}?\n\nISSO SALVARÁ UMA FOTO DOS RESULTADOS FINANCEIROS ATUAIS.`,
+                    confirmLabel: acao,
+                    tone: 'warning',
+                    onConfirm: async () => {
+                      setConfirmacao(null);
+                      setSalvandoFechamento(true);
+                      try {
+                        const faturamento = Number(mesAtual?.faturamento_bruto) || 0;
+                        const lucro = Number(mesAtual?.lucro_real) || 0;
+                        const possivel = Number(mesAtual?.lucro_possivel) || lucro;
+                        const atendimentos = Number(mesAtual?.total_atendimentos) || 0;
+                        const pendente = Number(mesAtual?.total_pendente) || 0;
+                        const resultadoFinal = lucro + homecareDados.lucro - despesasDados.total - gastosPessoais - salariosFixos;
 
-                  const acao = fechamentoExiste ? 'atualizar' : 'fechar';
-                  if (!confirm(`Deseja ${acao} o mês de ${mesLabel}?\n\nIsso salvará uma foto dos resultados financeiros atuais.`)) return;
+                        const payload = {
+                          salao_id: salaoId,
+                          mes: `${ano}-${mes}-01`,
+                          faturamento_bruto: faturamento,
+                          lucro_liquido: lucro,
+                          lucro_possivel: possivel,
+                          total_atendimentos: atendimentos,
+                          total_pendente: pendente,
+                          total_despesas: despesasDados.total,
+                          total_gastos_pessoais: gastosPessoais,
+                          lucro_homecare: homecareDados.lucro,
+                          resultado_final: resultadoFinal,
+                        };
 
-                  setSalvandoFechamento(true);
-                  try {
-                    const faturamento = Number(mesAtual?.faturamento_bruto) || 0;
-                    const lucro = Number(mesAtual?.lucro_real) || 0;
-                    const possivel = Number(mesAtual?.lucro_possivel) || lucro;
-                    const atendimentos = Number(mesAtual?.total_atendimentos) || 0;
-                    const pendente = Number(mesAtual?.total_pendente) || 0;
-                    const resultadoFinal = lucro + homecareDados.lucro - despesasDados.total - gastosPessoais - salariosFixos;
+                        const { error } = await supabase
+                          .from('fechamentos')
+                          .upsert(payload, { onConflict: 'salao_id,mes' });
 
-                    const payload = {
-                      salao_id: salaoId,
-                      mes: `${ano}-${mes}-01`,
-                      faturamento_bruto: faturamento,
-                      lucro_liquido: lucro,
-                      lucro_possivel: possivel,
-                      total_atendimentos: atendimentos,
-                      total_pendente: pendente,
-                      total_despesas: despesasDados.total,
-                      total_gastos_pessoais: gastosPessoais,
-                      lucro_homecare: homecareDados.lucro,
-                      resultado_final: resultadoFinal,
-                    };
+                        if (error) throw error;
 
-                    const { error } = await supabase
-                      .from('fechamentos')
-                      .upsert(payload, { onConflict: 'salao_id,mes' });
-
-                    if (error) throw error;
-
-                    setFechamentoExiste(true);
-                    alert(`✅ Mês de ${mesLabel} ${fechamentoExiste ? 'atualizado' : 'fechado'} com sucesso!\n\nResultado final: ${fmt(resultadoFinal)}`);
-                  } catch (err) {
-                    console.error('Erro ao fechar mês:', err);
-                    alert(`❌ Erro ao ${acao} o mês:\n${err.message}`);
-                  } finally {
-                    setSalvandoFechamento(false);
-                  }
+                        setFechamentoExiste(true);
+                        showToast(`MÊS DE ${mesLabel.toUpperCase()} ${fechamentoExiste ? 'ATUALIZADO' : 'FECHADO'} COM SUCESSO!`, 'success');
+                      } catch (err) {
+                        console.error('Erro ao fechar mês:', err);
+                        showToast(`ERRO AO ${acao} O MÊS: ${err.message}`, 'error');
+                      } finally {
+                        setSalvandoFechamento(false);
+                      }
+                    },
+                  });
                 }}
                 disabled={salvandoFechamento}
                 className={`px-6 py-3 rounded-xl font-bold transition-all shadow-lg text-sm disabled:opacity-50 ${
@@ -804,6 +814,16 @@ export default function Dashboard({ salaoId }) {
         <div className="mt-6 text-center text-[10px] text-gray-600 font-medium">
           Dados em tempo real · Salão Secreto
         </div>
+
+        <ConfirmModal
+          open={!!confirmacao}
+          title={confirmacao?.title || ''}
+          message={confirmacao?.message || ''}
+          confirmLabel={confirmacao?.confirmLabel || 'CONFIRMAR'}
+          tone={confirmacao?.tone || 'warning'}
+          onCancel={() => setConfirmacao(null)}
+          onConfirm={confirmacao?.onConfirm || (() => setConfirmacao(null))}
+        />
 
       </>)}
     </div>

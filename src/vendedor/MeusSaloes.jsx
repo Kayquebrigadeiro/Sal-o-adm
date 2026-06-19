@@ -1,10 +1,14 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '../supabaseClient';
 import { useNavigate } from 'react-router-dom';
+import { useToast } from '../components/Toast';
+import ConfirmModal from '../components/ConfirmModal';
 
 export default function MeusSaloes({ userId }) {
+  const { showToast } = useToast();
   const [saloes, setSaloes] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [confirmacao, setConfirmacao] = useState(null);
   const navigate = useNavigate();
 
   useEffect(() => { carregar(); }, [userId]);
@@ -31,18 +35,19 @@ export default function MeusSaloes({ userId }) {
   };
 
   const deletar = async (id, nome) => {
-    if (!confirm(`Deletar "${nome}" permanentemente?\n\nTodos os dados serão apagados: profissionais, atendimentos, financeiro. Esta ação não pode ser desfeita.`)) return;
-    
     setLoading(true);
-    const { error } = await supabase.functions.invoke('deletar-salao', {
-      body: { salao_id: id }
-    });
+    try {
+      const { error } = await supabase.functions.invoke('deletar-salao', {
+        body: { salao_id: id }
+      });
 
-    if (error) {
-      alert('Erro ao deletar: ' + error.message);
-      return;
+      if (error) throw error;
+      showToast('SALÃO DELETADO', 'success');
+      carregar();
+    } catch (err) {
+      showToast('ERRO AO DELETAR: ' + err.message, 'error');
+      setLoading(false);
     }
-    carregar();
   };
 
   if (loading) {
@@ -104,7 +109,16 @@ export default function MeusSaloes({ userId }) {
                   Gerenciar
                 </button>
                 <button
-                  onClick={() => deletar(s.id, s.nome)}
+                  onClick={() => setConfirmacao({
+                    title: 'DELETAR SALÃO',
+                    message: `DELETAR "${s.nome}" PERMANENTEMENTE?\n\nTODOS OS DADOS SERÃO APAGADOS: PROFISSIONAIS, ATENDIMENTOS, FINANCEIRO.`,
+                    confirmLabel: 'DELETAR',
+                    tone: 'danger',
+                    onConfirm: async () => {
+                      setConfirmacao(null);
+                      await deletar(s.id, s.nome);
+                    },
+                  })}
                   className="text-xs border border-red-200 text-red-600 rounded-lg px-3 py-1.5 hover:bg-red-50">
                   Deletar
                 </button>
@@ -112,6 +126,16 @@ export default function MeusSaloes({ userId }) {
             </div>
           ))}</div>
       )}
+
+      <ConfirmModal
+        open={!!confirmacao}
+        title={confirmacao?.title || ''}
+        message={confirmacao?.message || ''}
+        confirmLabel={confirmacao?.confirmLabel || 'CONFIRMAR'}
+        tone={confirmacao?.tone || 'danger'}
+        onCancel={() => setConfirmacao(null)}
+        onConfirm={confirmacao?.onConfirm || (() => setConfirmacao(null))}
+      />
     </div>
   );
 }

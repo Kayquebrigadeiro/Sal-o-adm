@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { supabase } from '../supabaseClient';
 import { useToast } from '../components/Toast';
 import Modal from '../components/Modal';
+import ConfirmModal from '../components/ConfirmModal';
 import { Plus, Edit2, Trash2, ShieldCheck, Users, AlertCircle, Copy, MessageCircle, CreditCard } from 'lucide-react';
 
 const fmt = (v) => Number(v || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
@@ -30,6 +31,7 @@ export default function Configuracoes({ salaoId, role }) {
   const [erroAssinatura, setErroAssinatura] = useState(null);
   const [modalPix, setModalPix] = useState(false);
   const [copiado, setCopiado] = useState(false);
+  const [confirmacao, setConfirmacao] = useState(null);
 
   // Variáveis PIX (.env)
   const chavePix = import.meta.env.VITE_PIX_CHAVE;
@@ -108,7 +110,6 @@ export default function Configuracoes({ salaoId, role }) {
   };
 
   const deletarProfissional = async (id) => {
-    if (!window.confirm('REMOVER ESTE PROFISSIONAL DA EQUIPE?')) return;
     try {
       await supabase.from('profissionais').update({ ativo: false }).eq('id', id).eq('salao_id', salaoId);
       showToast('PROFISSIONAL REMOVIDO', 'success');
@@ -182,7 +183,16 @@ export default function Configuracoes({ salaoId, role }) {
                 <Edit2 size={18} />
               </button>
               <button
-                onClick={() => deletarProfissional(prof.id)}
+                onClick={() => setConfirmacao({
+                  title: 'REMOVER PROFISSIONAL',
+                  message: 'REMOVER ESTE PROFISSIONAL DA EQUIPE?',
+                  confirmLabel: 'REMOVER',
+                  tone: 'danger',
+                  onConfirm: async () => {
+                    setConfirmacao(null);
+                    await deletarProfissional(prof.id);
+                  },
+                })}
                 className="p-2 hover:bg-red-50 rounded-xl text-red-400 hover:text-red-600"
                 title="Remover Profissional"
               >
@@ -366,6 +376,16 @@ export default function Configuracoes({ salaoId, role }) {
            </div>
         </div>
       </Modal>
+
+      <ConfirmModal
+        open={!!confirmacao}
+        title={confirmacao?.title || ''}
+        message={confirmacao?.message || ''}
+        confirmLabel={confirmacao?.confirmLabel || 'CONFIRMAR'}
+        tone={confirmacao?.tone || 'danger'}
+        onCancel={() => setConfirmacao(null)}
+        onConfirm={confirmacao?.onConfirm || (() => setConfirmacao(null))}
+      />
     </div>
   );
 }

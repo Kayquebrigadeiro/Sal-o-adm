@@ -2,12 +2,15 @@ import { useState, useEffect } from 'react';
 import { supabase } from '../supabaseClient';
 import { Trash2, Plus, Users, Building2, Eye, EyeOff, Copy, Check } from 'lucide-react';
 import { useToast } from '../components/Toast';
+import ConfirmModal from '../components/ConfirmModal';
 
 export default function AdminVendedor({ email, userId }) {
+  const { showToast } = useToast();
   const [tab, setTab] = useState('saloes'); // 'saloes' | 'proprietarios'
   const [saloes, setSaloes] = useState([]);
   const [carregando, setCarregando] = useState(false);
   const [erro, setErro] = useState('');
+  const [confirmacao, setConfirmacao] = useState(null);
 
   // Form para novo salão
   const [novoSalao, setNovoSalao] = useState({ nome: '', telefone: '' });
@@ -40,7 +43,7 @@ export default function AdminVendedor({ email, userId }) {
   const criarSalao = async (e) => {
     e.preventDefault();
     if (!novoSalao.nome.trim()) {
-      alert('Nome do salão é obrigatório');
+      showToast('NOME DO SALÃO É OBRIGATÓRIO', 'error');
       return;
     }
 
@@ -60,31 +63,29 @@ export default function AdminVendedor({ email, userId }) {
       if (error) throw error;
       if (error) throw error;
 
-      alert('✅ Salão criado com sucesso!');
+      showToast('SALÃO CRIADO COM SUCESSO!', 'success');
       setNovoSalao({ nome: '', telefone: '' });
       carregarSaloes();
     } catch (err) {
       console.error('[AdminVendedor] Erro ao criar salão:', err);
-      alert('❌ Erro: ' + err.message);
+      showToast('ERRO: ' + err.message, 'error');
     } finally {
       setSalvandoSalao(false);
     }
   };
 
   const deletarSalao = async (salaoId, salaoNome) => {
-    if (!confirm(`⚠️ Deletar "${salaoNome}" permanentemente?`)) return;
-
     try {
       const { data, error } = await supabase
         .rpc('fn_deletar_salao', { p_salao_id: salaoId });
       if (error) throw error;
       if (error) throw error;
 
-      alert('✅ Salão deletado.');
+      showToast('SALÃO DELETADO', 'success');
       carregarSaloes();
     } catch (err) {
       console.error('[AdminVendedor] Erro ao deletar:', err);
-      alert('❌ Erro: ' + err.message);
+      showToast('ERRO: ' + err.message, 'error');
     }
   };
 
@@ -209,7 +210,16 @@ export default function AdminVendedor({ email, userId }) {
                         </td>
                         <td className="px-6 py-4">
                           <button
-                            onClick={() => deletarSalao(salao.id, salao.nome)}
+                            onClick={() => setConfirmacao({
+                              title: 'DELETAR SALÃO',
+                              message: `DELETAR "${salao.nome}" PERMANENTEMENTE?`,
+                              confirmLabel: 'DELETAR',
+                              tone: 'danger',
+                              onConfirm: async () => {
+                                setConfirmacao(null);
+                                await deletarSalao(salao.id, salao.nome);
+                              },
+                            })}
                             className="text-red-600 hover:text-red-700 hover:bg-red-50 p-2 rounded transition-colors"
                             title="Deletar salão"
                           >
@@ -246,6 +256,16 @@ export default function AdminVendedor({ email, userId }) {
           </div>
         </div>
       )}
+
+      <ConfirmModal
+        open={!!confirmacao}
+        title={confirmacao?.title || ''}
+        message={confirmacao?.message || ''}
+        confirmLabel={confirmacao?.confirmLabel || 'CONFIRMAR'}
+        tone={confirmacao?.tone || 'danger'}
+        onCancel={() => setConfirmacao(null)}
+        onConfirm={confirmacao?.onConfirm || (() => setConfirmacao(null))}
+      />
     </div>
   );
 }

@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { supabase } from '../supabaseClient';
 import { useToast } from '../components/Toast';
 import Modal from '../components/Modal';
+import ConfirmModal from '../components/ConfirmModal';
 import { Plus, Trash2, Pencil, Package, Calculator } from 'lucide-react';
 
 const fmt = (v) => Number(v || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
@@ -15,6 +16,7 @@ export default function CatalogoProdutos({ salaoId, onChange }) {
   const [modalProd, setModalProd] = useState(false);
   const [editando, setEditando] = useState(null);
   const [form, setForm] = useState({ nome: '', preco_compra: '', qtd_aplicacoes: '' });
+  const [confirmacao, setConfirmacao] = useState(null);
 
   useEffect(() => {
     if (salaoId) carregar();
@@ -64,7 +66,6 @@ export default function CatalogoProdutos({ salaoId, onChange }) {
   };
 
   const deletarProduto = async (id) => {
-    if (!window.confirm('REMOVER ESTE PRODUTO?')) return;
     await supabase.from('produtos_catalogo').update({ ativo: false }).eq('id', id).eq('salao_id', salaoId);
     showToast('PRODUTO REMOVIDO', 'success');
     await carregar();
@@ -125,7 +126,21 @@ export default function CatalogoProdutos({ salaoId, onChange }) {
                   <td className="px-4 py-3">
                     <div className="flex items-center justify-center gap-2">
                       <button onClick={() => abrirModalProduto(prod)} className="text-gray-500 hover:text-sky-600"><Pencil size={14} /></button>
-                      <button onClick={() => deletarProduto(prod.id)} className="text-red-400 hover:text-red-600"><Trash2 size={14} /></button>
+                      <button
+                        onClick={() => setConfirmacao({
+                          title: 'REMOVER PRODUTO',
+                          message: 'REMOVER ESTE PRODUTO?',
+                          confirmLabel: 'REMOVER',
+                          tone: 'danger',
+                          onConfirm: async () => {
+                            setConfirmacao(null);
+                            await deletarProduto(prod.id);
+                          },
+                        })}
+                        className="text-red-400 hover:text-red-600"
+                      >
+                        <Trash2 size={14} />
+                      </button>
                     </div>
                   </td>
                 </tr>
@@ -171,6 +186,16 @@ export default function CatalogoProdutos({ salaoId, onChange }) {
           </button>
         </div>
       </Modal>
+
+      <ConfirmModal
+        open={!!confirmacao}
+        title={confirmacao?.title || ''}
+        message={confirmacao?.message || ''}
+        confirmLabel={confirmacao?.confirmLabel || 'CONFIRMAR'}
+        tone={confirmacao?.tone || 'danger'}
+        onCancel={() => setConfirmacao(null)}
+        onConfirm={confirmacao?.onConfirm || (() => setConfirmacao(null))}
+      />
     </div>
   );
 }

@@ -3,6 +3,7 @@ import { supabase } from '../supabaseClient';
 import { useToast } from '../components/Toast';
 import PageHeader from '../components/PageHeader';
 import Modal from '../components/Modal';
+import ConfirmModal from '../components/ConfirmModal';
 import { Plus, Pencil, Trash2 } from 'lucide-react';
 
 const fmt = (v) => Number(v || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
@@ -18,6 +19,7 @@ export default function Paralelos({ salaoId }) {
   
   const [modalAberto, setModalAberto] = useState(false);
   const [paraleloEditando, setParaleloEditando] = useState(null);
+  const [confirmacao, setConfirmacao] = useState(null);
   const [form, setForm] = useState({
     data: '',
     cliente: '',
@@ -125,7 +127,6 @@ export default function Paralelos({ salaoId }) {
   };
 
   const deletar = async (id) => {
-    if (!confirm('Deletar este registro?')) return;
     try {
       await supabase.from('procedimentos_paralelos').delete().eq('id', id).eq('salao_id', salaoId);
       showToast('Deletado', 'success');
@@ -227,7 +228,19 @@ export default function Paralelos({ salaoId }) {
                       <button onClick={() => abrirModal(par)} className="text-gray-500 hover:text-sky-600">
                         <Pencil size={16} />
                       </button>
-                      <button onClick={() => deletar(par.id)} className="text-red-500 hover:text-red-700">
+                      <button
+                        onClick={() => setConfirmacao({
+                          title: 'DELETAR REGISTRO',
+                          message: 'DELETAR ESTE REGISTRO?',
+                          confirmLabel: 'DELETAR',
+                          tone: 'danger',
+                          onConfirm: async () => {
+                            setConfirmacao(null);
+                            await deletar(par.id);
+                          },
+                        })}
+                        className="text-red-500 hover:text-red-700"
+                      >
                         <Trash2 size={16} />
                       </button>
                     </div>
@@ -339,6 +352,16 @@ export default function Paralelos({ salaoId }) {
           </div>
         </div>
       </Modal>
+
+      <ConfirmModal
+        open={!!confirmacao}
+        title={confirmacao?.title || ''}
+        message={confirmacao?.message || ''}
+        confirmLabel={confirmacao?.confirmLabel || 'CONFIRMAR'}
+        tone={confirmacao?.tone || 'danger'}
+        onCancel={() => setConfirmacao(null)}
+        onConfirm={confirmacao?.onConfirm || (() => setConfirmacao(null))}
+      />
     </div>
   );
 }

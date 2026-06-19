@@ -1,13 +1,17 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '../supabaseClient';
+import { useToast } from '../components/Toast';
+import ConfirmModal from '../components/ConfirmModal';
 
 export default function GerenciarAdmins() {
+  const { showToast } = useToast();
   const [admins, setAdmins]     = useState([]);
   const [loading, setLoading]   = useState(true);
   const [modal, setModal]       = useState(false);
   const [form, setForm]         = useState({ nome: '', email: '', senha: '' });
   const [salvando, setSalvando] = useState(false);
   const [meuId, setMeuId]       = useState(null);
+  const [confirmacao, setConfirmacao] = useState(null);
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data }) => setMeuId(data.user?.id));
@@ -32,7 +36,7 @@ export default function GerenciarAdmins() {
 
   const criarAdmin = async (e) => {
     e.preventDefault();
-    if (form.senha.length < 6) { alert('Senha deve ter pelo menos 6 caracteres.'); return; }
+    if (form.senha.length < 6) { showToast('SENHA DEVE TER PELO MENOS 6 CARACTERES', 'error'); return; }
     setSalvando(true);
 
     const { error } = await supabase.functions.invoke('criar-admin', {
@@ -40,7 +44,7 @@ export default function GerenciarAdmins() {
     });
 
     setSalvando(false);
-    if (error) { alert('Erro: ' + error.message); return; }
+    if (error) { showToast('ERRO: ' + error.message, 'error'); return; }
 
     setModal(false);
     setForm({ nome: '', email: '', senha: '' });
@@ -48,8 +52,6 @@ export default function GerenciarAdmins() {
   };
 
   const removerAdmin = async (id, nome) => {
-    if (!confirm(`Remover o admin "${nome}"?\n\nEle perderá o acesso ao sistema imediatamente.`)) return;
-
     setLoading(true);
     const { data: { user } } = await supabase.auth.getUser();
 
@@ -57,7 +59,8 @@ export default function GerenciarAdmins() {
       body: { user_id: id, admin_solicitante_id: user.id }
     });
 
-    if (error) { alert('Erro: ' + error.message); return; }
+    if (error) { showToast('ERRO: ' + error.message, 'error'); setLoading(false); return; }
+    showToast('ADMIN REMOVIDO', 'success');
     carregar();
   };
 
@@ -107,7 +110,16 @@ export default function GerenciarAdmins() {
                   <td className="px-4 py-3 text-right">
                     {a.auth_user_id !== meuId && (
                       <button
-                        onClick={() => removerAdmin(a.auth_user_id, a.email)}
+                        onClick={() => setConfirmacao({
+                          title: 'REMOVER ADMIN',
+                          message: `REMOVER O ADMIN "${a.email}"?\n\nELE PERDERÁ O ACESSO AO SISTEMA IMEDIATAMENTE.`,
+                          confirmLabel: 'REMOVER',
+                          tone: 'danger',
+                          onConfirm: async () => {
+                            setConfirmacao(null);
+                            await removerAdmin(a.auth_user_id, a.email);
+                          },
+                        })}
                         className="text-xs text-red-500 hover:text-red-700 border border-red-200 rounded px-2 py-1 hover:bg-red-50"
                       >
                         Remover
@@ -183,6 +195,16 @@ export default function GerenciarAdmins() {
           </div>
         </div>
       )}
+
+      <ConfirmModal
+        open={!!confirmacao}
+        title={confirmacao?.title || ''}
+        message={confirmacao?.message || ''}
+        confirmLabel={confirmacao?.confirmLabel || 'CONFIRMAR'}
+        tone={confirmacao?.tone || 'danger'}
+        onCancel={() => setConfirmacao(null)}
+        onConfirm={confirmacao?.onConfirm || (() => setConfirmacao(null))}
+      />
     </div>
   );
 }

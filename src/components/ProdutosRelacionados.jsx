@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../supabaseClient';
 import { useToast } from './Toast';
+import ConfirmModal from './ConfirmModal';
 import { Plus, Trash2, Loader2, Package } from 'lucide-react';
 
 const fmt = (v) => Number(v || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
@@ -11,6 +12,7 @@ export default function ProdutosRelacionados({ salaoId, servicoId, onUpdate }) {
   const [catalogo, setCatalogo] = useState([]);
   const [loading, setLoading] = useState(true);
   const [salvando, setSalvando] = useState(false);
+  const [confirmacao, setConfirmacao] = useState(null);
 
   // Form de novo vínculo
   const [novoProdutoId, setNovoProdutoId] = useState('');
@@ -69,7 +71,6 @@ export default function ProdutosRelacionados({ salaoId, servicoId, onUpdate }) {
   };
 
   const remover = async (produtoId) => {
-    if (!window.confirm('REMOVER ESTE PRODUTO DO SERVIÇO?')) return;
     try {
       const { error } = await supabase.from('procedimento_produtos').delete().eq('procedimento_id', servicoId).eq('produto_id', produtoId).eq('salao_id', salaoId);
       if (error) throw error;
@@ -125,7 +126,20 @@ export default function ProdutosRelacionados({ salaoId, servicoId, onUpdate }) {
                     <p className="text-[9px] font-bold text-gray-500 uppercase">Custo</p>
                     <p className="text-xs font-black text-red-500">{fmt(custoTotal)}</p>
                   </div>
-                  <button onClick={() => remover(v.produto_id)} className="p-2 text-red-400 hover:bg-red-50 hover:text-red-600 rounded-lg transition-colors" title="REMOVER PRODUTO">
+                  <button
+                    onClick={() => setConfirmacao({
+                      title: 'REMOVER PRODUTO',
+                      message: 'REMOVER ESTE PRODUTO DO SERVIÇO?',
+                      confirmLabel: 'REMOVER',
+                      tone: 'danger',
+                      onConfirm: async () => {
+                        setConfirmacao(null);
+                        await remover(v.produto_id);
+                      },
+                    })}
+                    className="p-2 text-red-400 hover:bg-red-50 hover:text-red-600 rounded-lg transition-colors"
+                    title="REMOVER PRODUTO"
+                  >
                     <Trash2 size={16} />
                   </button>
                 </div>
@@ -172,6 +186,16 @@ export default function ProdutosRelacionados({ salaoId, servicoId, onUpdate }) {
           {salvando ? <Loader2 size={16} className="animate-spin" /> : <><Plus size={16} className="mr-1" /> Vincular</>}
         </button>
       </div>
+
+      <ConfirmModal
+        open={!!confirmacao}
+        title={confirmacao?.title || ''}
+        message={confirmacao?.message || ''}
+        confirmLabel={confirmacao?.confirmLabel || 'CONFIRMAR'}
+        tone={confirmacao?.tone || 'danger'}
+        onCancel={() => setConfirmacao(null)}
+        onConfirm={confirmacao?.onConfirm || (() => setConfirmacao(null))}
+      />
     </div>
   );
 }

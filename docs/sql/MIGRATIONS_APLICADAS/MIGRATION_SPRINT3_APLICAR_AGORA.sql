@@ -41,14 +41,40 @@ create or replace function atualizar_totais_atendimento()
 returns trigger as $$
 declare
   v_atendimento_id uuid;
+  v_valor_cobrado  numeric(10,2);
+  v_valor_indicado numeric(10,2);
+  v_valor_pago     numeric(10,2);
+  v_cfg            configuracoes%rowtype;
+  v_custo_variavel numeric(10,2);
+  v_salao_id       uuid;
 begin
   v_atendimento_id := coalesce(new.atendimento_id, old.atendimento_id);
 
+  select
+    coalesce(sum(valor_cobrado), 0),
+    coalesce(sum(valor_indicado), 0),
+    coalesce(sum(valor_pago), 0)
+  into v_valor_cobrado, v_valor_indicado, v_valor_pago
+  from atendimento_procedimentos
+  where atendimento_id = v_atendimento_id;
+
+  select a.salao_id, coalesce(a.custo_variavel, 0)
+  into v_salao_id, v_custo_variavel
+  from atendimentos a
+  where a.id = v_atendimento_id;
+
+  select * into v_cfg
+  from configuracoes
+  where salao_id = v_salao_id;
+
   update atendimentos
   set
-    valor_cobrado = coalesce((select sum(valor_cobrado) from atendimento_procedimentos where atendimento_id = v_atendimento_id), 0),
-    valor_pago    = coalesce((select sum(valor_pago)    from atendimento_procedimentos where atendimento_id = v_atendimento_id), 0),
-    atualizado_em = now()
+    valor_cobrado  = v_valor_cobrado,
+    valor_pago     = v_valor_pago,
+    lucro_possivel = v_valor_indicado
+                     - coalesce(v_cfg.custo_fixo_por_atendimento, 0)
+                     - v_custo_variavel,
+    atualizado_em  = now()
   where id = v_atendimento_id;
 
   return coalesce(new, old);

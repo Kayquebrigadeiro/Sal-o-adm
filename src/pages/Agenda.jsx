@@ -263,6 +263,11 @@ export default function Agenda({ salaoId, role }) {
     return !isNaN(num) && num > 0 && num <= 999999 && Number.isFinite(num);
   };
 
+  const isMissingRpc = (error) => {
+    const message = String(error?.message || '').toLowerCase();
+    return error?.code === 'PGRST202' || message.includes('could not find the function') || message.includes('not found');
+  };
+
   // ─── Criar Profissional Rápido ───
   const criarProfissionalRapido = async () => {
     if (!novoProf.nome.trim()) return showToast('DIGITE O NOME DO PROFISSIONAL', 'error');
@@ -379,31 +384,9 @@ export default function Agenda({ salaoId, role }) {
     if (servicos.length === 0) return showToast('ADICIONE PELO MENOS UM SERVIÇO!', 'error');
 
     setSalvando(true);
-    let atendimentoId = null; // Guarda o ID para rollback
     
     try {
-      // 1. Criar atendimento base
-      const dados = {
-        salao_id: salaoId,
-        data: dataSelecionada,
-        horario: selecao.hora,
-        profissional_id: selecao.profId,
-        procedimento_id: servicos[0].procId, // Para compatibilidade com queries antigas
-        cliente: nomeCliente.toUpperCase(),
-        valor_cobrado: 0, // Será calculado pela trigger
-        valor_pago: novo.pago ? servicos.reduce((sum, s) => sum + s.valor_cobrado, 0) : 0,
-        status: 'AGENDADO',
-        obs: novo.obs || null,
-      };
-
-      const { data: atendimentoData, error: atendError } = await supabase.from('atendimentos').insert(dados).select();
-      if (atendError) throw atendError;
-
-      atendimentoId = atendimentoData[0].id; // Salva para rollback
-
-      // 2. Inserir cada serviço em atendimento_procedimentos
       const dadosServicos = servicos.map((s, idx) => ({
-        atendimento_id: atendimentoId,
         procedimento_id: s.procId,
         comprimento: s.requer_comprimento ? s.tamanho : null,
         valor_indicado: s.valor_indicado,
@@ -412,15 +395,52 @@ export default function Agenda({ salaoId, role }) {
         sequencia: idx + 1,
       }));
 
-      const { error: procError } = await supabase.from('atendimento_procedimentos').insert(dadosServicos);
-      if (procError) {
-        // ROLLBACK: deleta o atendimento criado no passo 1
-        await supabase
-          .from('atendimentos')
-          .delete()
-          .eq('id', atendimentoId);
-        
-        throw procError; // Relança o erro para o catch
+      const { data: rpcData, error: rpcError } = await supabase.rpc('criar_atendimento_com_procedimentos', {
+        p_salao_id: salaoId,
+        p_data: dataSelecionada,
+        p_horario: selecao.hora,
+        p_profissional_id: selecao.profId,
+        p_cliente: nomeCliente.toUpperCase(),
+        p_obs: novo.obs || null,
+        p_status: 'AGENDADO',
+        p_procedimentos: dadosServicos,
+      });
+
+      if (rpcError && !isMissingRpc(rpcError)) throw rpcError;
+
+      if (rpcError && isMissingRpc(rpcError)) {
+        // Fallback local enquanto a migração não foi aplicada.
+        const dados = {
+          salao_id: salaoId,
+          data: dataSelecionada,
+          horario: selecao.hora,
+          profissional_id: selecao.profId,
+          procedimento_id: servicos[0].procId,
+          cliente: nomeCliente.toUpperCase(),
+          valor_cobrado: 0,
+          valor_pago: novo.pago ? servicos.reduce((sum, s) => sum + s.valor_cobrado, 0) : 0,
+          status: 'AGENDADO',
+          obs: novo.obs || null,
+        };
+
+        const { data: atendimentoData, error: atendError } = await supabase.from('atendimentos').insert(dados).select();
+        if (atendError) throw atendError;
+
+        const atendimentoId = atendimentoData[0].id;
+        const dadosServicosFallback = servicos.map((s, idx) => ({
+          atendimento_id: atendimentoId,
+          procedimento_id: s.procId,
+          comprimento: s.requer_comprimento ? s.tamanho : null,
+          valor_indicado: s.valor_indicado,
+          valor_cobrado: s.valor_cobrado,
+          valor_pago: novo.pago ? s.valor_cobrado : 0,
+          sequencia: idx + 1,
+        }));
+
+        const { error: procError } = await supabase.from('atendimento_procedimentos').insert(dadosServicosFallback);
+        if (procError) throw procError;
+      } else {
+        if (!rpcData) throw new Error('RPC de criação não retornou o id do atendimento');
       }
 
       // Toast com resumo dos serviços
@@ -490,6 +510,7 @@ export default function Agenda({ salaoId, role }) {
       tamanho: formEdicao.tamanho,
       valor_indicado,
       valor_cobrado: Number(formEdicao.valor),
+      valor_pago: Number(agendamentoSelecionado?.valor_pago) > 0 ? Number(formEdicao.valor) : 0,
       requer_comprimento: proc?.requer_comprimento ?? true,
     };
 
@@ -514,24 +535,43 @@ export default function Agenda({ salaoId, role }) {
     setSalvandoEdicao(true);
     try {
       const atendId = agendamentoSelecionado.id;
-      // Apaga todos os procedimentos do atendimento e reinserere
-      const { error: delErr } = await supabase.from('atendimento_procedimentos').delete().eq('atendimento_id', atendId);
-      if (delErr) throw delErr;
-
+      const pagamentoAtivo = Number(agendamentoSelecionado?.valor_pago) > 0;
       const novos = servicosEdicao.map((s, idx) => ({
-        atendimento_id: atendId,
         procedimento_id: s.procId,
         comprimento: s.requer_comprimento ? s.tamanho : null,
         valor_indicado: s.valor_indicado,
         valor_cobrado: s.valor_cobrado,
-        valor_pago: 0,
+        valor_pago: pagamentoAtivo ? s.valor_cobrado : 0,
         sequencia: idx + 1,
       }));
-      const { error: insErr } = await supabase.from('atendimento_procedimentos').insert(novos);
-      if (insErr) throw insErr;
 
-      // Atualiza procedimento_id principal para compatibilidade
-      await supabase.from('atendimentos').update({ procedimento_id: servicosEdicao[0].procId }).eq('id', atendId);
+      const { error: rpcError } = await supabase.rpc('substituir_procedimentos_atendimento', {
+        p_atendimento_id: atendId,
+        p_procedimentos: novos,
+      });
+
+      if (rpcError && !isMissingRpc(rpcError)) throw rpcError;
+
+      if (rpcError && isMissingRpc(rpcError)) {
+        // Fallback local enquanto a migração não foi aplicada.
+        const { error: delErr } = await supabase.from('atendimento_procedimentos').delete().eq('atendimento_id', atendId);
+        if (delErr) throw delErr;
+
+        const { error: insErr } = await supabase.from('atendimento_procedimentos').insert(
+          novos.map((s, idx) => ({
+            atendimento_id: atendId,
+            procedimento_id: s.procedimento_id,
+            comprimento: s.comprimento,
+            valor_indicado: s.valor_indicado,
+            valor_cobrado: s.valor_cobrado,
+            valor_pago: s.valor_pago,
+            sequencia: idx + 1,
+          }))
+        );
+        if (insErr) throw insErr;
+
+        await supabase.from('atendimentos').update({ procedimento_id: servicosEdicao[0].procId }).eq('id', atendId);
+      }
 
       showToast('✅ SERVIÇOS ATUALIZADOS COM SUCESSO!', 'success');
       setModoEdicao(false);
@@ -585,7 +625,7 @@ export default function Agenda({ salaoId, role }) {
 
   const cancelarAgendamento = () => {
     if (!agendamentoSelecionado) return;
-    // Abre o modal de confirmação em vez de usar window.confirm
+    // Abre o modal de confirmação
     setModalCancelarAberto(true);
   };
 
@@ -667,7 +707,7 @@ export default function Agenda({ salaoId, role }) {
       const profDestino = profissionais.find(p => p.id === novoProfId);
       const nomeCliente = dragging.cliente;
       
-      // Sprint 5: Usar modal customizado em vez de window.confirm
+      // Sprint 5: Usar modal customizado
       setMoverDados({
         agendId,
         novoProfId,

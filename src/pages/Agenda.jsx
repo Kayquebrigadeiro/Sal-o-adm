@@ -1210,9 +1210,9 @@ export default function Agenda({ salaoId, role }) {
       {/* ═══ PAINEL LATERAL (MODAL) ═══ */}
       {modalAberto && (
         <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex justify-center items-center z-50 p-4" onClick={() => setModalAberto(false)}>
-          <div className="w-full max-w-lg bg-white rounded-2xl shadow-2xl max-h-[90vh] overflow-y-auto animate-fadeIn"
+          <div className="w-full max-w-lg bg-white rounded-2xl shadow-2xl max-h-[90vh] overflow-y-auto animate-fadeIn p-6"
             onClick={e => e.stopPropagation()}>
-            <div className="p-6">
+            <div className="flex justify-between items-center mb-8">
               <div>
                 <h2 className="text-xl font-black text-gray-800 uppercase">Novo Atendimento</h2>
                 <p className="text-xs text-gray-500 font-bold uppercase">
@@ -1578,7 +1578,6 @@ export default function Agenda({ salaoId, role }) {
                   `✅ CONFIRMAR AGENDAMENTO (${servicos.length} SERVIÇO${servicos.length > 1 ? 'S' : ''})`
                 )}
               </button>
-            </div>
             </div>
           </div>
         </div>

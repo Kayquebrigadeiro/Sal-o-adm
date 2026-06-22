@@ -242,6 +242,7 @@ export default function Agenda({ salaoId, role }) {
     if (!proc) return;
     const preco = Number(proc.preco_p) || 0;
     setNovo(prev => ({ ...prev, procId, valor: preco }));
+    setMostrarSugerido(true);
   };
 
   // ─── Selecionar tamanho ───

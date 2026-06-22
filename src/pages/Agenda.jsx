@@ -1368,88 +1368,147 @@ export default function Agenda({ salaoId, role }) {
                 );
               })()}
 
-              {/* VALOR + PREVIEW FINANCEIRO */}
-              <div className={`p-4 rounded-2xl border-2 transition-all duration-300 ${role === 'PROPRIETARIO' && previewFinanceiro?.prejuizo && !ignorarPrejuizo
-                ? 'bg-red-50 border-red-400'
-                : 'bg-white border-sky-300 shadow-sm'
+              {/* ═══ SPRINT 7.2: BLOCO DE VALOR COBRADO (HERO) ═══ */}
+              <div className={`rounded-2xl border-2 transition-all duration-300 overflow-hidden ${
+                role === 'PROPRIETARIO' && previewFinanceiro?.prejuizo && !ignorarPrejuizo
+                  ? 'border-red-400'
+                  : 'border-gray-900'
+              }`}>
+
+                {/* — Cabeçalho do bloco — */}
+                <div className={`px-4 pt-4 pb-3 ${
+                  role === 'PROPRIETARIO' && previewFinanceiro?.prejuizo && !ignorarPrejuizo
+                    ? 'bg-red-50'
+                    : 'bg-gray-900'
                 }`}>
-                <div className="flex justify-between items-start mb-2">
-                  <label className="text-[11px] font-black uppercase text-sky-800">Valor Final Cobrado do Cliente</label>
-                  {(() => {
-                    const proc = procedimentos.find(p => p.id === novo.procId);
-                    if (!proc) return null;
-                    const precoP = Number(proc.preco_p) || 0;
-                    let sugerido = 0;
-                    if (novo.tamanho === 'P') sugerido = precoP;
-                    else if (novo.tamanho === 'M') sugerido = Number(proc.preco_m) || (precoP * 1.20);
-                    else if (novo.tamanho === 'G') sugerido = Number(proc.preco_g) || (precoP * 1.30);
-
-                    if (!sugerido) return null;
-                    return (
-                      <div className="flex items-center gap-1">
-                        <button onClick={() => setNovo(prev => ({ ...prev, valor: sugerido }))}
-                          className="text-[9px] font-black bg-sky-50 text-sky-700 px-2 py-1 rounded-lg hover:bg-sky-100 transition-colors uppercase border border-sky-200">
-                          Sugestão: {mostrarSugerido ? fmt(sugerido) : '***'}
-                        </button>
-                        <button onClick={() => setMostrarSugerido(!mostrarSugerido)} className="p-1 text-gray-500 hover:text-sky-600 transition-colors">
-                          {mostrarSugerido ? <EyeOff size={14} /> : <Eye size={14} />}
-                        </button>
-                      </div>
-                    );
-                  })()}
-                </div>
-                <input
-                  type="number" step="0.01"
-                  className={`w-full bg-transparent text-4xl font-black outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none ${role === 'PROPRIETARIO' && previewFinanceiro?.prejuizo ? 'text-red-600' : 'text-gray-800'
+                  <p className={`text-[10px] font-black uppercase tracking-widest mb-1 ${
+                    role === 'PROPRIETARIO' && previewFinanceiro?.prejuizo && !ignorarPrejuizo
+                      ? 'text-red-500'
+                      : 'text-gray-400'
+                  }`}>Valor Real Cobrado</p>
+                  <input
+                    type="number" step="0.01"
+                    className={`w-full bg-transparent text-5xl font-black outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none ${
+                      role === 'PROPRIETARIO' && previewFinanceiro?.prejuizo && !ignorarPrejuizo
+                        ? 'text-red-600'
+                        : 'text-white'
                     }`}
-                  onFocus={e => e.target.select()}
-                  value={novo.valor}
-                  onChange={e => setNovo({ ...novo, valor: e.target.value })}
-                  placeholder="0,00"
-                />
-                <div className="flex items-center gap-1.5 mt-2 border-t pt-2 border-gray-100">
-                  <p className="text-[10px] text-gray-500 uppercase font-bold">O sistema sugere o valor. Você define o preço final.</p>
-                  <Tooltip content="O valor sugerido é apenas uma referência calculada para garantir sua margem. O salão define o valor final cobrado da cliente.">
-                    <HelpCircle size={13} className="text-gray-400 hover:text-sky-500 transition-colors" />
-                  </Tooltip>
+                    onFocus={e => e.target.select()}
+                    value={novo.valor}
+                    onChange={e => setNovo({ ...novo, valor: e.target.value })}
+                    placeholder="0,00"
+                  />
+                  <p className={`text-[10px] mt-1 font-medium ${
+                    role === 'PROPRIETARIO' && previewFinanceiro?.prejuizo && !ignorarPrejuizo
+                      ? 'text-red-400'
+                      : 'text-gray-500'
+                  }`}>O salão define este valor. O sistema apenas sugere.</p>
                 </div>
 
-                {/* Desmembramento do Motor Financeiro */}
-                {role === 'PROPRIETARIO' && previewFinanceiro && (
-                  <div className={`mt-4 pt-4 border-t ${previewFinanceiro.prejuizo ? 'border-red-200' : 'border-gray-200'}`}>
-                    <div className="grid grid-cols-2 gap-3 mb-3">
-                      <div>
-                        <p className="text-[10px] font-bold text-gray-500 uppercase">Lucro Líquido</p>
-                        <p className={`text-xl font-black ${ignorarPrejuizo ? 'text-gray-500' : previewFinanceiro.prejuizo ? 'text-red-600' : 'text-emerald-600'}`}>
-                          {ignorarPrejuizo ? '—' : fmt(previewFinanceiro.lucroLiquido)}
-                        </p>
+                {/* — Suçestão discreta — */}
+                {(() => {
+                  const proc = procedimentos.find(p => p.id === novo.procId);
+                  if (!proc) return null;
+                  const precoP = Number(proc.preco_p) || 0;
+                  let sugerido = 0;
+                  if (novo.tamanho === 'P') sugerido = precoP;
+                  else if (novo.tamanho === 'M') sugerido = Number(proc.preco_m) || (precoP * 1.20);
+                  else if (novo.tamanho === 'G') sugerido = Number(proc.preco_g) || (precoP * 1.30);
+                  if (!sugerido) return null;
+                  return (
+                    <div className="px-4 py-2.5 bg-gray-50 border-t border-gray-200 flex items-center justify-between">
+                      <div className="flex items-center gap-1.5">
+                        <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wide">Sugestão do sistema:</span>
+                        <span className="text-[10px] font-black text-gray-500">{mostrarSugerido ? fmt(sugerido) : '•••'}</span>
+                        <button onClick={() => setMostrarSugerido(!mostrarSugerido)} className="text-gray-400 hover:text-gray-600 transition-colors">
+                          {mostrarSugerido ? <EyeOff size={11} /> : <Eye size={11} />}
+                        </button>
                       </div>
-                      <div className="text-right">
-                        <p className="text-[10px] font-bold text-gray-500 uppercase">Margem</p>
-                        <p className={`text-xl font-black ${previewFinanceiro.margemReal < 0 ? 'text-red-600' : previewFinanceiro.margemReal < 15 ? 'text-gray-500' : 'text-emerald-600'}`}>
-                          {fmtPct(previewFinanceiro.margemReal)}
-                        </p>
+                      <button
+                        onClick={() => setNovo(prev => ({ ...prev, valor: sugerido }))}
+                        className="text-[9px] font-black text-gray-500 hover:text-gray-700 underline uppercase transition-colors"
+                      >
+                        Usar sugestão
+                      </button>
+                    </div>
+                  );
+                })()}
+
+                {/* — Bloco educativo — */}
+                {novo.procId && (
+                  <div className="px-4 py-3 bg-sky-50 border-t border-sky-100 flex items-start gap-2">
+                    <span className="text-base leading-none mt-0.5">💡</span>
+                    <p className="text-[10px] text-sky-700 font-medium leading-relaxed">
+                      <span className="font-black">Como funciona?</span> O sistema sugere um valor baseado na sua precificação. Você pode cobrar mais ou menos. O faturamento e o lucro serão calculados usando o valor que você definir aqui.
+                    </p>
+                  </div>
+                )}
+
+                {/* — Indicadores financeiros (só PROPRIETARIO) — */}
+                {role === 'PROPRIETARIO' && previewFinanceiro && (
+                  <div className="px-4 py-4 bg-white border-t border-gray-100 space-y-4">
+
+                    {/* Cards Margem + Lucro Real */}
+                    <div className="grid grid-cols-2 gap-3">
+                      <div className={`rounded-xl p-3 border ${
+                        previewFinanceiro.margemReal < 0
+                          ? 'bg-red-50 border-red-200'
+                          : previewFinanceiro.margemReal < 15
+                          ? 'bg-gray-50 border-gray-200'
+                          : 'bg-emerald-50 border-emerald-200'
+                      }`}>
+                        <p className="text-[9px] font-black uppercase tracking-widest text-gray-500 mb-1">Margem</p>
+                        <p className={`text-2xl font-black ${
+                          previewFinanceiro.margemReal < 0 ? 'text-red-600'
+                          : previewFinanceiro.margemReal < 15 ? 'text-gray-600'
+                          : 'text-emerald-600'
+                        }`}>{fmtPct(previewFinanceiro.margemReal)}</p>
+                      </div>
+                      <div className={`rounded-xl p-3 border ${
+                        ignorarPrejuizo ? 'bg-gray-50 border-gray-200'
+                        : previewFinanceiro.prejuizo ? 'bg-red-50 border-red-200'
+                        : 'bg-emerald-50 border-emerald-200'
+                      }`}>
+                        <p className="text-[9px] font-black uppercase tracking-widest text-gray-500 mb-1">Lucro Real</p>
+                        <p className={`text-2xl font-black ${
+                          ignorarPrejuizo ? 'text-gray-500'
+                          : previewFinanceiro.prejuizo ? 'text-red-600'
+                          : 'text-emerald-600'
+                        }`}>{ignorarPrejuizo ? '—' : fmt(previewFinanceiro.lucroLiquido)}</p>
                       </div>
                     </div>
 
-                    {/* Detalhamento Matemático Óbvio */}
-                    <div className="font-mono text-[11px] text-gray-500 bg-sky-50/50 p-2 rounded flex flex-col gap-0.5 uppercase">
-                      <div className="flex justify-between"><span>Faturamento:</span> <span className="font-bold text-gray-600">{fmt(previewFinanceiro.valorBruto)}</span></div>
-                      <div className="flex justify-between"><span><span className="text-red-400">(-)</span> Fixo:</span> <span className="text-red-500">-{fmt(previewFinanceiro.custoFixo)}</span></div>
-                      <div className="flex justify-between"><span><span className="text-red-400">(-)</span> Material:</span> <span className="text-red-500">-{fmt(previewFinanceiro.custoProduto)}</span></div>
-                      <div className="h-px bg-sky-100 my-1"></div>
-                      <div className="flex justify-between font-bold"><span><span className="text-emerald-500 font-black">(=)</span> Lucro:</span> <span className="text-emerald-600">{fmt(previewFinanceiro.lucroLiquido)}</span></div>
+                    {/* Calculadora financeira didática */}
+                    <div className="bg-gray-50 rounded-xl p-3 border border-gray-100 font-mono text-[11px]">
+                      <div className="flex justify-between py-1">
+                        <span className="text-gray-500 uppercase">Faturamento</span>
+                        <span className="font-black text-gray-700">{fmt(previewFinanceiro.valorBruto)}</span>
+                      </div>
+                      <div className="flex justify-between py-1">
+                        <span className="text-red-400 uppercase">(-) Custo Fixo</span>
+                        <span className="text-red-500 font-bold">- {fmt(previewFinanceiro.custoFixo)}</span>
+                      </div>
+                      <div className="flex justify-between py-1">
+                        <span className="text-red-400 uppercase">(-) Material</span>
+                        <span className="text-red-500 font-bold">- {fmt(previewFinanceiro.custoProduto)}</span>
+                      </div>
+                      <div className="border-t border-gray-200 mt-1 pt-2 flex justify-between">
+                        <span className="text-emerald-600 font-black uppercase">(=) Lucro Real</span>
+                        <span className={`font-black ${
+                          previewFinanceiro.prejuizo ? 'text-red-600' : 'text-emerald-600'
+                        }`}>{fmt(previewFinanceiro.lucroLiquido)}</span>
+                      </div>
                     </div>
 
                     {/* Alerta de prejuízo */}
                     {previewFinanceiro.prejuizo && !ignorarPrejuizo && (
-                      <div className="mt-3 flex items-center justify-between">
-                        <div className="flex items-center gap-1 text-red-600">
+                      <div className="flex items-center justify-between bg-red-50 border border-red-200 rounded-xl px-3 py-2">
+                        <div className="flex items-center gap-1.5 text-red-600">
                           <AlertTriangle size={14} />
-                          <span className="text-[10px] font-black uppercase">Prejuízo!</span>
+                          <span className="text-[10px] font-black uppercase">Este valor gera prejuízo!</span>
                         </div>
                         <button onClick={() => setIgnorarPrejuizo(true)}
-                          className="text-[9px] font-black text-gray-500 hover:text-gray-500 underline uppercase">
+                          className="text-[9px] font-black text-gray-400 hover:text-gray-600 underline uppercase">
                           Ignorar
                         </button>
                       </div>
@@ -1477,9 +1536,9 @@ export default function Agenda({ salaoId, role }) {
                       <div key={s.id} className="bg-white border-l-4 border-blue-400 p-3 rounded-lg flex flex-col hover:bg-gray-50 transition-colors gap-2 shadow-sm">
                         <div>
                           <p className="font-bold text-sm text-gray-800">{s.procNome} {s.requer_comprimento && <span className="bg-gray-100 px-2 py-0.5 rounded text-[10px] ml-1">{s.tamanho}</span>}</p>
-                          <div className="flex gap-4 mt-1 text-[10px] uppercase">
-                            <p className="text-gray-500 font-bold">Sugerido: {fmt(s.valor_indicado || s.valor_cobrado)}</p>
-                            <p className="text-gray-800 font-black">Cobrado: {fmt(s.valor_cobrado)}</p>
+                          <div className="flex gap-3 mt-1 items-baseline">
+                            <p className="text-[10px] text-gray-400 font-medium uppercase line-through">Sug: {fmt(s.valor_indicado || s.valor_cobrado)}</p>
+                            <p className="text-sm text-gray-900 font-black uppercase">Cobrado: {fmt(s.valor_cobrado)}</p>
                           </div>
                         </div>
                         <div className="flex items-center gap-2 border-t border-gray-100 pt-2">

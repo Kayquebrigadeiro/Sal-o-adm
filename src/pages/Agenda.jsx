@@ -60,7 +60,7 @@ export default function Agenda({ salaoId, role }) {
   // ─── Formulário ───
   const [novo, setNovo] = useState({ cliente: '', procId: '', tamanho: 'P', valor: '', obs: '', pago: false });
   const [ignorarPrejuizo, setIgnorarPrejuizo] = useState(false);
-  const [mostrarSugerido, setMostrarSugerido] = useState(false);
+  const [mostrarSugerido, setMostrarSugerido] = useState(true);
 
   // ─── Sprint 3: Múltiplos Serviços ───
   const [servicos, setServicos] = useState([]);

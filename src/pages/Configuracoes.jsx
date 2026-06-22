@@ -3,7 +3,7 @@ import { supabase } from '../supabaseClient';
 import { useToast } from '../components/Toast';
 import Modal from '../components/Modal';
 import ConfirmModal from '../components/ConfirmModal';
-import { Plus, Edit2, Trash2, ShieldCheck, Users, AlertCircle, Copy, MessageCircle, CreditCard } from 'lucide-react';
+import { Plus, Edit2, Trash2, ShieldCheck, Users, AlertCircle, Copy, MessageCircle, CreditCard, Clock, Loader2 } from 'lucide-react';
 
 const fmt = (v) => Number(v || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
 
@@ -13,7 +13,11 @@ export default function Configuracoes({ salaoId, role }) {
   const [loading, setLoading] = useState(true);
   
   // Abas
-  const [abaAtiva, setAbaAtiva] = useState('equipe'); // 'equipe' | 'plano'
+  const [abaAtiva, setAbaAtiva] = useState('equipe'); // 'equipe' | 'plano' | 'funcionamento'
+
+  // Horários de Funcionamento
+  const [horariosSemana, setHorariosSemana] = useState(null);
+  const [loadingHorarios, setLoadingHorarios] = useState(false);
 
   // Modal Profissionais
   const [modalProf, setModalProf] = useState(false);
@@ -48,6 +52,61 @@ export default function Configuracoes({ salaoId, role }) {
       carregarAssinatura();
     }
   }, [abaAtiva, salaoId]);
+
+  useEffect(() => {
+    if (abaAtiva === 'funcionamento' && !horariosSemana && salaoId) {
+      carregarHorarios();
+    }
+  }, [abaAtiva, salaoId]);
+
+  const carregarHorarios = async () => {
+    setLoadingHorarios(true);
+    try {
+      const { data, error } = await supabase
+        .from('configuracoes')
+        .select('horarios_semana')
+        .eq('salao_id', salaoId)
+        .maybeSingle();
+
+      if (error) throw error;
+      
+      if (data && data.horarios_semana) {
+        setHorariosSemana(data.horarios_semana);
+      } else {
+        // Fallback default
+        setHorariosSemana({
+          "0": { ativo: false, abertura: "08:00", fechamento: "19:00" },
+          "1": { ativo: true, abertura: "08:00", fechamento: "19:00" },
+          "2": { ativo: true, abertura: "08:00", fechamento: "19:00" },
+          "3": { ativo: true, abertura: "08:00", fechamento: "19:00" },
+          "4": { ativo: true, abertura: "08:00", fechamento: "19:00" },
+          "5": { ativo: true, abertura: "08:00", fechamento: "19:00" },
+          "6": { ativo: true, abertura: "08:00", fechamento: "15:00" }
+        });
+      }
+    } catch (err) {
+      showToast('ERRO AO CARREGAR HORÁRIOS', 'error');
+    } finally {
+      setLoadingHorarios(false);
+    }
+  };
+
+  const salvarHorarios = async () => {
+    setLoadingHorarios(true);
+    try {
+      const { error } = await supabase
+        .from('configuracoes')
+        .update({ horarios_semana: horariosSemana })
+        .eq('salao_id', salaoId);
+
+      if (error) throw error;
+      showToast('HORÁRIOS SALVOS COM SUCESSO!', 'success');
+    } catch (err) {
+      showToast('ERRO AO SALVAR HORÁRIOS', 'error');
+    } finally {
+      setLoadingHorarios(false);
+    }
+  };
 
   const carregarAssinatura = async () => {
     setLoadingAssinatura(true);
@@ -143,6 +202,12 @@ export default function Configuracoes({ salaoId, role }) {
             className={`px-4 py-3 font-bold uppercase transition-all whitespace-nowrap border-b-2 text-sm ${abaAtiva === 'equipe' ? 'border-blue-900 text-gray-800' : 'border-transparent text-gray-500 hover:text-gray-500 hover:bg-gray-50'}`}
           >
             Equipe & Parceiros
+          </button>
+          <button
+            onClick={() => setAbaAtiva('funcionamento')}
+            className={`px-4 py-3 font-bold uppercase transition-all whitespace-nowrap border-b-2 text-sm ${abaAtiva === 'funcionamento' ? 'border-blue-900 text-gray-800' : 'border-transparent text-gray-500 hover:text-gray-500 hover:bg-gray-50'}`}
+          >
+            Funcionamento
           </button>
           {/* DESATIVADO TEMPORARIAMENTE
           <button
@@ -257,6 +322,72 @@ export default function Configuracoes({ salaoId, role }) {
           </button>
         </div>
       </Modal>
+
+      {/* ABA FUNCIONAMENTO */}
+      {abaAtiva === 'funcionamento' && role === 'PROPRIETARIO' && (
+        <div className="bg-white rounded-3xl border border-gray-200 p-8 shadow-sm max-w-2xl mx-auto animate-fadeIn">
+          <h2 className="text-xl font-black text-gray-800 uppercase mb-8 flex items-center gap-3">
+            <Clock className="text-gray-500" size={24} /> Horário de Funcionamento
+          </h2>
+          
+          {loadingHorarios && !horariosSemana ? (
+            <div className="flex items-center justify-center py-12">
+               <span className="animate-spin w-8 h-8 border-4 border-gray-200 border-t-blue-900 rounded-full"></span>
+            </div>
+          ) : horariosSemana ? (
+            <div className="space-y-4">
+              {['Domingo', 'Segunda-feira', 'Terça-feira', 'Quarta-feira', 'Quinta-feira', 'Sexta-feira', 'Sábado'].map((dia, idx) => (
+                <div key={idx} className={`flex flex-col sm:flex-row sm:items-center justify-between p-4 rounded-2xl border transition-colors gap-4 ${horariosSemana[idx]?.ativo ? 'border-sky-200 bg-sky-50/30' : 'border-gray-200 bg-gray-50 opacity-70'}`}>
+                  <div className="flex items-center gap-3 w-full sm:w-1/3">
+                    <input 
+                      type="checkbox" 
+                      className="w-5 h-5 rounded border-gray-300 text-sky-600 focus:ring-sky-500 cursor-pointer"
+                      checked={horariosSemana[idx]?.ativo || false}
+                      onChange={(e) => setHorariosSemana(prev => ({
+                        ...prev, 
+                        [idx]: { ...prev[idx], ativo: e.target.checked }
+                      }))}
+                    />
+                    <span className="font-bold text-gray-700 text-sm uppercase">{dia}</span>
+                  </div>
+                  
+                  <div className="flex items-center gap-2 w-full sm:flex-1 sm:justify-end">
+                    <input 
+                      type="time" 
+                      className={`w-full sm:w-auto border-2 border-gray-200 p-2 rounded-xl focus:border-sky-500 outline-none text-sm font-bold text-gray-700 ${!horariosSemana[idx]?.ativo ? 'opacity-50 cursor-not-allowed' : ''}`}
+                      value={horariosSemana[idx]?.abertura || '08:00'}
+                      disabled={!horariosSemana[idx]?.ativo}
+                      onChange={(e) => setHorariosSemana(prev => ({
+                        ...prev, 
+                        [idx]: { ...prev[idx], abertura: e.target.value }
+                      }))}
+                    />
+                    <span className="text-gray-400 font-bold uppercase text-xs">às</span>
+                    <input 
+                      type="time" 
+                      className={`w-full sm:w-auto border-2 border-gray-200 p-2 rounded-xl focus:border-sky-500 outline-none text-sm font-bold text-gray-700 ${!horariosSemana[idx]?.ativo ? 'opacity-50 cursor-not-allowed' : ''}`}
+                      value={horariosSemana[idx]?.fechamento || '19:00'}
+                      disabled={!horariosSemana[idx]?.ativo}
+                      onChange={(e) => setHorariosSemana(prev => ({
+                        ...prev, 
+                        [idx]: { ...prev[idx], fechamento: e.target.value }
+                      }))}
+                    />
+                  </div>
+                </div>
+              ))}
+              
+              <button 
+                onClick={salvarHorarios}
+                disabled={loadingHorarios}
+                className="w-full mt-6 bg-white text-gray-800 py-4 rounded-2xl font-black uppercase text-sm hover:bg-sky-500 hover:text-white transition-all shadow-xl shadow-blue-900/10 flex items-center justify-center gap-2 disabled:opacity-70"
+              >
+                {loadingHorarios ? <Loader2 className="animate-spin text-gray-400" size={18} /> : 'Salvar Horários'}
+              </button>
+            </div>
+          ) : null}
+        </div>
+      )}
 
       {/* ABA MEU PLANO */}
       {abaAtiva === 'plano' && role === 'PROPRIETARIO' && (

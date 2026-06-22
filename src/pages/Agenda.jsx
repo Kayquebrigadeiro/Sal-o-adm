@@ -2,7 +2,7 @@ import { useState, useEffect, useMemo } from 'react';
 import { supabase } from '../supabaseClient';
 import { useToast } from '../components/Toast';
 import { FinancialEngine } from '../services/FinancialEngine';
-import { User, X, CheckCircle2, AlertTriangle, UserPlus, ChevronLeft, ChevronRight, Loader2, Sparkles, Search, Phone, Plus, Eye, EyeOff, Trash2, Package, Pencil, HelpCircle } from 'lucide-react';
+import { User, X, CheckCircle2, AlertTriangle, UserPlus, ChevronLeft, ChevronRight, Loader2, Sparkles, Search, Phone, Plus, Eye, EyeOff, Trash2, Package, Pencil, HelpCircle, Settings } from 'lucide-react';
 import Tooltip from '../components/Tooltip';
 
 const fmt = (v) => Number(v || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
@@ -18,13 +18,6 @@ const PROF_COLORS = [
   { bg: 'bg-slate-100 border-r border-slate-300', light: 'bg-teal-50', text: 'text-teal-800', border: 'border-teal-300', hover: 'hover:bg-slate-50' },
 ];
 
-const HORARIOS = [
-  '08:00', '08:30', '09:00', '09:30', '10:00', '10:30',
-  '11:00', '11:30', '12:00', '13:00', '13:30', '14:00',
-  '14:30', '15:00', '15:30', '16:00', '16:30', '17:00',
-  '17:30', '18:00', '18:30', '19:00'
-];
-
 export default function Agenda({ salaoId, role }) {
   const { showToast } = useToast();
 
@@ -32,7 +25,7 @@ export default function Agenda({ salaoId, role }) {
   const [profissionais, setProfissionais] = useState([]);
   const [procedimentos, setProcedimentos] = useState([]);
   const [agendamentos, setAgendamentos] = useState([]);
-  const [config, setConfig] = useState({ custoFixo: 0 });
+  const [config, setConfig] = useState({ custoFixo: 0, horariosSemana: null, horariosExcecao: {} });
   const [loading, setLoading] = useState(true);
   const [custosCompostos, setCustosCompostos] = useState({});
 
@@ -71,6 +64,77 @@ export default function Agenda({ salaoId, role }) {
   const [novoProf, setNovoProf] = useState({ nome: '', cargo: 'FUNCIONARIO' });
   const [salvandoProf, setSalvandoProf] = useState(false);
 
+  // ─── Modal de Exceção de Horário ───
+  const [modalHorarioDiaAberto, setModalHorarioDiaAberto] = useState(false);
+  const [horarioDiaConfig, setHorarioDiaConfig] = useState({ ativo: true, abertura: '08:00', fechamento: '19:00' });
+  const [salvandoHorarioDia, setSalvandoHorarioDia] = useState(false);
+
+  const abrirAjusteDia = () => {
+    let conf = { ativo: true, abertura: '08:00', fechamento: '19:00' };
+    
+    if (config.horariosExcecao && config.horariosExcecao[dataSelecionada]) {
+      conf = config.horariosExcecao[dataSelecionada];
+    } else if (config.horariosSemana) {
+      const [year, month, day] = dataSelecionada.split('-');
+      const dataObj = new Date(year, month - 1, day);
+      const diaDaSemana = dataObj.getDay().toString();
+      if (config.horariosSemana[diaDaSemana]) {
+         conf = { ...config.horariosSemana[diaDaSemana] };
+      }
+    }
+    
+    setHorarioDiaConfig(conf);
+    setModalHorarioDiaAberto(true);
+  };
+
+  const salvarAjusteDia = async () => {
+    setSalvandoHorarioDia(true);
+    try {
+      const novaExcecao = {
+        ...config.horariosExcecao,
+        [dataSelecionada]: horarioDiaConfig
+      };
+
+      const { error } = await supabase
+        .from('configuracoes')
+        .update({ horarios_excecao: novaExcecao })
+        .eq('salao_id', salaoId);
+
+      if (error) throw error;
+      
+      setConfig(prev => ({ ...prev, horariosExcecao: novaExcecao }));
+      showToast('HORÁRIO DO DIA ATUALIZADO!', 'success');
+      setModalHorarioDiaAberto(false);
+    } catch (err) {
+      showToast('ERRO AO SALVAR HORÁRIO', 'error');
+    } finally {
+      setSalvandoHorarioDia(false);
+    }
+  };
+
+  const limparAjusteDia = async () => {
+    setSalvandoHorarioDia(true);
+    try {
+      const novaExcecao = { ...config.horariosExcecao };
+      delete novaExcecao[dataSelecionada];
+
+      const { error } = await supabase
+        .from('configuracoes')
+        .update({ horarios_excecao: novaExcecao })
+        .eq('salao_id', salaoId);
+
+      if (error) throw error;
+      
+      setConfig(prev => ({ ...prev, horariosExcecao: novaExcecao }));
+      showToast('AJUSTE REMOVIDO!', 'success');
+      setModalHorarioDiaAberto(false);
+    } catch (err) {
+      showToast('ERRO AO REMOVER AJUSTE', 'error');
+    } finally {
+      setSalvandoHorarioDia(false);
+    }
+  };
+
   // ─── Engine ───
   const engine = useMemo(() => new FinancialEngine({
     custoFixoPorAtendimento: config.custoFixo
@@ -86,7 +150,7 @@ export default function Agenda({ salaoId, role }) {
       setLoading(true);
       try {
         const [cfgRes, profRes, procRes, cliRes, custoRes] = await Promise.all([
-          supabase.from('configuracoes').select('custo_fixo_por_atendimento').eq('salao_id', salaoId).maybeSingle(),
+          supabase.from('configuracoes').select('custo_fixo_por_atendimento, horarios_semana, horarios_excecao').eq('salao_id', salaoId).maybeSingle(),
           supabase.from('profissionais').select('id, nome, cargo').eq('salao_id', salaoId).eq('ativo', true).order('nome'),
           supabase.from('procedimentos').select('id, nome, categoria, requer_comprimento, preco_p, preco_m, preco_g, custo_variavel').eq('salao_id', salaoId).eq('ativo', true).order('nome'),
           supabase.from('clientes').select('id, nome, telefone').eq('salao_id', salaoId).order('nome'),
@@ -95,7 +159,9 @@ export default function Agenda({ salaoId, role }) {
 
         if (cfgRes.data) {
           setConfig({
-            custoFixo: Number(cfgRes.data.custo_fixo_por_atendimento) || 0
+            custoFixo: Number(cfgRes.data.custo_fixo_por_atendimento) || 0,
+            horariosSemana: cfgRes.data.horarios_semana || null,
+            horariosExcecao: cfgRes.data.horarios_excecao || {}
           });
         }
         // Ordena: proprietária primeiro, depois funcionários
@@ -150,6 +216,50 @@ export default function Agenda({ salaoId, role }) {
 
     setAgendamentos(data || []);
   };
+
+  // ─── Geração Dinâmica de Horários ───
+  const HORARIOS = useMemo(() => {
+    let abertura = '08:00';
+    let fechamento = '19:00';
+    let ativo = true;
+
+    if (config.horariosExcecao && config.horariosExcecao[dataSelecionada]) {
+      const exc = config.horariosExcecao[dataSelecionada];
+      abertura = exc.abertura || abertura;
+      fechamento = exc.fechamento || fechamento;
+      ativo = exc.ativo !== undefined ? exc.ativo : ativo;
+    } else if (config.horariosSemana) {
+      const [year, month, day] = dataSelecionada.split('-');
+      const dataObj = new Date(year, month - 1, day);
+      const diaDaSemana = dataObj.getDay().toString();
+      const hs = config.horariosSemana[diaDaSemana];
+      if (hs) {
+        abertura = hs.abertura || abertura;
+        fechamento = hs.fechamento || fechamento;
+        ativo = hs.ativo !== undefined ? hs.ativo : ativo;
+      }
+    }
+
+    if (!ativo) return [];
+
+    const horariosGerados = [];
+    let [horaAtual, minAtual] = abertura.split(':').map(Number);
+    const [horaFim, minFim] = fechamento.split(':').map(Number);
+
+    const minutosTotaisAtual = () => horaAtual * 60 + minAtual;
+    const minutosTotaisFim = horaFim * 60 + minFim;
+
+    while (minutosTotaisAtual() <= minutosTotaisFim) {
+      horariosGerados.push(`${String(horaAtual).padStart(2, '0')}:${String(minAtual).padStart(2, '0')}`);
+      minAtual += 30;
+      if (minAtual >= 60) {
+        horaAtual += 1;
+        minAtual -= 60;
+      }
+    }
+
+    return horariosGerados;
+  }, [dataSelecionada, config.horariosSemana, config.horariosExcecao]);
 
   // ─── Autocomplete de clientes ───
   const clientesFiltrados = useMemo(() => {
@@ -823,6 +933,9 @@ export default function Agenda({ salaoId, role }) {
           <button onClick={() => mudarDia(1)} className="p-2 hover:bg-white rounded-lg transition-all shadow-sm border border-gray-200 bg-white">
             <ChevronRight size={16} className="text-gray-500" />
           </button>
+          <button onClick={abrirAjusteDia} className="p-2 hover:bg-white rounded-lg transition-all shadow-sm border border-gray-200 bg-white" title="Ajustar Horário do Dia">
+            <Settings size={16} className="text-gray-500" />
+          </button>
         </div>
       </div>
 
@@ -938,7 +1051,17 @@ export default function Agenda({ salaoId, role }) {
               </tr>
             </thead>
             <tbody>
-              {HORARIOS.map(hora => (
+              {HORARIOS.length === 0 ? (
+                <tr>
+                  <td colSpan={profissionais.length + 1} className="py-20 text-center bg-gray-50/50">
+                    <div className="flex flex-col items-center justify-center gap-3 opacity-60">
+                      <span className="text-4xl">😴</span>
+                      <p className="text-gray-500 font-bold uppercase text-sm tracking-wide">Salão Fechado Neste Dia</p>
+                      <p className="text-gray-400 text-xs font-semibold max-w-xs text-center uppercase">Você pode ajustar o horário deste dia no botão de engrenagem acima.</p>
+                    </div>
+                  </td>
+                </tr>
+              ) : HORARIOS.map(hora => (
                 <tr key={hora} className="group">
                   <td className="p-1.5 border-b border-r border-gray-300 bg-gray-50 text-center font-bold text-gray-600 text-[10px]">{hora}</td>
                   {profissionais.map((prof, idx) => {
@@ -1216,6 +1339,89 @@ export default function Agenda({ salaoId, role }) {
       )}
 
       {/* ═══ PAINEL LATERAL (MODAL) ═══ */}
+      {/* ═══ MODAL AJUSTE DE HORÁRIO DO DIA ═══ */}
+      {modalHorarioDiaAberto && (
+        <div className="fixed inset-0 bg-blue-950/40 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-fadeIn">
+          <div className="bg-white rounded-3xl w-full max-w-md overflow-hidden shadow-2xl animate-scaleIn border border-gray-100 flex flex-col max-h-[90vh]">
+            <div className="flex justify-between items-center p-5 border-b border-gray-100 bg-slate-50">
+              <div>
+                <h2 className="text-sm font-black text-blue-950 uppercase tracking-wide">Ajustar Horário</h2>
+                <p className="text-xs text-gray-500 font-medium uppercase mt-0.5">{fmtDataCompleta(dataSelecionada)}</p>
+              </div>
+              <button onClick={() => setModalHorarioDiaAberto(false)} className="p-2 bg-white rounded-full text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors shadow-sm">
+                <X size={20} />
+              </button>
+            </div>
+            
+            <div className="p-6 space-y-5 overflow-y-auto custom-scrollbar">
+              <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 flex gap-3">
+                <AlertTriangle className="text-amber-500 shrink-0 mt-0.5" size={20} />
+                <p className="text-xs font-bold text-amber-800 uppercase leading-relaxed">
+                  Esta alteração afetará apenas o dia {dataSelecionada.split('-').reverse().join('/')}. Para mudar o padrão da semana inteira, vá em Configurações.
+                </p>
+              </div>
+
+              <div className="space-y-4">
+                <div className={`flex items-center gap-3 p-4 border rounded-xl transition-colors ${horarioDiaConfig.ativo ? 'border-sky-200 bg-sky-50' : 'border-gray-200 bg-gray-50'}`}>
+                  <input
+                    type="checkbox"
+                    className="w-5 h-5 rounded border-gray-300 text-sky-600 focus:ring-sky-500 cursor-pointer"
+                    checked={horarioDiaConfig.ativo}
+                    onChange={(e) => setHorarioDiaConfig(prev => ({ ...prev, ativo: e.target.checked }))}
+                    id="checkboxAtivoDia"
+                  />
+                  <label htmlFor="checkboxAtivoDia" className="font-bold text-gray-700 text-sm uppercase cursor-pointer">
+                    Salão Aberto Neste Dia
+                  </label>
+                </div>
+
+                {horarioDiaConfig.ativo && (
+                  <div className="flex items-center justify-between gap-4">
+                    <div className="flex-1">
+                      <label className="text-xs font-bold text-gray-500 uppercase mb-1 block">Abertura</label>
+                      <input
+                        type="time"
+                        className="w-full border-2 border-gray-200 p-3 rounded-xl focus:border-sky-500 outline-none text-sm font-bold text-gray-700"
+                        value={horarioDiaConfig.abertura}
+                        onChange={(e) => setHorarioDiaConfig(prev => ({ ...prev, abertura: e.target.value }))}
+                      />
+                    </div>
+                    <div className="flex-1">
+                      <label className="text-xs font-bold text-gray-500 uppercase mb-1 block">Fechamento</label>
+                      <input
+                        type="time"
+                        className="w-full border-2 border-gray-200 p-3 rounded-xl focus:border-sky-500 outline-none text-sm font-bold text-gray-700"
+                        value={horarioDiaConfig.fechamento}
+                        onChange={(e) => setHorarioDiaConfig(prev => ({ ...prev, fechamento: e.target.value }))}
+                      />
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            <div className="p-5 border-t border-gray-100 bg-slate-50 flex gap-3">
+              {config.horariosExcecao && config.horariosExcecao[dataSelecionada] && (
+                <button
+                  onClick={limparAjusteDia}
+                  disabled={salvandoHorarioDia}
+                  className="flex-1 bg-white text-red-500 border border-red-200 py-3 rounded-xl font-bold uppercase text-xs hover:bg-red-50 transition-all shadow-sm flex justify-center items-center gap-2"
+                >
+                  {salvandoHorarioDia ? <Loader2 size={16} className="animate-spin" /> : 'Remover Exceção'}
+                </button>
+              )}
+              <button
+                onClick={salvarAjusteDia}
+                disabled={salvandoHorarioDia}
+                className="flex-1 bg-blue-900 text-white py-3 rounded-xl font-bold uppercase text-xs hover:bg-blue-800 transition-all shadow-lg shadow-blue-900/20 flex justify-center items-center gap-2"
+              >
+                {salvandoHorarioDia ? <Loader2 size={16} className="animate-spin" /> : 'Salvar Horário'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {modalAberto && (
         <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex justify-center items-center z-50 p-4" onClick={() => setModalAberto(false)}>
           <div className="w-full max-w-lg bg-white rounded-2xl shadow-2xl max-h-[90vh] overflow-y-auto animate-fadeIn p-6"

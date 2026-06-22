@@ -1165,6 +1165,13 @@ export default function Agenda({ salaoId, role }) {
                 <p className="font-medium text-gray-600">{fmt(agendamentoSelecionado.valor_cobrado)}</p>
               </div>
 
+              {agendamentoSelecionado.obs && (
+                <div className="bg-amber-50 border border-amber-200 rounded-xl px-3 py-2">
+                  <p className="text-[10px] font-black uppercase text-amber-600 mb-1">Observação</p>
+                  <p className="text-sm text-gray-700 font-medium">{agendamentoSelecionado.obs}</p>
+                </div>
+              )}
+
               {/* PAGO OU NÃO */}
               <div className={`flex items-center gap-3 p-3 border-2 rounded-xl cursor-pointer transition-colors ${Number(agendamentoSelecionado.valor_pago) > 0 ? 'border-emerald-200 bg-emerald-50 hover:border-emerald-300' : 'border-gray-200 bg-white hover:border-gray-200'}`} onClick={togglePagamento}>
                 <div className={`w-5 h-5 rounded flex items-center justify-center transition-colors ${Number(agendamentoSelecionado.valor_pago) > 0 ? 'bg-emerald-500 text-white' : 'bg-sky-100 text-transparent'}`}>

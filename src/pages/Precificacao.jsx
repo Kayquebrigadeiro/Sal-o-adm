@@ -8,7 +8,8 @@ import CatalogoProdutos from './CatalogoProdutos';
 import BaseCustos from '../components/BaseCustos';
 import ProdutosRelacionados from '../components/ProdutosRelacionados';
 import { CATEGORIAS, ORDEM_CATEGORIAS } from '../constants/categorias';
-import { Plus, Trash2, Calculator, AlertTriangle, Package, Landmark, Zap, RefreshCw } from 'lucide-react';
+import { Plus, Trash2, Calculator, AlertTriangle, Package, Landmark, Zap, RefreshCw, HelpCircle } from 'lucide-react';
+import InfoTooltip from '../components/Tooltip';
 
 const fmt = (v) => Number(v || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
 const fmtPct = (v) => `${Number(v || 0).toFixed(1)}%`;
@@ -589,13 +590,29 @@ export default function Precificacao({ salaoId }) {
               <tr className="bg-white text-gray-800 text-[10px] uppercase font-bold tracking-wider">
                 <th className="p-3 whitespace-nowrap">Serviço</th>
                 <th className="p-3 text-center whitespace-nowrap">Custo Fixo</th>
-                <th className="p-3 text-center whitespace-nowrap"><span className="text-emerald-500 font-black mr-1">+</span>Custo Mat.</th>
-                <th className="p-3 text-center whitespace-nowrap"><span className="text-emerald-500 font-black mr-1">+</span>Ganho Liq.</th>
-                <th className="p-3 text-center border-l border-gray-200 whitespace-nowrap">
-                  <span className="text-gray-500 font-black mr-1">=</span>Preço P
+                <th className="p-3 text-center whitespace-nowrap">
+                  <div className="flex items-center justify-center gap-1">
+                    <span className="text-emerald-500 font-black">+</span>
+                    Custo dos produtos
+                    <InfoTooltip content="Soma dos produtos utilizados." position="top">
+                      <HelpCircle size={12} className="text-gray-400 hover:text-sky-500 cursor-pointer" />
+                    </InfoTooltip>
+                  </div>
                 </th>
-                <th className="p-3 text-center whitespace-nowrap">Preço M</th>
-                <th className="p-3 text-center whitespace-nowrap">Preço G</th>
+                <th className="p-3 text-center whitespace-nowrap">
+                  <div className="flex items-center justify-center gap-1">
+                    <span className="text-emerald-500 font-black">+</span>
+                    Ganho Desejado
+                    <InfoTooltip content="Valor que você deseja receber por este serviço." position="top">
+                      <HelpCircle size={12} className="text-gray-400 hover:text-sky-500 cursor-pointer" />
+                    </InfoTooltip>
+                  </div>
+                </th>
+                <th className="p-3 text-center border-l border-gray-200 whitespace-nowrap">
+                  <span className="text-gray-500 font-black mr-1">=</span>Preço Curto
+                </th>
+                <th className="p-3 text-center whitespace-nowrap">Preço Médio</th>
+                <th className="p-3 text-center whitespace-nowrap">Preço Longo</th>
                 <th className="p-3 text-center border-l border-gray-200 whitespace-nowrap">Ações</th>
               </tr>
             </thead>
@@ -645,7 +662,7 @@ export default function Precificacao({ salaoId }) {
             </div>
 
             <div className="bg-gray-50 border border-gray-200 rounded-xl p-4">
-              <label className="text-xs font-black text-gray-500 mb-2 block uppercase">Produtos Utilizados (Custo Mat.)</label>
+              <label className="text-xs font-black text-gray-500 mb-2 block uppercase">Produtos Utilizados (Custo dos produtos)</label>
               <select className="w-full border-2 border-gray-200 p-3 rounded-xl text-xs font-bold uppercase mb-3 outline-none" onChange={(e) => {
                 const id = e.target.value;
                 if (!id) return;
@@ -700,15 +717,15 @@ export default function Precificacao({ salaoId }) {
               <h3 className="text-sm font-black text-emerald-400 uppercase mb-4 flex items-center gap-2"><Calculator size={16} /> Resumo Matemático</h3>
               <div className="space-y-2 text-xs font-medium text-gray-600 uppercase">
                 <div className="flex justify-between"><span>Custo Fixo:</span> <span className="text-gray-800">{fmt(config.custo_fixo_por_atendimento)} (Automático)</span></div>
-                <div className="flex justify-between"><span>Custo Mat.:</span> <span className="text-gray-800">{fmt(custoMatModal)} (Soma dos {prodsSelecionados.length} Acima)</span></div>
-                <div className="flex justify-between"><span>Ganho Líq.:</span> <span className="text-gray-800">{fmt(ganhoModal)} (Você Digita)</span></div>
+                <div className="flex justify-between"><span>Custo dos produtos:</span> <span className="text-gray-800">{fmt(custoMatModal)} (Soma dos {prodsSelecionados.length} Acima)</span></div>
+                <div className="flex justify-between"><span>Ganho Desejado:</span> <span className="text-gray-800">{fmt(ganhoModal)} (Você Digita)</span></div>
                 <div className="border-t border-gray-200 my-2 pt-2 flex justify-between font-black text-sm text-gray-500"><span>SUBTOTAL (BASE):</span> <span>{fmt(baseModal)}</span></div>
                 <div className="flex justify-between text-gray-500"><span>Taxa Maquininha (5%):</span> <span>+ {fmt(valorMaquininhaModal)} (÷ 0,95)</span></div>
               </div>
 
               <div className="mt-4 space-y-2">
                 <div className="bg-emerald-500/20 border border-emerald-500/50 rounded-xl p-3 flex justify-between items-center">
-                  <span className="font-black text-emerald-400 uppercase">PREÇO FINAL (P):</span>
+                  <span className="font-black text-emerald-400 uppercase">PREÇO FINAL (CURTO):</span>
                   <div className="text-right">
                     <span className="text-lg font-black text-gray-800 block">{fmt(precoPModal)}</span>
                     <span className="text-[9px] text-emerald-200 uppercase">(Já cobre a maquininha)</span>
@@ -717,11 +734,11 @@ export default function Precificacao({ salaoId }) {
                 {formProc.categoria === 'SERVICO_CABELO' && (
                   <div className="grid grid-cols-2 gap-2 mt-2">
                     <div className="bg-sky-500 rounded-xl p-2 text-center border border-gray-200 flex justify-between items-center px-3">
-                      <span className="text-[10px] font-bold text-gray-500 uppercase">PREÇO M (+20%)</span>
+                      <span className="text-[10px] font-bold text-gray-500 uppercase">PREÇO MÉDIO (+20%)</span>
                       <span className="font-black text-gray-800">{fmt(precoMModal)}</span>
                     </div>
                     <div className="bg-sky-500 rounded-xl p-2 text-center border border-gray-200 flex justify-between items-center px-3">
-                      <span className="text-[10px] font-bold text-gray-500 uppercase">PREÇO G (+30%)</span>
+                      <span className="text-[10px] font-bold text-gray-500 uppercase">PREÇO LONGO (+30%)</span>
                       <span className="font-black text-gray-800">{fmt(precoGModal)}</span>
                     </div>
                   </div>

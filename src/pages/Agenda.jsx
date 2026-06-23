@@ -269,6 +269,20 @@ export default function Agenda({ salaoId, role }) {
       .slice(0, 6);
   }, [buscaCliente, clientes]);
 
+  // ─── Dias para o Painel de Mover ───
+  const nextDays = useMemo(() => {
+    if (!dragging?.dataOrigem) return [];
+    const arr = [];
+    const [y, m, d] = dragging.dataOrigem.split('-');
+    const baseDate = new Date(y, m - 1, d);
+    for(let i = 0; i <= 6; i++) {
+       const date = new Date(baseDate);
+       date.setDate(date.getDate() + i);
+       arr.push(date.toISOString().split('T')[0]);
+    }
+    return arr;
+  }, [dragging]);
+
   const selecionarCliente = (nome) => {
     setNovo(prev => ({ ...prev, cliente: nome }));
     setBuscaCliente(nome);
@@ -801,10 +815,10 @@ export default function Agenda({ salaoId, role }) {
   // ─── Drag and Drop Handler ───
   const handleDrop = async (novoProfId, novaHora) => {
     if (!dragging) return;
-    const { agendId, profId: profOrigem, hora: horaOrigem } = dragging;
+    const { agendId, profId: profOrigem, hora: horaOrigem, dataOrigem } = dragging;
 
     // Sem mudança
-    if (novoProfId === profOrigem && novaHora === horaOrigem) {
+    if (novoProfId === profOrigem && novaHora === horaOrigem && dataSelecionada === dataOrigem) {
       setDragging(null);
       setDragOver(null);
       return;
@@ -825,45 +839,23 @@ export default function Agenda({ salaoId, role }) {
     }
 
     // Confirmar mudança de profissional (só se mudou)
-    if (novoProfId !== profOrigem) {
-      const profDestino = profissionais.find(p => p.id === novoProfId);
-      const nomeCliente = dragging.cliente;
-      
-      // Sprint 5: Usar modal customizado
-      setMoverDados({
-        agendId,
-        novoProfId,
-        novaHora,
-        profDestino: profDestino?.nome,
-        nomeCliente,
-      });
-      setModalMoverAberto(true);
-      return;
-    }
-
-    try {
-      const { error } = await supabase
-        .from('atendimentos')
-        .update({
-          profissional_id: novoProfId,
-          horario: novaHora + ':00',
-        })
-        .eq('id', agendId)
-        .eq('salao_id', salaoId);
-
-      if (error) throw error;
-
-      showToast('✅ AGENDAMENTO MOVIDO COM SUCESSO!', 'success');
-      carregarAtendimentos();
-    } catch (err) {
-      showToast(`ERRO AO MOVER: ${err.message}`, 'error');
-    } finally {
-      setDragging(null);
-      setDragOver(null);
-    }
+    const profDestino = profissionais.find(p => p.id === novoProfId);
+    const nomeCliente = dragging.cliente;
+    
+    // Sprint 5 e 8: Usar modal customizado
+    setMoverDados({
+      agendId,
+      novoProfId,
+      novaHora,
+      novaData: dataSelecionada,
+      dataOrigem,
+      profDestino: profDestino?.nome,
+      nomeCliente,
+    });
+    setModalMoverAberto(true);
   };
 
-  // ─── Sprint 5: Confirmar movimento de agendamento ───
+  // ─── Sprint 5 e 8: Confirmar movimento de agendamento ───
   const confirmarMover = async () => {
     if (!moverDados) return;
     
@@ -873,6 +865,7 @@ export default function Agenda({ salaoId, role }) {
         .update({
           profissional_id: moverDados.novoProfId,
           horario: moverDados.novaHora + ':00',
+          data: moverDados.novaData
         })
         .eq('id', moverDados.agendId)
         .eq('salao_id', salaoId);
@@ -905,7 +898,28 @@ export default function Agenda({ salaoId, role }) {
   }
 
   return (
-    <div className="p-5 bg-slate-50 min-h-screen font-sans flex flex-col">
+    <div className="p-5 bg-slate-50 min-h-screen font-sans flex flex-col relative">
+      {dragging && (
+        <div className="fixed top-0 left-0 w-full z-[100] bg-gray-900/90 backdrop-blur-md border-b border-gray-700 p-3 shadow-2xl flex flex-col items-center gap-2 animate-slideDown">
+           <p className="text-white text-xs font-black uppercase tracking-widest text-center">Para qual dia deseja mover?</p>
+           <div className="flex gap-2 flex-wrap justify-center">
+             {nextDays.map(dia => {
+               const lbl = new Date(dia + 'T12:00:00').toLocaleDateString('pt-BR', { weekday: 'short', day: '2-digit', month: '2-digit'});
+               return (
+                  <div
+                    key={dia}
+                    onDragOver={e => { e.preventDefault(); if (dataSelecionada !== dia) setDataSelecionada(dia); }}
+                    className={`px-4 py-2 rounded-xl border-2 transition-all cursor-pointer font-bold text-xs uppercase
+                      ${dataSelecionada === dia ? 'bg-white text-sky-600 border-white scale-110 shadow-lg shadow-sky-500/50' : 'border-gray-500 text-gray-300 bg-gray-800'}`}
+                  >
+                    {lbl}
+                  </div>
+               );
+             })}
+           </div>
+           <p className="text-gray-400 text-[10px] uppercase font-bold mt-1">Passe o mouse sobre o dia desejado e solte na grade de horários abaixo</p>
+        </div>
+      )}
       <div className="mx-auto w-full max-w-[1400px] flex flex-col">
       {/* ═══ HEADER COM NAVEGAÇÃO DE DATA ═══ */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-6 gap-3">
@@ -1082,7 +1096,7 @@ export default function Agenda({ salaoId, role }) {
                             draggable
                             onDragStart={(e) => {
                               e.dataTransfer.effectAllowed = 'move';
-                              setDragging({ agendId: agend.id, profId: prof.id, hora });
+                              setDragging({ agendId: agend.id, profId: prof.id, hora, dataOrigem: dataSelecionada, cliente: agend.cliente });
                             }}
                             onDragEnd={() => { setDragging(null); setDragOver(null); }}
                             onClick={(e) => abrirDetalhes(agend, e)}

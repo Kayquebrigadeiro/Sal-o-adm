@@ -26,6 +26,7 @@ export default function Configuracoes({ salaoId, role }) {
     nome: '',
     cargo: 'FUNCIONARIO',
     salario_fixo: '',
+    porcentagem_comissao: '',
     ativo: true
   });
 
@@ -133,7 +134,7 @@ export default function Configuracoes({ salaoId, role }) {
     if (isInitial) setLoading(true);
     const { data } = await supabase
       .from('profissionais')
-      .select('id, nome, cargo, salario_fixo')
+      .select('id, nome, cargo, salario_fixo, porcentagem_comissao')
       .eq('salao_id', salaoId)
       .eq('ativo', true)
       .order('nome');
@@ -148,6 +149,7 @@ export default function Configuracoes({ salaoId, role }) {
       ...form,
       salao_id: salaoId,
       salario_fixo: Number(form.salario_fixo || 0),
+      porcentagem_comissao: form.porcentagem_comissao ? Number(form.porcentagem_comissao) : null,
       ativo: true
     };
 
@@ -187,7 +189,7 @@ export default function Configuracoes({ salaoId, role }) {
         </div>
         {abaAtiva === 'equipe' && (
           <button
-            onClick={() => { setEditando(null); setForm({ nome: '', cargo: 'FUNCIONARIO', salario_fixo: '', ativo: true }); setModalProf(true); }}
+            onClick={() => { setEditando(null); setForm({ nome: '', cargo: 'FUNCIONARIO', salario_fixo: '', porcentagem_comissao: '', ativo: true }); setModalProf(true); }}
             className="bg-white text-gray-800 px-6 py-3 rounded-2xl font-bold flex items-center gap-2 hover:bg-sky-500 hover:text-white transition-all shadow-lg shadow-blue-200 uppercase text-sm"
           >
             <Plus size={18} /> Novo Profissional
@@ -234,8 +236,10 @@ export default function Configuracoes({ salaoId, role }) {
                   {prof.nome}
                   {prof.cargo === 'PROPRIETARIO' && <ShieldCheck size={14} className="text-gray-500" title="Proprietário" />}
                 </h3>
-                <p className="text-xs font-bold text-gray-500 uppercase tracking-widest">
-                  {prof.cargo} • {prof.salario_fixo > 0 ? `Fixo: ${fmt(prof.salario_fixo)}` : 'Apenas Comissão'}
+                <p className="text-xs font-bold text-gray-500 uppercase tracking-widest mt-1">
+                  {prof.cargo} 
+                  {prof.salario_fixo > 0 ? ` • Fixo: ${fmt(prof.salario_fixo)}` : ''}
+                  {prof.porcentagem_comissao ? ` • Comiss.: ${prof.porcentagem_comissao}%` : ''}
                 </p>
               </div>
             </div>
@@ -293,7 +297,7 @@ export default function Configuracoes({ salaoId, role }) {
               </select>
             </div>
             <div>
-              <label className="text-sm font-bold text-gray-600 mb-1 block uppercase">Salário Fixo (Opcional)</label>
+              <label className="text-sm font-bold text-gray-600 mb-1 block uppercase">Salário Fixo (Mês)</label>
               <div className="relative">
                 <span className="absolute left-3 top-3.5 text-gray-500 text-sm">R$</span>
                 <input
@@ -303,13 +307,25 @@ export default function Configuracoes({ salaoId, role }) {
                 />
               </div>
             </div>
+            <div className="col-span-2">
+              <label className="text-sm font-bold text-gray-600 mb-1 block uppercase">Comissão Padrão (Opcional)</label>
+              <div className="relative">
+                <input
+                  type="number" className="w-full border-2 border-gray-200 p-3 pr-10 rounded-2xl focus:border-sky-500 outline-none"
+                  value={form.porcentagem_comissao} onChange={e => setForm({ ...form, porcentagem_comissao: e.target.value })}
+                  placeholder="Ex: 50"
+                  max="100"
+                />
+                <span className="absolute right-4 top-3.5 text-gray-500 font-bold">%</span>
+              </div>
+            </div>
           </div>
 
           <div className="p-4 bg-sky-50 rounded-2xl border border-sky-100 uppercase">
             <div className="flex gap-3">
               <Users className="text-gray-500" size={20} />
               <p className="text-xs text-sky-600 leading-relaxed">
-                <strong>Nota:</strong> A comissão deste profissional é definida por <strong>procedimento</strong> na aba de Serviços. Isso permite que ele ganhe 50% em cortes e 30% em químicas, por exemplo.
+                <strong>Nota Importante:</strong> A comissão exata também pode ser definida por <strong>procedimento</strong> na aba de Precificação/Serviços. O valor preenchido aqui serve de base para os profissionais.
               </p>
             </div>
           </div>

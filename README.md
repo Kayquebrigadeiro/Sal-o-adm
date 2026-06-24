@@ -1,4 +1,4 @@
-# 💇‍♀️ Salão Secreto: Ecossistema SaaS de Gestão Financeira Avançada
+#  Salão Secreto: Ecossistema SaaS de Gestão Financeira Avançada
 
 > **Solução integrada para otimização de margens de lucro e controle operacional multi-tenant.**
 
@@ -6,7 +6,7 @@ O **Salão Secreto** é uma plataforma SaaS especializada que atua como um núcl
 
 ---
 
-## 🎯 Objetivo: Segurança Operacional e Rentabilidade
+##  Objetivo: Segurança Operacional e Rentabilidade
 
 O sistema elimina a incerteza financeira comum na gestão de centros de estética através de:
 
@@ -16,37 +16,37 @@ O sistema elimina a incerteza financeira comum na gestão de centros de estétic
 
 ---
 
-## 🎭 Estrutura de Acessos e Perfis (RBAC)
+##  Estrutura de Acessos e Perfis (RBAC)
 
 A plataforma possui um sistema de permissões baseado em níveis de responsabilidade:
 
-### 👑 ADMINISTRADOR GERAL (Vendedor)
+### ADMINISTRADOR GERAL (Vendedor)
 - Gestão centralizada de múltiplos salões (tenants).
 - Monitoramento de indicadores globais de performance.
 - Configuração de infraestrutura e provisionamento de novos acessos.
 
-### 👩‍💼 GESTÃO DE UNIDADE (Proprietária)
+###  GESTÃO DE UNIDADE (Proprietária)
 - Controle administrativo total do ponto de venda.
 - Configuração de regras de comissionamento e precificação.
 - Acesso a dashboards estratégicos de saúde financeira e performance de equipe.
 
-### ✂️ COLABORADOR OPERACIONAL (Staff)
+###  COLABORADOR OPERACIONAL (Staff)
 - Interface simplificada para gestão de agenda individual.
 - Acesso restrito a informações operacionais pertinentes à função.
 - Foco na excelência do atendimento e organização de horários.
 
 ---
 
-## ✨ Diferenciais Tecnológicos
+##  Diferenciais Tecnológicos
 
-- **🛡️ Isolamento Multi-Tenant**: Implementação robusta de Row Level Security (RLS) para garantir a total privacidade e segurança dos dados entre unidades.
-- **📈 Inteligência de Dados**: Dashboards em tempo real com ranking de procedimentos e análise de rendimento por profissional.
-- **🕒 Agendamento Inteligente**: Sistema de reserva de horários integrado ao motor financeiro para previsão imediata de margens.
-- **⚙️ Automação de Back-end**: Triggers em PostgreSQL para atualização atômica de indicadores financeiros a cada transação.
+- ** Isolamento Multi-Tenant**: Implementação robusta de Row Level Security (RLS) para garantir a total privacidade e segurança dos dados entre unidades.
+- **Inteligência de Dados**: Dashboards em tempo real com ranking de procedimentos e análise de rendimento por profissional.
+- ** Agendamento Inteligente**: Sistema de reserva de horários integrado ao motor financeiro para previsão imediata de margens.
+- **Automação de Back-end**: Triggers em PostgreSQL para atualização atômica de indicadores financeiros a cada transação.
 
 ---
 
-## 🛠️ Especificações Técnicas
+## Especificações Técnicas
 
 Desenvolvido com tecnologias de vanguarda para garantir escalabilidade e resiliência:
 
@@ -58,7 +58,7 @@ Desenvolvido com tecnologias de vanguarda para garantir escalabilidade e resili�
 
 ---
 
-## 🚀 Implementação
+##  Implementação
 
 ### Pré-requisitos
 - Node.js 18+
@@ -90,18 +90,18 @@ Desenvolvido com tecnologias de vanguarda para garantir escalabilidade e resili�
 
 ---
 
-## 📂 Documentação e Suporte
+## Documentação e Suporte
 
 Acesse os documentos técnicos para orientações detalhadas:
 
-- 📑 **[Guia de Deploy](docs/guias/GUIA_DEPLOY.md)**: Procedimentos para publicação.
-- 🏗️ **[Arquitetura do Sistema](docs/ARQUITETURA_VENDEDOR_ADMIN.md)**: Documentação técnica da infraestrutura.
-- 🧠 **[Lógica Financeira](docs/CONTEXTO_COMPLETO_IA.md)**: Detalhamento das regras de negócio e cálculos.
-- 🔐 **[Gestão de Acessos](docs/resumos/RESUMO_IMPLEMENTACAO_ADMINS.md)**: Estrutura de permissões e segurança.
+- **[Guia de Deploy](docs/guias/GUIA_DEPLOY.md)**: Procedimentos para publicação.
+-  **[Arquitetura do Sistema](docs/ARQUITETURA_VENDEDOR_ADMIN.md)**: Documentação técnica da infraestrutura.
+-  **[Lógica Financeira](docs/CONTEXTO_COMPLETO_IA.md)**: Detalhamento das regras de negócio e cálculos.
+-  **[Gestão de Acessos](docs/resumos/RESUMO_IMPLEMENTACAO_ADMINS.md)**: Estrutura de permissões e segurança.
 
 ---
 
-## 🤝 Roadmap de Evolução
+##  Roadmap de Evolução
 
 - [ ] Aplicativo Nativo (iOS/Android)
 - [ ] Módulo de Comunicação Automatizada (WhatsApp API)
@@ -110,7 +110,7 @@ Acesse os documentos técnicos para orientações detalhadas:
 
 ---
 
-## 📄 Termos e Licença
+## Termos e Licença
 
 Software de uso privado. Todos os direitos reservados para **Kayque Brigadeiro**.
 

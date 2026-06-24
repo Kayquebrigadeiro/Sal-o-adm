@@ -542,3 +542,4 @@ export default function Configuracoes({ salaoId, role }) {
     </div>
   );
 }
+// Fim do componente

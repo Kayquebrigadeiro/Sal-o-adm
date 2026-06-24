@@ -42,7 +42,15 @@ export default function Agenda({ salaoId, role }) {
   const [modoNovoCliente, setModoNovoCliente] = useState(false);
 
   // ─── Data selecionada ───
-  const [dataSelecionada, setDataSelecionada] = useState(new Date().toISOString().split('T')[0]);
+  const getLocalToday = () => {
+    const d = new Date();
+    const year = d.getFullYear();
+    const month = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  };
+
+  const [dataSelecionada, setDataSelecionada] = useState(getLocalToday());
 
   // ─── Modal ───
   const [modalAberto, setModalAberto] = useState(false);
@@ -278,7 +286,11 @@ export default function Agenda({ salaoId, role }) {
     for(let i = 0; i <= 6; i++) {
        const date = new Date(baseDate);
        date.setDate(date.getDate() + i);
-       arr.push(date.toISOString().split('T')[0]);
+       
+       const year = date.getFullYear();
+       const month = String(date.getMonth() + 1).padStart(2, '0');
+       const day = String(date.getDate()).padStart(2, '0');
+       arr.push(`${year}-${month}-${day}`);
     }
     return arr;
   }, [dragging]);
@@ -320,10 +332,13 @@ export default function Agenda({ salaoId, role }) {
   const mudarDia = (delta) => {
     const d = new Date(dataSelecionada + 'T12:00:00');
     d.setDate(d.getDate() + delta);
-    setDataSelecionada(d.toISOString().split('T')[0]);
+    const year = d.getFullYear();
+    const month = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    setDataSelecionada(`${year}-${month}-${day}`);
   };
-  const hoje = () => setDataSelecionada(new Date().toISOString().split('T')[0]);
-  const ehHoje = dataSelecionada === new Date().toISOString().split('T')[0];
+  const hoje = () => setDataSelecionada(getLocalToday());
+  const ehHoje = dataSelecionada === getLocalToday();
 
   const fmtDataCompleta = (d) => {
     const dt = new Date(d + 'T12:00:00');

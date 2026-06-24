@@ -132,12 +132,18 @@ export default function Configuracoes({ salaoId, role }) {
 
   const carregarProfissionais = async (isInitial = false) => {
     if (isInitial) setLoading(true);
-    const { data } = await supabase
+    const { data, error } = await supabase
       .from('profissionais')
-      .select('id, nome, cargo, salario_fixo, porcentagem_comissao')
+      .select('*')
       .eq('salao_id', salaoId)
       .eq('ativo', true)
       .order('nome');
+      
+    if (error) {
+      console.error("ERRO AO CARREGAR PROFISSIONAIS:", error);
+      showToast('ERRO AO CARREGAR EQUIPE. O Supabase pode estar atualizando o cache.', 'error');
+    }
+    
     setProfissionais(data || []);
     if (isInitial) setLoading(false);
   };

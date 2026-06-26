@@ -2,6 +2,8 @@ import { useState, useEffect, useMemo } from 'react';
 import { supabase } from '../supabaseClient';
 import { useToast } from '../components/Toast';
 import ConfirmModal from '../components/ConfirmModal';
+import useDashboardProtection from '../hooks/useDashboardProtection';
+import DashboardLockOverlay from '../components/DashboardLockOverlay';
 import {
   Lock, AlertCircle, ShieldCheck, CalendarDays,
   Sparkles, Bookmark, CheckCircle, TrendingUp,
@@ -103,9 +105,8 @@ const ExplicacaoGrafico = ({ texto, dica }) => (
 export default function Dashboard({ salaoId }) {
   const { showToast } = useToast();
 
-  // ─── PIN ───
-  const [unlocked, setUnlocked] = useState(false);
-  const [pin, setPin] = useState('');
+  // ─── Proteção Inteligente ───
+  const { isLocked, protectionEnabled, loading: protectionLoading, unlock } = useDashboardProtection(salaoId);
 
   // ─── Filtros (igual à planilha) ───
   const [mesSelecionado, setMesSelecionado] = useState('');
@@ -141,15 +142,15 @@ export default function Dashboard({ salaoId }) {
 
   // ─── Carregar dados ───
   useEffect(() => {
-    if (!salaoId || !mesSelecionado || !unlocked) return;
+    if (!salaoId || !mesSelecionado || isLocked) return;
     carregarDados();
-  }, [salaoId, mesSelecionado, unlocked]);
+  }, [salaoId, mesSelecionado, isLocked]);
 
   // Recarregar homecare quando ano mudar
   useEffect(() => {
-    if (!salaoId || !unlocked) return;
+    if (!salaoId || isLocked) return;
     carregarHomecarePorMes();
-  }, [salaoId, anoHomecare, unlocked]);
+  }, [salaoId, anoHomecare, isLocked]);
 
   const carregarDados = async () => {
     setLoading(true);
@@ -318,30 +319,24 @@ export default function Dashboard({ salaoId }) {
   }, [mesAtual, homecareDados, despesasDados, gastosPessoais, salariosFixos]);
 
   // ────────────────────────────────────────────────────────────
-  // TELA DE BLOQUEIO
+  // LOADING da proteção (enquanto busca config do banco)
   // ────────────────────────────────────────────────────────────
-  if (!unlocked) {
+  if (protectionLoading) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-screen bg-gradient-to-br from-blue-900 to-blue-800 p-4">
-        <div className="bg-gray-50 backdrop-blur-xl p-8 rounded-3xl shadow-2xl border border-gray-200 w-full max-w-sm text-center">
-          <div className="w-16 h-16 bg-gradient-to-br from-sky-400 to-sky-500 text-white rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-xl">
-            <Lock size={28} />
-          </div>
-          <h2 className="text-2xl font-black text-gray-800 mb-2">Painel Financeiro</h2>
-          <p className="text-gray-500 mb-8 text-sm">Acesso restrito à gestão financeira.</p>
-          <form onSubmit={e => { e.preventDefault(); if (pin === (import.meta.env.VITE_DASHBOARD_PIN || '8239')) setUnlocked(true); else { showToast('PIN INCORRETO', 'error'); setPin(''); } }}>
-            <input
-              type="password" maxLength={4} placeholder="PIN"
-              className="w-full text-center text-4xl tracking-[0.5em] font-black bg-gray-50 border border-gray-200 text-gray-800 rounded-xl py-4 outline-none focus:ring-2 focus:ring-sky-500 mb-4"
-              value={pin} onChange={e => setPin(e.target.value)} autoFocus
-            />
-            <button type="submit" className="w-full bg-gradient-to-r from-sky-500 to-sky-500 text-white py-4 rounded-xl font-bold hover:opacity-90 transition-all shadow-xl">
-              Desbloquear
-            </button>
-          </form>
+      <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-blue-900 to-blue-800">
+        <div className="flex flex-col items-center gap-4">
+          <div className="w-8 h-8 border-3 border-sky-400 border-t-transparent rounded-full animate-spin" />
+          <p className="text-gray-300 text-sm font-medium uppercase">Carregando Dashboard...</p>
         </div>
       </div>
     );
+  }
+
+  // ────────────────────────────────────────────────────────────
+  // TELA DE BLOQUEIO (PIN automático via hook)
+  // ────────────────────────────────────────────────────────────
+  if (isLocked) {
+    return <DashboardLockOverlay onUnlock={unlock} salaoId={salaoId} />;
   }
 
   // ────────────────────────────────────────────────────────────
@@ -368,10 +363,12 @@ export default function Dashboard({ salaoId }) {
               ))}
             </select>
           </div>
-          <button onClick={() => { setUnlocked(false); setPin(''); }}
-            className="flex items-center gap-2 bg-white px-4 py-2 rounded-xl border border-gray-200 text-gray-500 font-bold hover:bg-gray-50 text-sm shadow-sm">
-            <Lock size={14} /> Bloquear
-          </button>
+          {protectionEnabled && (
+            <button onClick={() => window.location.reload()}
+              className="flex items-center gap-2 bg-white px-4 py-2 rounded-xl border border-gray-200 text-gray-500 font-bold hover:bg-gray-50 text-sm shadow-sm">
+              <Lock size={14} /> Bloquear
+            </button>
+          )}
         </div>
       </div>
 

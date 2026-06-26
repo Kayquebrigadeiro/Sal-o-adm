@@ -3,7 +3,7 @@ import { supabase } from '../supabaseClient';
 import { useToast } from '../components/Toast';
 import Modal from '../components/Modal';
 import ConfirmModal from '../components/ConfirmModal';
-import { Plus, Edit2, Trash2, ShieldCheck, Users, AlertCircle, Copy, MessageCircle, CreditCard, Clock, Loader2 } from 'lucide-react';
+import { Plus, Edit2, Trash2, ShieldCheck, Users, AlertCircle, Copy, MessageCircle, CreditCard, Clock, Loader2, Lock, RefreshCw } from 'lucide-react';
 
 const fmt = (v) => Number(v || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
 
@@ -38,6 +38,11 @@ export default function Configuracoes({ salaoId, role }) {
   const [copiado, setCopiado] = useState(false);
   const [confirmacao, setConfirmacao] = useState(null);
 
+  // Proteção do Dashboard
+  const [dashboardProtection, setDashboardProtection] = useState(false);
+  const [dashboardPin, setDashboardPin] = useState(null);
+  const [loadingProtection, setLoadingProtection] = useState(false);
+
   // Variáveis PIX (.env)
   const chavePix = import.meta.env.VITE_PIX_CHAVE;
   const nomePix  = import.meta.env.VITE_PIX_NOME;
@@ -47,6 +52,75 @@ export default function Configuracoes({ salaoId, role }) {
   useEffect(() => {
     if (salaoId) carregarProfissionais(true);
   }, [salaoId]);
+
+  // Carregar config de proteção do Dashboard
+  useEffect(() => {
+    if (salaoId && abaAtiva === 'equipe') carregarProtecaoDashboard();
+  }, [salaoId, abaAtiva]);
+
+  const carregarProtecaoDashboard = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('configuracoes')
+        .select('dashboard_protection_enabled, dashboard_pin')
+        .eq('salao_id', salaoId)
+        .maybeSingle();
+      if (error) throw error;
+      setDashboardProtection(data?.dashboard_protection_enabled ?? false);
+      setDashboardPin(data?.dashboard_pin ?? null);
+    } catch (err) {
+      console.error('Erro ao carregar proteção:', err);
+    }
+  };
+
+  const gerarPin = () => String(Math.floor(1000 + Math.random() * 9000));
+
+  const toggleProtecaoDashboard = async () => {
+    setLoadingProtection(true);
+    try {
+      const novoEstado = !dashboardProtection;
+      const novoPin = novoEstado ? gerarPin() : null;
+
+      const { error } = await supabase
+        .from('configuracoes')
+        .update({
+          dashboard_protection_enabled: novoEstado,
+          dashboard_pin: novoPin,
+        })
+        .eq('salao_id', salaoId);
+
+      if (error) throw error;
+
+      setDashboardProtection(novoEstado);
+      setDashboardPin(novoPin);
+      showToast(
+        novoEstado ? 'PROTEÇÃO DO DASHBOARD ATIVADA!' : 'PROTEÇÃO DO DASHBOARD DESATIVADA',
+        'success'
+      );
+    } catch (err) {
+      showToast('ERRO AO ALTERAR PROTEÇÃO', 'error');
+    } finally {
+      setLoadingProtection(false);
+    }
+  };
+
+  const redefinirPin = async () => {
+    setLoadingProtection(true);
+    try {
+      const novoPin = gerarPin();
+      const { error } = await supabase
+        .from('configuracoes')
+        .update({ dashboard_pin: novoPin })
+        .eq('salao_id', salaoId);
+      if (error) throw error;
+      setDashboardPin(novoPin);
+      showToast('NOVO PIN GERADO COM SUCESSO!', 'success');
+    } catch (err) {
+      showToast('ERRO AO REDEFINIR PIN', 'error');
+    } finally {
+      setLoadingProtection(false);
+    }
+  };
 
   useEffect(() => {
     if (abaAtiva === 'plano' && !assinatura && salaoId) {
@@ -230,7 +304,8 @@ export default function Configuracoes({ salaoId, role }) {
 
       {/* ABA EQUIPE */}
       {abaAtiva === 'equipe' && (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 animate-fadeIn">
+        <>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 animate-fadeIn">
         {profissionais.map(prof => (
           <div key={prof.id} className="bg-white p-5 rounded-3xl border border-gray-200 shadow-sm flex items-center justify-between group hover:border-gray-200 transition-all">
             <div className="flex items-center gap-4">
@@ -277,6 +352,61 @@ export default function Configuracoes({ salaoId, role }) {
           </div>
         ))}
       </div>
+
+      {/* SEÇÃO SEGURANÇA — Proteção do Dashboard */}
+      {role === 'PROPRIETARIO' && (
+        <div className="mt-8 bg-white rounded-3xl border border-gray-200 p-6 shadow-sm animate-fadeIn">
+          <h2 className="text-lg font-black text-gray-800 uppercase mb-6 flex items-center gap-3">
+            <Lock className="text-gray-500" size={20} /> Segurança do Dashboard
+          </h2>
+
+          {/* Switch de proteção */}
+          <div className="flex items-center justify-between p-4 rounded-2xl border border-gray-200 bg-gray-50">
+            <div className="flex-1">
+              <p className="font-bold text-gray-800 text-sm uppercase">Exigir PIN ao acessar o Dashboard Financeiro</p>
+              <p className="text-xs text-gray-500 mt-1 uppercase">
+                Quando ativado, será necessário informar um PIN de 4 dígitos para abrir o Dashboard e sempre que você sair da aba.
+              </p>
+            </div>
+            <button
+              onClick={toggleProtecaoDashboard}
+              disabled={loadingProtection}
+              className={`relative w-14 h-7 rounded-full transition-all duration-300 flex-shrink-0 ml-4 ${
+                dashboardProtection ? 'bg-sky-500' : 'bg-gray-300'
+              } ${loadingProtection ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
+            >
+              <span className={`absolute top-0.5 w-6 h-6 bg-white rounded-full shadow-md transition-all duration-300 ${
+                dashboardProtection ? 'left-7' : 'left-0.5'
+              }`} />
+            </button>
+          </div>
+
+          {/* PIN atual + redefinir */}
+          {dashboardProtection && dashboardPin && (
+            <div className="mt-4 p-4 bg-sky-50 border border-sky-200 rounded-2xl animate-fadeIn">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-[10px] font-black text-gray-500 uppercase tracking-widest mb-1">Seu PIN Atual</p>
+                  <p className="text-3xl font-black text-sky-600 tracking-[0.4em]">{dashboardPin}</p>
+                </div>
+                <button
+                  onClick={redefinirPin}
+                  disabled={loadingProtection}
+                  className="flex items-center gap-2 bg-white text-gray-600 px-4 py-2.5 rounded-xl text-xs font-black uppercase hover:bg-sky-500 hover:text-white transition-all shadow-sm border border-gray-200 disabled:opacity-50"
+                >
+                  <RefreshCw size={14} /> Redefinir PIN
+                </button>
+              </div>
+              <div className="mt-3 bg-orange-50 border border-orange-200 rounded-xl p-3">
+                <p className="text-xs font-bold text-orange-600 uppercase">
+                  ⚠️ Memorize este PIN. Se esquecer, você poderá redefinir usando sua senha de login diretamente no Dashboard.
+                </p>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+        </>
       )}
 
       {/* MODAL DE CADASTRO/EDIÇÃO */}

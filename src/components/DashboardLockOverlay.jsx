@@ -125,7 +125,7 @@ export default function DashboardLockOverlay({ onUnlock, salaoId }) {
   // ────────────────────────────────────────────────────
   if (novoPinGerado) {
     return (
-      <div className="fixed inset-0 z-[60] flex flex-col items-center justify-center bg-gradient-to-br from-blue-900 to-blue-800 p-4">
+      <div className="w-full min-h-[85vh] rounded-3xl flex flex-col items-center justify-center bg-gradient-to-br from-blue-900 to-blue-800 p-4 shadow-sm my-4">
         <div className="bg-gray-50 backdrop-blur-xl p-8 rounded-3xl shadow-2xl border border-gray-200 w-full max-w-sm text-center animate-fadeIn">
           <div className="w-16 h-16 bg-gradient-to-br from-emerald-400 to-emerald-500 text-white rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-xl">
             <RefreshCw size={28} />
@@ -161,7 +161,7 @@ export default function DashboardLockOverlay({ onUnlock, salaoId }) {
   // ────────────────────────────────────────────────────
   if (modoReset) {
     return (
-      <div className="fixed inset-0 z-[60] flex flex-col items-center justify-center bg-gradient-to-br from-blue-900 to-blue-800 p-4">
+      <div className="w-full min-h-[85vh] rounded-3xl flex flex-col items-center justify-center bg-gradient-to-br from-blue-900 to-blue-800 p-4 shadow-sm my-4">
         <div className="bg-gray-50 backdrop-blur-xl p-8 rounded-3xl shadow-2xl border border-gray-200 w-full max-w-sm text-center animate-fadeIn">
           <div className="w-16 h-16 bg-gradient-to-br from-orange-400 to-orange-500 text-white rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-xl">
             <ShieldAlert size={28} />
@@ -228,7 +228,7 @@ export default function DashboardLockOverlay({ onUnlock, salaoId }) {
   // RENDER: Tela de PIN principal
   // ────────────────────────────────────────────────────
   return (
-    <div className="fixed inset-0 z-[60] flex flex-col items-center justify-center bg-gradient-to-br from-blue-900 to-blue-800 p-4">
+    <div className="w-full min-h-[85vh] rounded-3xl flex flex-col items-center justify-center bg-gradient-to-br from-blue-900 to-blue-800 p-4 shadow-sm my-4">
       <div className="bg-gray-50 backdrop-blur-xl p-8 rounded-3xl shadow-2xl border border-gray-200 w-full max-w-sm text-center animate-fadeIn">
         <div className="w-16 h-16 bg-gradient-to-br from-sky-400 to-sky-500 text-white rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-xl">
           <Lock size={28} />

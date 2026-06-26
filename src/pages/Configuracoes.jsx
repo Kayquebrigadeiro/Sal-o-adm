@@ -3,7 +3,7 @@ import { supabase } from '../supabaseClient';
 import { useToast } from '../components/Toast';
 import Modal from '../components/Modal';
 import ConfirmModal from '../components/ConfirmModal';
-import { Plus, Edit2, Trash2, ShieldCheck, Users, AlertCircle, Copy, MessageCircle, CreditCard, Clock, Loader2, Lock, RefreshCw } from 'lucide-react';
+import { Plus, Edit2, Trash2, ShieldCheck, Users, AlertCircle, Copy, MessageCircle, CreditCard, Clock, Loader2, Lock, RefreshCw, Eye } from 'lucide-react';
 
 const fmt = (v) => Number(v || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
 
@@ -42,6 +42,14 @@ export default function Configuracoes({ salaoId, role }) {
   const [dashboardProtection, setDashboardProtection] = useState(false);
   const [dashboardPin, setDashboardPin] = useState(null);
   const [loadingProtection, setLoadingProtection] = useState(false);
+
+  // Autenticação para visualizar/redefinir PIN
+  const [modalSenhaPin, setModalSenhaPin] = useState(false);
+  const [senhaPinInput, setSenhaPinInput] = useState('');
+  const [acaoAposSenha, setAcaoAposSenha] = useState(''); // 'REVEAL' ou 'REDEFINE'
+  const [pinVisivel, setPinVisivel] = useState(false);
+  const [loadingSenhaPin, setLoadingSenhaPin] = useState(false);
+  const [erroSenhaPin, setErroSenhaPin] = useState('');
 
   // Variáveis PIX (.env)
   const chavePix = import.meta.env.VITE_PIX_CHAVE;
@@ -114,11 +122,74 @@ export default function Configuracoes({ salaoId, role }) {
         .eq('salao_id', salaoId);
       if (error) throw error;
       setDashboardPin(novoPin);
+      setPinVisivel(true);
+      setTimeout(() => setPinVisivel(false), 10000);
       showToast('NOVO PIN GERADO COM SUCESSO!', 'success');
     } catch (err) {
       showToast('ERRO AO REDEFINIR PIN', 'error');
     } finally {
       setLoadingProtection(false);
+    }
+  };
+
+  const handleVerificarSenhaPin = async (e) => {
+    e.preventDefault();
+    setErroSenhaPin('');
+    setLoadingSenhaPin(true);
+
+    try {
+      if (!senhaPinInput.trim()) {
+        setErroSenhaPin('Informe sua senha');
+        return;
+      }
+
+      const { data: sessionData } = await supabase.auth.getSession();
+      const token = sessionData?.session?.access_token;
+
+      if (!token) {
+        setErroSenhaPin('Sessão expirada. Faça login novamente.');
+        return;
+      }
+
+      const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+      const response = await fetch(`${supabaseUrl}/functions/v1/verify-dashboard-password`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+        body: JSON.stringify({ password: senhaPinInput.trim() }),
+      });
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        setErroSenhaPin(result.error || 'Erro ao verificar senha');
+        return;
+      }
+
+      if (!result.authorized) {
+        setErroSenhaPin('Senha incorreta');
+        setSenhaPinInput('');
+        return;
+      }
+
+      // Senha correta
+      setModalSenhaPin(false);
+      setSenhaPinInput('');
+      
+      if (acaoAposSenha === 'REVEAL') {
+        setPinVisivel(true);
+        setTimeout(() => setPinVisivel(false), 10000);
+      } else if (acaoAposSenha === 'REDEFINE') {
+        await redefinirPin();
+      }
+
+    } catch (err) {
+      console.error('Erro na verificação da senha:', err);
+      setErroSenhaPin('Erro inesperado. Tente novamente.');
+    } finally {
+      setLoadingSenhaPin(false);
     }
   };
 
@@ -387,19 +458,31 @@ export default function Configuracoes({ salaoId, role }) {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-[10px] font-black text-gray-500 uppercase tracking-widest mb-1">Seu PIN Atual</p>
-                  <p className="text-3xl font-black text-sky-600 tracking-[0.4em]">{dashboardPin}</p>
+                  <p className="text-3xl font-black text-sky-600 tracking-[0.4em]">
+                    {pinVisivel ? dashboardPin : '****'}
+                  </p>
                 </div>
-                <button
-                  onClick={redefinirPin}
-                  disabled={loadingProtection}
-                  className="flex items-center gap-2 bg-white text-gray-600 px-4 py-2.5 rounded-xl text-xs font-black uppercase hover:bg-sky-500 hover:text-white transition-all shadow-sm border border-gray-200 disabled:opacity-50"
-                >
-                  <RefreshCw size={14} /> Redefinir PIN
-                </button>
+                <div className="flex gap-2">
+                  {!pinVisivel && (
+                    <button
+                      onClick={() => { setAcaoAposSenha('REVEAL'); setModalSenhaPin(true); }}
+                      className="flex items-center gap-2 bg-white text-gray-600 px-4 py-2.5 rounded-xl text-xs font-black uppercase hover:bg-sky-500 hover:text-white transition-all shadow-sm border border-gray-200"
+                    >
+                      <Eye size={14} /> Ver PIN
+                    </button>
+                  )}
+                  <button
+                    onClick={() => { setAcaoAposSenha('REDEFINE'); setModalSenhaPin(true); }}
+                    disabled={loadingProtection}
+                    className="flex items-center gap-2 bg-white text-gray-600 px-4 py-2.5 rounded-xl text-xs font-black uppercase hover:bg-sky-500 hover:text-white transition-all shadow-sm border border-gray-200 disabled:opacity-50"
+                  >
+                    <RefreshCw size={14} /> Redefinir PIN
+                  </button>
+                </div>
               </div>
               <div className="mt-3 bg-orange-50 border border-orange-200 rounded-xl p-3">
                 <p className="text-xs font-bold text-orange-600 uppercase">
-                  ⚠️ Memorize este PIN. Se esquecer, você poderá redefinir usando sua senha de login diretamente no Dashboard.
+                  ⚠️ O PIN fica oculto por segurança. Confirme sua senha de login para visualizá-lo ou redefini-lo.
                 </p>
               </div>
             </div>
@@ -657,6 +740,49 @@ export default function Configuracoes({ salaoId, role }) {
                <MessageCircle size={16} /> Falar no WhatsApp
              </a>
            </div>
+        </div>
+      </Modal>
+
+      {/* MODAL SENHA PARA PIN */}
+      <Modal open={modalSenhaPin} onClose={() => { setModalSenhaPin(false); setErroSenhaPin(''); setSenhaPinInput(''); }} title="CONFIRMAR ACESSO">
+        <div className="space-y-4">
+          <p className="text-sm font-bold text-gray-600 uppercase text-center mb-4">
+            Digite sua senha de login para {acaoAposSenha === 'REVEAL' ? 'visualizar' : 'redefinir'} o PIN.
+          </p>
+          <form onSubmit={handleVerificarSenhaPin}>
+            <div className="relative mb-4">
+              <input
+                type="password"
+                placeholder="Sua senha de login"
+                className="w-full text-center text-lg font-bold bg-gray-50 border-2 border-gray-200 text-gray-800 rounded-xl py-4 px-4 outline-none focus:border-sky-500 transition-all"
+                value={senhaPinInput}
+                onChange={e => setSenhaPinInput(e.target.value)}
+                autoFocus
+                disabled={loadingSenhaPin}
+              />
+            </div>
+            
+            {erroSenhaPin && (
+              <div className="bg-red-50 border border-red-200 rounded-xl p-3 mb-4 animate-fadeIn">
+                <p className="text-xs font-bold text-red-600 uppercase text-center">{erroSenhaPin}</p>
+              </div>
+            )}
+
+            <button
+              type="submit"
+              disabled={loadingSenhaPin}
+              className="w-full bg-gradient-to-r from-sky-500 to-sky-600 text-white py-4 rounded-xl font-bold hover:opacity-90 transition-all shadow-xl disabled:opacity-50 flex items-center justify-center gap-2 uppercase"
+            >
+              {loadingSenhaPin ? (
+                <>
+                  <Loader2 size={18} className="animate-spin" />
+                  Verificando...
+                </>
+              ) : (
+                'Confirmar'
+              )}
+            </button>
+          </form>
         </div>
       </Modal>
 

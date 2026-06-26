@@ -112,6 +112,15 @@ export default function Configuracoes({ salaoId, role }) {
     }
   };
 
+  const handleToggleClick = () => {
+    if (dashboardProtection) {
+      setAcaoAposSenha('DISABLE');
+      setModalSenhaPin(true);
+    } else {
+      toggleProtecaoDashboard();
+    }
+  };
+
   const redefinirPin = async () => {
     setLoadingProtection(true);
     try {
@@ -183,6 +192,8 @@ export default function Configuracoes({ salaoId, role }) {
         setTimeout(() => setPinVisivel(false), 10000);
       } else if (acaoAposSenha === 'REDEFINE') {
         await redefinirPin();
+      } else if (acaoAposSenha === 'DISABLE') {
+        await toggleProtecaoDashboard();
       }
 
     } catch (err) {
@@ -440,7 +451,7 @@ export default function Configuracoes({ salaoId, role }) {
               </p>
             </div>
             <button
-              onClick={toggleProtecaoDashboard}
+              onClick={handleToggleClick}
               disabled={loadingProtection}
               className={`relative w-14 h-7 rounded-full transition-all duration-300 flex-shrink-0 ml-4 ${
                 dashboardProtection ? 'bg-sky-500' : 'bg-gray-300'
@@ -747,7 +758,7 @@ export default function Configuracoes({ salaoId, role }) {
       <Modal open={modalSenhaPin} onClose={() => { setModalSenhaPin(false); setErroSenhaPin(''); setSenhaPinInput(''); }} title="CONFIRMAR ACESSO">
         <div className="space-y-4">
           <p className="text-sm font-bold text-gray-600 uppercase text-center mb-4">
-            Digite sua senha de login para {acaoAposSenha === 'REVEAL' ? 'visualizar' : 'redefinir'} o PIN.
+            Digite sua senha de login para {acaoAposSenha === 'REVEAL' ? 'visualizar' : acaoAposSenha === 'REDEFINE' ? 'redefinir' : 'desativar'} a proteção do Dashboard.
           </p>
           <form onSubmit={handleVerificarSenhaPin}>
             <div className="relative mb-4">

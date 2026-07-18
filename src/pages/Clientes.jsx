@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { supabase } from '../supabaseClient';
+import { api } from '../services/api';
 import { useToast } from '../components/Toast';
 import Modal from '../components/Modal';
 import { Plus, Search, Phone, MessageCircle, Calendar, History, User, FileText, UserPlus } from 'lucide-react';
@@ -26,43 +26,10 @@ export default function Clientes({ salaoId }) {
   const carregarClientes = async () => {
     setLoading(true);
     try {
-      // 1. Carregar clientes
-      const { data: clientesData } = await supabase
-        .from('clientes')
-        .select('id, nome, telefone')
-        .eq('salao_id', salaoId)
-        .order('nome');
-
-      // 2. Carregar resumo financeiro agregado por nome de cliente (atendimentos EXECUTADOS)
-      const { data: resumoData } = await supabase
-        .from('atendimentos')
-        .select('cliente, valor_cobrado, data')
-        .eq('salao_id', salaoId)
-        .eq('status', 'EXECUTADO');
-
-      // 3. Agregar por nome de cliente
-      const resumoMap = {};
-      (resumoData || []).forEach(a => {
-        const nome = a.cliente;
-        if (!resumoMap[nome]) {
-          resumoMap[nome] = { total_gasto: 0, ultima_visita: null, total_atendimentos: 0 };
-        }
-        resumoMap[nome].total_gasto += Number(a.valor_cobrado || 0);
-        resumoMap[nome].total_atendimentos += 1;
-        if (!resumoMap[nome].ultima_visita || a.data > resumoMap[nome].ultima_visita) {
-          resumoMap[nome].ultima_visita = a.data;
-        }
-      });
-
-      // 4. Mesclar dados
-      const clientesMerged = (clientesData || []).map(c => ({
-        ...c,
-        total_gasto: resumoMap[c.nome]?.total_gasto || 0,
-        ultima_visita: resumoMap[c.nome]?.ultima_visita || null,
-        total_atendimentos: resumoMap[c.nome]?.total_atendimentos || 0,
-      }));
-
-      setClientes(clientesMerged);
+      const res = await api.get('/relatorios/clientes-resumo');
+      if (!res.ok) throw new Error('Erro ao carregar clientes');
+      const data = await res.json();
+      setClientes(data || []);
     } catch (err) {
       showToast('Erro ao carregar clientes', 'error');
     } finally {
@@ -73,35 +40,45 @@ export default function Clientes({ salaoId }) {
   const salvarCliente = async () => {
     if (!form.nome) return showToast('O nome é obrigatório.', 'error');
 
-    let erro;
-    if (form.id) {
-      const { error } = await supabase.from('clientes').update({ nome: form.nome, telefone: form.telefone }).eq('id', form.id).eq('salao_id', salaoId);
-      erro = error;
-    } else {
-      const { error } = await supabase.from('clientes').insert({ salao_id: salaoId, nome: form.nome, telefone: form.telefone || null });
-      erro = error;
-    }
+    try {
+      let res;
+      if (form.id) {
+        res = await api.put('/cadastros/clientes/' + form.id, { nome: form.nome, telefone: form.telefone });
+      } else {
+        res = await api.post('/cadastros/clientes', { nome: form.nome, telefone: form.telefone || null });
+      }
 
-    if (erro) showToast('Erro ao salvar cliente', 'error');
-    else {
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.error || 'Erro ao salvar cliente');
+      }
+
       showToast('Cliente guardado com sucesso!', 'success');
       setModalAberto(false);
       carregarClientes();
+    } catch (err) {
+      showToast(err.message || 'Erro ao salvar cliente', 'error');
     }
   };
 
   const abrirFicha = async (cliente) => {
     setClienteSelecionado(cliente);
 
-    // Busca por nome na v_atendimentos_completo para obter múltiplos procedimentos
-    const { data } = await supabase
-      .from('v_atendimentos_completo')
-      .select('data, horario, valor_cobrado, status, procedimentos')
-      .eq('salao_id', salaoId)
-      .eq('cliente', cliente.nome)
-      .order('data', { ascending: false });
+    try {
+      const res = await api.get('/atendimentos');
+      if (!res.ok) throw new Error('Erro ao carregar histórico');
+      const json = await res.json();
+      const todos = json.data || [];
 
-    setHistorico(data || []);
+      // Filtrar por nome do cliente e status EXECUTADO, ordenar por data desc
+      const filtrados = todos
+        .filter(a => a.cliente === cliente.nome && a.status === 'EXECUTADO')
+        .sort((a, b) => (b.data || '').localeCompare(a.data || ''));
+
+      setHistorico(filtrados);
+    } catch (err) {
+      setHistorico([]);
+    }
     // Usar o total pré-computado (apenas EXECUTADOS) para consistência
     setTotalGasto(cliente.total_gasto || 0);
   };
@@ -259,7 +236,7 @@ export default function Clientes({ salaoId }) {
                 {historico.map((a, i) => (
                   <div key={i} className="border border-gray-200 rounded-xl p-3 flex justify-between items-center text-sm">
                     <div>
-                      <p className="font-bold text-gray-800">{a.procedimentos?.nome || 'Procedimento apagado'}</p>
+                      <p className="font-bold text-gray-800">{a.procedimento_nome || 'Procedimento apagado'}</p>
                       <p className="text-xs text-gray-500">
                         {new Date(a.data + 'T12:00:00').toLocaleDateString('pt-BR')} às {a.horario?.slice(0, 5)}
                       </p>

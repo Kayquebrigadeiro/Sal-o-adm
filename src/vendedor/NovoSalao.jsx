@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { supabase } from '../supabaseClient';
+import api from '../services/api';
 import { useNavigate } from 'react-router-dom';
 
 // Gera senha segura aleatória (10 chars: letras + números)
@@ -27,52 +27,22 @@ export default function NovoSalao({ userId }) {
 
   const set = (campo, valor) => setForm(f => ({ ...f, [campo]: valor }));
 
-  // ── Etapa 3: chamada à Edge Function ────────────────────────────────────
+  // ── Etapa 3: criar salão no backend Node ─────────────────────────────────
   const finalizarCadastro = async () => {
     setCarregando(true);
     try {
-
-      // 1. Garante sessão ativa
-      const { data: sessionData } = await supabase.auth.getSession();
-      if (!sessionData?.session) {
-        alert('Sua sessão expirou. Faça login novamente.');
-        window.location.href = '/login';
-        return;
-      }
-
-      const session = sessionData.session;
-
-      // 2. Invoca a Edge Function com o header que elimina o 401
-      const { data, error } = await supabase.functions.invoke('criar-proprietaria', {
-        headers: {
-          Authorization: `Bearer ${session.access_token}`,
-        },
-        body: {
-          email:        form.email_proprietaria,
-          senha:        senhaGerada,
-          nome:         form.nome_proprietaria,
-          nome_salao:   form.nome_salao,
-          telefone:     form.telefone,
-          vendedor_id:  userId, // Usando userId da prop
-          redirectTo:   window.location.origin + '/agenda',
-        },
+      await api.post('/salao/criar-proprietaria', {
+        email:       form.email_proprietaria,
+        senha:       senhaGerada,
+        nome:        form.nome_proprietaria,
+        nome_salao:  form.nome_salao,
+        telefone:    form.telefone,
+        vendedor_id: userId,
       });
-
-      if (error) {
-        let msg = error.message;
-        // Supabase oculta a mensagem real no error.context quando é um erro HTTP 400
-        if (error.context && typeof error.context.json === 'function') {
-           try {
-             const errData = await error.context.json();
-             if (errData.error) msg = errData.error;
-           } catch(e) {}
-        }
-        throw new Error(msg);
-      }
       setEtapa(4);
-
     } catch (err) {
-      alert('Erro ao criar salão: ' + err.message);
+      const msg = err.response?.data?.error || err.message || 'Erro desconhecido';
+      alert('Erro ao criar salão: ' + msg);
     } finally {
       setCarregando(false);
     }

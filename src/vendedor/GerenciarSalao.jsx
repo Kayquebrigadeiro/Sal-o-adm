@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { supabase } from '../supabaseClient';
+import api from '../services/api';
 
 export default function GerenciarSalao({ userId }) {
   const { salaoId } = useParams();
@@ -15,24 +15,17 @@ export default function GerenciarSalao({ userId }) {
 
   const carregarDados = async () => {
     setLoading(true);
-    // Busca informações básicas do salão
-    const { data: salaoData } = await supabase
-      .from('saloes')
-      .select('id, nome, telefone, criado_em, ativo')
-      .eq('id', salaoId)
-      .single();
-    
-    setSalao(salaoData);
+    try {
+      const { data: salaoData } = await api.get(`/salao/${salaoId}`);
+      setSalao(salaoData || null);
 
-    // Busca os logins gerados para este salão
-    const { data: loginsData } = await supabase
-      .from('logins_gerados')
-      .select('username, senha_temporaria, gerado_em')
-      .eq('salao_id', salaoId)
-      .order('gerado_em', { ascending: false });
-    
-    setLogins(loginsData || []);
-    setLoading(false);
+      const { data: loginsData } = await api.get('/admin/logins-gerados', { params: { salao_id: salaoId } });
+      setLogins(loginsData || []);
+    } catch (err) {
+      console.error('Erro ao carregar dados:', err);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const copiarCredenciais = (username, senha) => {

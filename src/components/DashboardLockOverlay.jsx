@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { supabase } from '../supabaseClient';
+import { api } from '../services/api';
 import { Lock, ShieldAlert, Eye, EyeOff, Loader2, KeyRound, RefreshCw } from 'lucide-react';
 
 /**
@@ -22,7 +22,7 @@ export default function DashboardLockOverlay({ onUnlock, salaoId }) {
   const [novoPinGerado, setNovoPinGerado] = useState(null);
 
   // ─── Tentar desbloquear com PIN ───
-  const handleSubmitPin = (e) => {
+  const handleSubmitPin = async (e) => {
     e.preventDefault();
     setErro('');
 
@@ -31,7 +31,7 @@ export default function DashboardLockOverlay({ onUnlock, salaoId }) {
       return;
     }
 
-    const sucesso = onUnlock(pinInput);
+    const sucesso = await onUnlock(pinInput);
     if (!sucesso) {
       setErro('PIN incorreto');
       setPinInput('');
@@ -55,23 +55,9 @@ export default function DashboardLockOverlay({ onUnlock, salaoId }) {
         return;
       }
 
-      // Chamar Edge Function para validar senha
-      const { data: sessionData } = await supabase.auth.getSession();
-      const token = sessionData?.session?.access_token;
-
-      if (!token) {
-        setErroReset('Sessão expirada. Faça login novamente.');
-        return;
-      }
-
-      const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-      const response = await fetch(`${supabaseUrl}/functions/v1/verify-dashboard-password`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
-        },
-        body: JSON.stringify({ password: senhaInput.trim() }),
+      // Chamar API Node para validar senha de login
+      const response = await api.post('/auth/verify-login-password', {
+        password: senhaInput.trim()
       });
 
       const result = await response.json();
@@ -87,15 +73,16 @@ export default function DashboardLockOverlay({ onUnlock, salaoId }) {
         return;
       }
 
-      // Senha válida → gerar novo PIN e salvar
+      // Senha válida → gerar novo PIN e salvar via API
       const novoPin = gerarPin();
 
-      const { error: updateError } = await supabase
-        .from('configuracoes')
-        .update({ dashboard_pin: novoPin })
-        .eq('salao_id', salaoId);
+      const updateResponse = await api.put(`/cadastros/configuracoes/${salaoId}`, {
+        dashboard_pin: novoPin
+      });
 
-      if (updateError) throw updateError;
+      if (!updateResponse.ok) {
+        throw new Error('Erro ao atualizar PIN');
+      }
 
       setNovoPinGerado(novoPin);
       setSenhaInput('');

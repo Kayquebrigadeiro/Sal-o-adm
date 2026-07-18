@@ -1,5 +1,4 @@
 import { useState } from 'react';
-import { supabase } from '../supabaseClient';
 import { CreditCard, AlertTriangle, LogOut, Copy, CheckCircle2, MessageCircle } from 'lucide-react';
 import { useToast } from '../components/Toast';
 
@@ -14,8 +13,8 @@ export default function TelaAssinaturaVencida({ salaoNome, dataVencimento, diasR
 
   const dataFormatada = dataVencimento ? new Date(dataVencimento + 'T00:00:00').toLocaleDateString('pt-BR') : '--/--/----';
 
-  const handleSair = async () => {
-    await supabase.auth.signOut();
+  const handleSair = () => {
+    localStorage.clear();
     window.location.href = '/';
   };
 

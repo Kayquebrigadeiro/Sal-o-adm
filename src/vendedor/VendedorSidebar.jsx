@@ -1,20 +1,9 @@
 import { NavLink } from 'react-router-dom';
-import { supabase } from '../supabaseClient';
 
 export default function VendedorSidebar({ email }) {
-  const handleLogout = async () => {
-    try {
-      Object.keys(localStorage).forEach(key => {
-        if (key.startsWith('sb-') || key.includes('supabase')) {
-          localStorage.removeItem(key);
-        }
-      });
-      await supabase.auth.signOut({ scope: 'local' });
-      window.location.href = '/';
-    } catch (err) {
-      console.error('Erro ao sair:', err);
-      window.location.href = '/';
-    }
+  const handleLogout = () => {
+    localStorage.clear();
+    window.location.href = '/';
   };
 
   return (

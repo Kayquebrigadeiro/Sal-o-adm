@@ -1,6 +1,5 @@
 import { useEffect, useState, useRef } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
-import { supabase } from './supabaseClient';
 import { ToastProvider } from './components/Toast';
 import Login from './pages/Login';
 import Sidebar from './components/Sidebar';
@@ -26,144 +25,39 @@ export default function App() {
   const [erroCritico, setErroCritico] = useState(null);
   const [assinatura, setAssinatura] = useState(null);
 
-  // 🛡️ useRef para evitar race conditions entre initSession e onAuthStateChange
-  const perfilBuscadoRef = useRef(false);
   const mountedRef = useRef(true);
 
-  // ─── Carregar perfil do Supabase (extraída para reutilização) ───
-  const carregarPerfil = async (userId) => {
-    try {
-      // Promise.race envolve TODO o carregarPerfil
-      const resultado = await Promise.race([
-        supabase
-          .from('perfis_acesso')
-          .select(`salao_id, cargo, saloes(configurado, nome)`)
-          .eq('auth_user_id', userId)
-          .single(),
-        new Promise((_, reject) =>
-          setTimeout(() => reject(new Error('TIMEOUT_PERFIL')), 8000)
-        )
-      ]);
-
-      if (!mountedRef.current) return;
-      const { data, error } = resultado;
-
-      if (error) {
-        console.error('Erro ao buscar perfil no Supabase:', error);
-        setErroCritico(`Erro de Base de Dados: ${error.message}`);
-        setCarregando(false);
-        return;
-      }
-
-      if (data) {
-        setPerfil({
-          salao_id: data.salao_id,
-          cargo: data.cargo,
-          configurado: data.saloes?.configurado
-        });
-        setSalaoNome(data.saloes?.nome || '');
-
-        // DESATIVADO TEMPORARIAMENTE
-        // if (data.cargo === 'PROPRIETARIO' && data.salao_id) {
-        //   const { data: acesso, error: acessoErr } = await supabase
-        //     .rpc('verificar_acesso_salao', { p_salao_id: data.salao_id });
-        //   if (!acessoErr && acesso) {
-        //     setAssinatura(acesso);
-        //   }
-        // }
-      } else {
-        setErroCritico('Perfil não encontrado na tabela perfis_acesso.');
-      }
-    } catch (err) {
-      if (!mountedRef.current) return;
-
-      console.error('Erro ao carregar perfil:', err.message);
-
-      if (err.message === 'TIMEOUT_PERFIL') {
-        setErroCritico('O servidor demorou muito para responder. Verifique sua conexão e tente novamente.');
-      } else {
-        setErroCritico(err.message || 'Ocorreu um erro desconhecido.');
-      }
-    } finally {
-      if (mountedRef.current) setCarregando(false);
-    }
-  };
-
+  // ─── SPRINT 1: Sessão via localStorage (token JWT do backend Node) ───
   useEffect(() => {
     mountedRef.current = true;
-    perfilBuscadoRef.current = false;
-    const initSession = async () => {
-      try {
-        // Promise race to prevent Supabase getSession deadlock
-        const sessionPromise = supabase.auth.getSession();
-        const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error('TIMEOUT_GET_SESSION')), 5000));
-        const { data: { session } } = await Promise.race([sessionPromise, timeoutPromise]);
-        
-        if (!mountedRef.current) return;
 
-        if (session) {
-          setSessao(session);
-          if (!perfilBuscadoRef.current) {
-            perfilBuscadoRef.current = true;
-            await carregarPerfil(session.user.id);
-          }
-        } else {
-          setSessao(null);
-          setPerfil(null);
-          setCarregando(false);
-        }
-      } catch (err) {
-        console.error("Erro ao buscar sessão (timeout ou falha):", err);
-        // Se a requisição de recuperar sessão for muito lenta, não queremos apagar o login do usuário, 
-        // vamos mostrar um erro que instrui a atualizar a página.
-        if (mountedRef.current) {
-          if (err.message === 'TIMEOUT_GET_SESSION') {
-             setErroCritico('Sua conexão parece instável e não foi possível carregar a sessão a tempo. Por favor, recarregue a página.');
-          }
-          setCarregando(false);
-        }
+    const initSession = () => {
+      const token = localStorage.getItem('authToken');
+      const userEmail = localStorage.getItem('userEmail');
+      const userRole = localStorage.getItem('userRole');
+      const salaoId = localStorage.getItem('salaoId');
+      const userId = localStorage.getItem('userId');
+
+      if (token && userEmail && userRole) {
+        setSessao({ user: { id: userId, email: userEmail } });
+        setPerfil({
+          salao_id: salaoId,
+          cargo: userRole,
+          configurado: true // Provisório — será buscado via API num sprint futuro
+        });
+        setSalaoNome(''); // Será buscado via API num sprint futuro
+      } else {
+        setSessao(null);
+        setPerfil(null);
       }
+
+      setCarregando(false);
     };
 
     initSession();
 
-    // ── Listener centralizado de sessão ──
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
-        if (!mountedRef.current) return;
-
-        if (event === 'SIGNED_OUT') {
-          setSessao(null);
-          setPerfil(null);
-          setSalaoNome('');
-          setErroCritico(null);
-          setAssinatura(null);
-          setCarregando(false);
-          perfilBuscadoRef.current = false;
-          return;
-        }
-
-        if (!session) {
-           setSessao(null);
-           setPerfil(null);
-           setCarregando(false);
-           return;
-        }
-
-        setSessao(session);
-
-        // Se a sessão mudou/atualizou e ainda não temos o perfil carregado
-        if (session && !perfilBuscadoRef.current) {
-          perfilBuscadoRef.current = true;
-          setCarregando(true);
-          await carregarPerfil(session.user.id);
-        }
-      }
-    );
-
     return () => {
       mountedRef.current = false;
-      subscription.unsubscribe();
     };
   }, []);
 
@@ -178,7 +72,7 @@ export default function App() {
           <h1 className="text-xl font-bold text-red-600 mb-2 text-center">Erro de Acesso Detectado</h1>
           <p className="text-sm text-gray-500 mb-6 text-center">{erroCritico}</p>
           <button
-            onClick={async () => { await supabase.auth.signOut(); window.location.reload(); }}
+            onClick={() => { localStorage.clear(); window.location.reload(); }}
             className="w-full bg-sky-500 text-white px-4 py-3 rounded-xl text-sm font-bold hover:bg-sky-600 transition-all shadow-lg"
           >
             Sair e Voltar ao Login

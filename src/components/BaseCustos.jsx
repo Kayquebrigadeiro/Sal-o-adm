@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { supabase } from '../supabaseClient';
+import api from '../services/api';
 import { useToast } from './Toast';
 import { Plus, Trash2, Home, Zap, Droplets, Wifi, ShoppingBag, Wrench } from 'lucide-react';
 
@@ -22,10 +22,16 @@ export default function BaseCustos({ salaoId, qtdAtendimentos, onCustoFixoChange
 
   const carregar = async () => {
     setLoading(true);
-    const { data } = await supabase.from('custos_fixos_itens').select('id, descricao, tipo, valor').eq('salao_id', salaoId).order('descricao');
-    setItens(data || []);
-    setLoading(false);
-    recalcularRateio(data || []);
+    try {
+      const { data } = await api.get('/cadastros/custos-fixos', { params: { salao_id: salaoId } });
+      const itensOrdenados = (data || []).sort((a, b) => (a.descricao || '').localeCompare(b.descricao || ''));
+      setItens(itensOrdenados);
+      recalcularRateio(itensOrdenados);
+    } catch (error) {
+      showToast('Erro ao carregar base de custos: ' + (error.response?.data?.message || error.message), 'error');
+    } finally {
+      setLoading(false);
+    }
   };
 
   const recalcularRateio = (lista) => {
@@ -36,28 +42,37 @@ export default function BaseCustos({ salaoId, qtdAtendimentos, onCustoFixoChange
   };
 
   const addItem = async () => {
-    const { error } = await supabase.from('custos_fixos_itens').insert({ salao_id: salaoId, descricao: '', tipo: 'OUTRO', valor: 0 });
-    if (error) showToast('Erro: ' + error.message, 'error');
-    else carregar();
+    try {
+      await api.post('/cadastros/custos-fixos', { salao_id: salaoId, descricao: '', tipo: 'OUTRO', valor: 0, valor_mensal: 0, ativo: true });
+      carregar();
+    } catch (error) {
+      showToast('Erro ao adicionar: ' + (error.response?.data?.message || error.message), 'error');
+    }
   };
 
-  const updateItem = async (id, campo, valor) => {
+  const updateItem = (id, campo, valor) => {
     setItens(prev => prev.map(i => i.id === id ? { ...i, [campo]: valor } : i));
   };
 
   const salvarItem = async (item) => {
     const v = Number(item.valor) || 0;
-    const { error } = await supabase.from('custos_fixos_itens')
-      .update({ descricao: item.descricao, tipo: item.tipo, valor: v, valor_mensal: v })
-      .eq('id', item.id).eq('salao_id', salaoId);
-    if (error) showToast('Erro ao salvar', 'error');
-    else { showToast('✓ Salvo', 'success'); recalcularRateio(itens); }
+    try {
+      await api.put(`/cadastros/custos-fixos/${item.id}`, { descricao: item.descricao, tipo: item.tipo, valor: v, valor_mensal: v, salao_id: salaoId });
+      showToast('✓ Salvo', 'success');
+      recalcularRateio(itens);
+    } catch (error) {
+      showToast('Erro ao salvar', 'error');
+    }
   };
 
   const deletarItem = async (id) => {
-    await supabase.from('custos_fixos_itens').delete().eq('id', id).eq('salao_id', salaoId);
-    carregar();
-    showToast('Removido', 'success');
+    try {
+      await api.delete(`/cadastros/custos-fixos/${id}`);
+      carregar();
+      showToast('Removido', 'success');
+    } catch (error) {
+      showToast('Erro ao remover: ' + (error.response?.data?.message || error.message), 'error');
+    }
   };
 
   const total = itens.reduce((a, i) => a + Number(i.valor || 0), 0);

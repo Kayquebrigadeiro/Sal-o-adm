@@ -1,18 +1,18 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { supabase } from '../supabaseClient';
+import { api } from '../services/api';
 
 /**
  * Hook para gerenciar a proteção inteligente do Dashboard Financeiro.
  * 
- * - Carrega configuração de proteção do banco (dashboard_protection_enabled + dashboard_pin)
+ * - Carrega configuração de proteção do banco (dashboard_protection_enabled)
  * - Escuta eventos de visibilidade (visibilitychange, blur/focus)
  * - Gerencia estado isLocked (apenas em memória — sem LocalStorage/SessionStorage)
+ * - Valida PIN exclusivamente no backend (nunca expõe o PIN real no frontend)
  * - Quando proteção ativada: Dashboard abre bloqueado + bloqueia ao perder foco
  * - Quando desativada: Dashboard abre livre, sem bloqueio por foco
  */
 export default function useDashboardProtection(salaoId) {
   const [protectionEnabled, setProtectionEnabled] = useState(false);
-  const [pin, setPin] = useState(null);
   const [isLocked, setIsLocked] = useState(true); // começa bloqueado por segurança
   const [loading, setLoading] = useState(true);
   const wasUnlockedRef = useRef(false); // rastreia se o dashboard já foi desbloqueado nesta sessão
@@ -22,19 +22,13 @@ export default function useDashboardProtection(salaoId) {
     if (!salaoId) return;
     setLoading(true);
     try {
-      const { data, error } = await supabase
-        .from('configuracoes')
-        .select('dashboard_protection_enabled, dashboard_pin')
-        .eq('salao_id', salaoId)
-        .maybeSingle();
-
-      if (error) throw error;
+      const res = await api.get('/cadastros/configuracoes');
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const data = await res.json();
 
       const enabled = data?.dashboard_protection_enabled ?? false;
-      const dbPin = data?.dashboard_pin ?? null;
 
       setProtectionEnabled(enabled);
-      setPin(dbPin);
 
       // Se proteção desativada, desbloqueia direto
       if (!enabled) {
@@ -86,21 +80,30 @@ export default function useDashboardProtection(salaoId) {
     };
   }, [protectionEnabled]);
 
-  // ─── Desbloquear com PIN ───
-  const unlock = useCallback((inputPin) => {
-    if (inputPin === pin) {
-      setIsLocked(false);
-      wasUnlockedRef.current = true;
-      return true;
+  // ─── Desbloquear com PIN (validação no backend) ───
+  const unlock = useCallback(async (inputPin) => {
+    try {
+      const res = await api.post('/auth/verify-dashboard-password', {
+        password: inputPin
+      });
+      const data = await res.json();
+
+      if (data.authorized) {
+        setIsLocked(false);
+        wasUnlockedRef.current = true;
+        return true;
+      }
+      return false;
+    } catch (err) {
+      console.error('Erro ao verificar PIN do Dashboard:', err);
+      return false;
     }
-    return false;
-  }, [pin]);
+  }, []);
 
   return {
     isLocked,
     setIsLocked,
     protectionEnabled,
-    pin,
     loading,
     unlock,
     refetch: fetchConfig,

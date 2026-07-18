@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo, useRef } from 'react';
-import { supabase } from '../supabaseClient';
+import { api } from '../services/api';
 import { useToast } from '../components/Toast';
 import { FinancialEngine } from '../services/FinancialEngine';
 import PageHeader from '../components/PageHeader';
@@ -76,30 +76,32 @@ export default function HomeCar({ salaoId }) {
   }, [mesSelecionado, salaoId]);
 
   const carregarClientes = async () => {
-    const { data } = await supabase
-      .from('clientes')
-      .select('id, nome, telefone')
-      .eq('salao_id', salaoId)
-      .order('nome');
-    setClientes(data || []);
+    try {
+      const res = await api.get('/cadastros/clientes');
+      if (!res.ok) throw new Error('Erro ao carregar clientes');
+      const data = await res.json();
+      setClientes(data || []);
+    } catch (err) {
+      console.error('Erro ao carregar clientes:', err);
+    }
   };
 
   const carregarVendas = async () => {
     setLoading(true);
     try {
+      const res = await api.get('/cadastros/homecare');
+      if (!res.ok) throw new Error('Erro ao carregar vendas');
+      const data = await res.json();
+
+      // Filtrar pelo mês selecionado no frontend
       const [ano, mes] = mesSelecionado.split('-');
-      const inicioMes = `${ano}-${mes}-01`;
-      const fimMes = new Date(ano, mes, 0).toISOString().split('T')[0];
+      const filtradas = (data || []).filter(v => {
+        if (!v.data) return false;
+        const d = typeof v.data === 'string' ? v.data.slice(0, 7) : '';
+        return d === `${ano}-${mes}`;
+      }).sort((a, b) => (b.data || '').localeCompare(a.data || ''));
 
-      const { data } = await supabase
-        .from('homecare')
-        .select('id, data, cliente, produto, custo_produto, valor_venda, valor_pago, valor_pendente, lucro, obs')
-        .eq('salao_id', salaoId)
-        .gte('data', inicioMes)
-        .lte('data', fimMes)
-        .order('data', { ascending: false });
-
-      setVendas(data || []);
+      setVendas(filtradas);
     } catch (error) {
       showToast('Erro ao carregar vendas', 'error');
     } finally {
@@ -125,15 +127,17 @@ export default function HomeCar({ salaoId }) {
     if (!buscaCliente.trim()) return;
     setSalvandoCliente(true);
     try {
-      const { data, error } = await supabase.from('clientes').insert([{
-        salao_id: salaoId,
+      const res = await api.post('/cadastros/clientes', {
         nome: buscaCliente.trim().toUpperCase(),
         telefone: novoClienteTelefone || null,
-      }]).select().single();
+      });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.error || 'Erro ao criar cliente');
+      }
+      const data = await res.json();
 
-      if (error) throw error;
-
-      setClientes(prev => [...prev, data].sort((a, b) => a.nome.localeCompare(b.nome)));
+      setClientes(prev => [...prev, data].sort((a, b) => (a.nome || '').localeCompare(b.nome || '')));
       setForm(prev => ({ ...prev, cliente: data.nome }));
       setBuscaCliente(data.nome);
       setModoNovoCliente(false);
@@ -185,38 +189,53 @@ export default function HomeCar({ salaoId }) {
     }
 
     try {
+      const custo = Number(form.custo_produto || 0);
+      const venda = Number(form.valor_venda);
+      const pago = Number(form.valor_pago || 0);
+
       const dados = {
-        salao_id: salaoId,
         data: form.data,
         cliente: form.cliente,
         produto: form.produto,
-        custo_produto: Number(form.custo_produto || 0),
-        valor_venda: Number(form.valor_venda),
-        valor_pago: Number(form.valor_pago || 0),
+        custo_produto: custo,
+        valor_venda: venda,
+        valor_pago: pago,
+        valor_pendente: venda - pago,
+        lucro: venda - custo,
         obs: form.obs
       };
 
+      let res;
       if (vendaEditando) {
-        await supabase.from('homecare').update(dados).eq('id', vendaEditando.id).eq('salao_id', salaoId);
-        showToast('✅ VENDA ATUALIZADA', 'success');
+        res = await api.put('/cadastros/homecare/' + vendaEditando.id, dados);
       } else {
-        await supabase.from('homecare').insert(dados);
-        showToast('✅ VENDA REGISTRADA', 'success');
+        res = await api.post('/cadastros/homecare', dados);
       }
+
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.error || 'Erro ao salvar venda');
+      }
+
+      showToast(vendaEditando ? '✅ VENDA ATUALIZADA' : '✅ VENDA REGISTRADA', 'success');
       setModalAberto(false);
       carregarVendas();
     } catch (error) {
-      showToast('ERRO AO SALVAR VENDA', 'error');
+      showToast(error.message || 'ERRO AO SALVAR VENDA', 'error');
     }
   };
 
   const deletar = async (id) => {
     try {
-      await supabase.from('homecare').delete().eq('id', id).eq('salao_id', salaoId);
+      const res = await api.delete('/cadastros/homecare/' + id);
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.error || 'Erro ao deletar');
+      }
       showToast('VENDA DELETADA', 'success');
       carregarVendas();
     } catch (error) {
-      showToast('ERRO AO DELETAR', 'error');
+      showToast(error.message || 'ERRO AO DELETAR', 'error');
     }
   };
 

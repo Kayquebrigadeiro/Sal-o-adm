@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { supabase } from '../supabaseClient';
+import { api } from '../services/api';
 import { useToast } from '../components/Toast';
 import Modal from '../components/Modal';
 import ConfirmModal from '../components/ConfirmModal';
@@ -51,6 +51,9 @@ export default function Configuracoes({ salaoId, role }) {
   const [loadingSenhaPin, setLoadingSenhaPin] = useState(false);
   const [erroSenhaPin, setErroSenhaPin] = useState('');
 
+  // Config ID (para PUT)
+  const [configId, setConfigId] = useState(null);
+
   // Variáveis PIX (.env)
   const chavePix = import.meta.env.VITE_PIX_CHAVE;
   const nomePix  = import.meta.env.VITE_PIX_NOME;
@@ -68,14 +71,14 @@ export default function Configuracoes({ salaoId, role }) {
 
   const carregarProtecaoDashboard = async () => {
     try {
-      const { data, error } = await supabase
-        .from('configuracoes')
-        .select('dashboard_protection_enabled, dashboard_pin')
-        .eq('salao_id', salaoId)
-        .maybeSingle();
-      if (error) throw error;
-      setDashboardProtection(data?.dashboard_protection_enabled ?? false);
-      setDashboardPin(data?.dashboard_pin ?? null);
+      const cfgRes = await api.get('/cadastros/configuracoes');
+      const data = cfgRes.ok ? await cfgRes.json() : [];
+      if (Array.isArray(data) && data.length > 0) {
+        const cfg = data[0];
+        setConfigId(cfg.id);
+        setDashboardProtection(cfg.dashboard_protection_enabled ?? false);
+        setDashboardPin(cfg.dashboard_pin ?? null);
+      }
     } catch (err) {
       console.error('Erro ao carregar proteção:', err);
     }
@@ -89,15 +92,10 @@ export default function Configuracoes({ salaoId, role }) {
       const novoEstado = !dashboardProtection;
       const novoPin = novoEstado ? gerarPin() : null;
 
-      const { error } = await supabase
-        .from('configuracoes')
-        .update({
-          dashboard_protection_enabled: novoEstado,
-          dashboard_pin: novoPin,
-        })
-        .eq('salao_id', salaoId);
-
-      if (error) throw error;
+      await api.put(`/cadastros/configuracoes/${configId}`, {
+        dashboard_protection_enabled: novoEstado,
+        dashboard_pin: novoPin,
+      });
 
       setDashboardProtection(novoEstado);
       setDashboardPin(novoPin);
@@ -125,11 +123,7 @@ export default function Configuracoes({ salaoId, role }) {
     setLoadingProtection(true);
     try {
       const novoPin = gerarPin();
-      const { error } = await supabase
-        .from('configuracoes')
-        .update({ dashboard_pin: novoPin })
-        .eq('salao_id', salaoId);
-      if (error) throw error;
+      await api.put(`/cadastros/configuracoes/${configId}`, { dashboard_pin: novoPin });
       setDashboardPin(novoPin);
       setPinVisivel(true);
       setTimeout(() => setPinVisivel(false), 10000);
@@ -152,24 +146,7 @@ export default function Configuracoes({ salaoId, role }) {
         return;
       }
 
-      const { data: sessionData } = await supabase.auth.getSession();
-      const token = sessionData?.session?.access_token;
-
-      if (!token) {
-        setErroSenhaPin('Sessão expirada. Faça login novamente.');
-        return;
-      }
-
-      const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-      const response = await fetch(`${supabaseUrl}/functions/v1/verify-dashboard-password`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
-        },
-        body: JSON.stringify({ password: senhaPinInput.trim() }),
-      });
-
+      const response = await api.post('/auth/verify-login-password', { password: senhaPinInput.trim() });
       const result = await response.json();
 
       if (!response.ok) {
@@ -219,16 +196,17 @@ export default function Configuracoes({ salaoId, role }) {
   const carregarHorarios = async () => {
     setLoadingHorarios(true);
     try {
-      const { data, error } = await supabase
-        .from('configuracoes')
-        .select('horarios_semana')
-        .eq('salao_id', salaoId)
-        .maybeSingle();
+      const cfgRes = await api.get('/cadastros/configuracoes');
+      const cfgData = cfgRes.ok ? await cfgRes.json() : [];
+      let horarios = null;
+      if (Array.isArray(cfgData) && cfgData.length > 0) {
+        const cfg = cfgData[0];
+        setConfigId(cfg.id);
+        horarios = cfg.horarios_semana;
+      }
 
-      if (error) throw error;
-      
-      if (data && data.horarios_semana) {
-        setHorariosSemana(data.horarios_semana);
+      if (horarios) {
+        setHorariosSemana(horarios);
       } else {
         // Fallback default
         setHorariosSemana({
@@ -251,12 +229,7 @@ export default function Configuracoes({ salaoId, role }) {
   const salvarHorarios = async () => {
     setLoadingHorarios(true);
     try {
-      const { error } = await supabase
-        .from('configuracoes')
-        .update({ horarios_semana: horariosSemana })
-        .eq('salao_id', salaoId);
-
-      if (error) throw error;
+      await api.put(`/cadastros/configuracoes/${configId}`, { horarios_semana: horariosSemana });
       showToast('HORÁRIOS SALVOS COM SUCESSO!', 'success');
     } catch (err) {
       showToast('ERRO AO SALVAR HORÁRIOS', 'error');
@@ -266,18 +239,9 @@ export default function Configuracoes({ salaoId, role }) {
   };
 
   const carregarAssinatura = async () => {
-    setLoadingAssinatura(true);
-    setErroAssinatura(null);
-    try {
-      const { data, error } = await supabase.rpc('verificar_acesso_salao', { p_salao_id: salaoId });
-      if (error) throw error;
-      setAssinatura(data);
-    } catch (err) {
-      console.error(err);
-      setErroAssinatura('Não foi possível carregar as informações do plano no momento.');
-    } finally {
-      setLoadingAssinatura(false);
-    }
+    // DESATIVADO TEMPORARIAMENTE (mesmo padrão do Assinaturas.jsx)
+    setLoadingAssinatura(false);
+    setErroAssinatura('Módulo de assinaturas desativado temporariamente.');
   };
 
   const copiarChave = () => {
@@ -288,56 +252,70 @@ export default function Configuracoes({ salaoId, role }) {
 
   const carregarProfissionais = async (isInitial = false) => {
     if (isInitial) setLoading(true);
-    const { data, error } = await supabase
-      .from('profissionais')
-      .select('*')
-      .eq('salao_id', salaoId)
-      .eq('ativo', true)
-      .order('nome');
-      
-    if (error) {
-      console.error("ERRO AO CARREGAR PROFISSIONAIS:", error);
-      showToast('ERRO AO CARREGAR EQUIPE. O Supabase pode estar atualizando o cache.', 'error');
+    try {
+      const res = await api.get('/cadastros/profissionais');
+      if (!res.ok) throw new Error('Falha ao carregar profissionais');
+      const data = await res.json();
+
+      // O backend retorna todos os registros; mantemos o comportamento antigo
+      // de exibir apenas os ativos e ordenados por nome.
+      const ativos = (Array.isArray(data) ? data : [])
+        .filter(p => p.ativo === true || p.ativo === 1)
+        .sort((a, b) => (a.nome || '').localeCompare(b.nome || ''));
+
+      setProfissionais(ativos);
+    } catch (err) {
+      console.error("ERRO AO CARREGAR PROFISSIONAIS:", err);
+      showToast('ERRO AO CARREGAR EQUIPE.', 'error');
+      setProfissionais([]);
+    } finally {
+      if (isInitial) setLoading(false);
     }
-    
-    setProfissionais(data || []);
-    if (isInitial) setLoading(false);
   };
 
   const salvarProfissional = async () => {
     if (!form.nome) return showToast('O NOME É OBRIGATÓRIO', 'error');
 
-    const dadosSalvar = {
-      ...form,
-      salao_id: salaoId,
+    // Payload enxuto: o salao_id é derivado do JWT no backend.
+    const payload = {
+      nome: form.nome,
+      cargo: form.cargo,
       salario_fixo: Number(form.salario_fixo || 0),
-      porcentagem_comissao: form.porcentagem_comissao ? Number(form.porcentagem_comissao) : null,
+      porcentagem_comissao: form.porcentagem_comissao === '' || form.porcentagem_comissao == null
+        ? 0
+        : Number(form.porcentagem_comissao),
       ativo: true
     };
 
-    let error;
-    if (editando) {
-      const { error: err } = await supabase.from('profissionais').update(dadosSalvar).eq('id', editando.id).eq('salao_id', salaoId);
-      error = err;
-    } else {
-      const { error: err } = await supabase.from('profissionais').upsert([dadosSalvar], { onConflict: 'salao_id,nome' });
-      error = err;
-    }
+    try {
+      let res;
+      if (editando) {
+        res = await api.put(`/cadastros/profissionais/${editando.id}`, payload);
+      } else {
+        res = await api.post('/cadastros/profissionais', payload);
+      }
 
-    if (error) showToast('ERRO AO SALVAR', 'error');
-    else {
+      if (!res.ok) throw new Error('Falha ao salvar profissional');
+
       showToast('PROFISSIONAL SALVO COM SUCESSO!', 'success');
       setModalProf(false);
       carregarProfissionais();
+    } catch (err) {
+      console.error('ERRO AO SALVAR PROFISSIONAL:', err);
+      showToast('ERRO AO SALVAR', 'error');
     }
   };
 
   const deletarProfissional = async (id) => {
     try {
-      await supabase.from('profissionais').update({ ativo: false }).eq('id', id).eq('salao_id', salaoId);
+      // Mantém o comportamento antigo: remoção lógica (ativo = false),
+      // preservando o histórico de atendimentos vinculados.
+      const res = await api.put(`/cadastros/profissionais/${id}`, { ativo: false });
+      if (!res.ok) throw new Error('Falha ao remover profissional');
       showToast('PROFISSIONAL REMOVIDO', 'success');
       carregarProfissionais();
     } catch (err) {
+      console.error('ERRO AO REMOVER PROFISSIONAL:', err);
       showToast('ERRO AO REMOVER', 'error');
     }
   };
@@ -401,8 +379,8 @@ export default function Configuracoes({ salaoId, role }) {
                 </h3>
                 <p className="text-xs font-bold text-gray-500 uppercase tracking-widest mt-1">
                   {prof.cargo} 
-                  {prof.salario_fixo > 0 ? ` • Fixo: ${fmt(prof.salario_fixo)}` : ''}
-                  {prof.porcentagem_comissao ? ` • Comiss.: ${prof.porcentagem_comissao}%` : ''}
+                  {Number(prof.salario_fixo) > 0 ? ` • Fixo: ${fmt(prof.salario_fixo)}` : ''}
+                  {Number(prof.porcentagem_comissao) > 0 ? ` • Comiss.: ${Number(prof.porcentagem_comissao)}%` : ''}
                 </p>
               </div>
             </div>

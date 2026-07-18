@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from 'react';
-import { supabase } from '../supabaseClient';
 import { useToast } from '../components/Toast';
+import { api } from '../services/api';
 import { FinancialEngine } from '../services/FinancialEngine';
 import { User, X, CheckCircle2, AlertTriangle, UserPlus, ChevronLeft, ChevronRight, Loader2, Sparkles, Search, Phone, Plus, Eye, EyeOff, Trash2, Package, Pencil, HelpCircle, Settings } from 'lucide-react';
 import Tooltip from '../components/Tooltip';
@@ -103,12 +103,9 @@ export default function Agenda({ salaoId, role }) {
         [dataSelecionada]: horarioDiaConfig
       };
 
-      const { error } = await supabase
-        .from('configuracoes')
-        .update({ horarios_excecao: novaExcecao })
-        .eq('salao_id', salaoId);
+      const res = await api.put('/cadastros/configuracoes', { horarios_excecao: novaExcecao });
+      if (!res.ok) throw new Error('Erro ao salvar');
 
-      if (error) throw error;
       
       setConfig(prev => ({ ...prev, horariosExcecao: novaExcecao }));
       showToast('HORÁRIO DO DIA ATUALIZADO!', 'success');
@@ -126,12 +123,9 @@ export default function Agenda({ salaoId, role }) {
       const novaExcecao = { ...config.horariosExcecao };
       delete novaExcecao[dataSelecionada];
 
-      const { error } = await supabase
-        .from('configuracoes')
-        .update({ horarios_excecao: novaExcecao })
-        .eq('salao_id', salaoId);
+      const res2 = await api.put('/cadastros/configuracoes', { horarios_excecao: novaExcecao });
+      if (!res2.ok) throw new Error('Erro ao remover ajuste');
 
-      if (error) throw error;
       
       setConfig(prev => ({ ...prev, horariosExcecao: novaExcecao }));
       showToast('AJUSTE REMOVIDO!', 'success');
@@ -158,33 +152,33 @@ export default function Agenda({ salaoId, role }) {
       setLoading(true);
       try {
         const [cfgRes, profRes, procRes, cliRes, custoRes] = await Promise.all([
-          supabase.from('configuracoes').select('custo_fixo_por_atendimento, horarios_semana, horarios_excecao').eq('salao_id', salaoId).maybeSingle(),
-          supabase.from('profissionais').select('id, nome, cargo').eq('salao_id', salaoId).eq('ativo', true).order('nome'),
-          supabase.from('procedimentos').select('id, nome, categoria, requer_comprimento, preco_p, preco_m, preco_g, custo_variavel').eq('salao_id', salaoId).eq('ativo', true).order('nome'),
-          supabase.from('clientes').select('id, nome, telefone').eq('salao_id', salaoId).order('nome'),
-          supabase.from('custo_composto_procedimento').select('procedimento_id, custo_total_composicao').eq('salao_id', salaoId),
+          api.get('/cadastros/configuracoes').then(r => r.json()),
+          api.get('/cadastros/profissionais').then(r => r.json()),
+          api.get('/cadastros/procedimentos').then(r => r.json()),
+          api.get('/cadastros/clientes').then(r => r.json()),
+          api.get('/relatorios/custo-composto-salao').then(r => r.json()),
         ]);
 
-        if (cfgRes.data) {
+        if (cfgRes) {
           setConfig({
-            custoFixo: Number(cfgRes.data.custo_fixo_por_atendimento) || 0,
-            horariosSemana: cfgRes.data.horarios_semana || null,
-            horariosExcecao: cfgRes.data.horarios_excecao || {}
+            custoFixo: Number(cfgRes.custo_fixo_por_atendimento) || 0,
+            horariosSemana: cfgRes.horarios_semana || null,
+            horariosExcecao: cfgRes.horarios_excecao || {}
           });
         }
         // Ordena: proprietária primeiro, depois funcionários
-        const sorted = (profRes.data || []).sort((a, b) => {
+        const sorted = (profRes.data || profRes || []).sort((a, b) => {
           if (a.cargo === 'PROPRIETARIO' && b.cargo !== 'PROPRIETARIO') return -1;
           if (b.cargo === 'PROPRIETARIO' && a.cargo !== 'PROPRIETARIO') return 1;
           return a.nome.localeCompare(b.nome);
         });
         setProfissionais(sorted);
-        setProcedimentos(procRes.data || []);
-        setClientes(cliRes.data || []);
+        setProcedimentos(procRes.data || procRes || []);
+        setClientes(cliRes || []);
 
         // Criar mapa de custos compostos
         const custoMap = {};
-        (custoRes.data || []).forEach(c => {
+        (custoRes || []).forEach(c => {
           custoMap[c.procedimento_id] = Number(c.custo_total_composicao) || 0;
         });
         setCustosCompostos(custoMap);
@@ -204,25 +198,33 @@ export default function Agenda({ salaoId, role }) {
   }, [salaoId, dataSelecionada]);
 
   const carregarAtendimentos = async () => {
-    // 🛡️ Sprint 3: Usar v_atendimentos_completo para obter múltiplos procedimentos
-    const colunas = role === 'PROPRIETARIO'
-      ? 'id, data, horario, cliente, valor_cobrado, valor_pago, valor_pendente, status, obs, profissional_id, lucro_liquido, lucro_possivel, custo_fixo, custo_variavel, valor_maquininha, valor_profissional, profissionais, procedimentos'
-      : 'id, data, horario, cliente, valor_cobrado, valor_pago, valor_pendente, status, obs, profissional_id, profissionais, procedimentos';
-
-    const { data, error } = await supabase
-      .from('v_atendimentos_completo')
-      .select(colunas)
-      .eq('salao_id', salaoId)
-      .eq('data', dataSelecionada)
-      .order('horario');
-
-    if (error) {
+    try {
+      const response = await api.get('/atendimentos?data=' + dataSelecionada);
+      if (!response.ok) throw new Error('Falha ao carregar');
+      const resData = await response.json();
+      const list = resData.data || resData || [];
+      
+      // Filtrar a data e fazer mapeamento local para substituir view
+      const filtrados = list.filter(a => a.data && a.data.startsWith(dataSelecionada));
+      
+      const mapped = filtrados.map(a => {
+        return {
+          ...a,
+          profissionais: { nome: profissionais.find(p => p.id === a.profissional_id)?.nome },
+          procedimentos: [{
+            procedimento_id: a.procedimento_id,
+            procedimento_nome: procedimentos.find(p => p.id === a.procedimento_id)?.nome || 'Procedimento',
+            comprimento: a.comprimento,
+            valor_cobrado: a.valor_cobrado
+          }]
+        };
+      });
+      
+      setAgendamentos(mapped);
+    } catch (error) {
       console.error('[Agenda] Erro ao carregar:', error);
       showToast('ERRO AO CARREGAR AGENDA', 'error');
-      return;
     }
-
-    setAgendamentos(data || []);
   };
 
   // ─── Geração Dinâmica de Horários ───
@@ -305,13 +307,12 @@ export default function Agenda({ salaoId, role }) {
     if (!buscaCliente.trim()) return;
     setSalvandoCliente(true);
     try {
-      const { data, error } = await supabase.from('clientes').insert([{
-        salao_id: salaoId,
+      const res = await api.post('/cadastros/clientes', {
         nome: buscaCliente.trim().toUpperCase(),
         telefone: novoClienteTelefone || null,
-      }]).select().single();
-
-      if (error) throw error;
+      });
+      if (!res.ok) throw new Error('Erro ao criar cliente');
+      const data = await res.json();
 
       // Atualiza a lista local
       setClientes(prev => [...prev, data].sort((a, b) => a.nome.localeCompare(b.nome)));
@@ -415,19 +416,19 @@ export default function Agenda({ salaoId, role }) {
     if (!novoProf.nome.trim()) return showToast('DIGITE O NOME DO PROFISSIONAL', 'error');
     setSalvandoProf(true);
     try {
-      const { error } = await supabase.from('profissionais').insert([{
-        salao_id: salaoId,
+      const resInsert = await api.post('/cadastros/profissionais', {
         nome: novoProf.nome.trim().toUpperCase(),
         cargo: novoProf.cargo,
         salario_fixo: 0,
         ativo: true
-      }]);
+      });
+      const error = !resInsert.ok ? new Error('Erro API') : null;
       if (error) throw error;
       showToast('PROFISSIONAL ADICIONADO À EQUIPE!', 'success');
       setModalProfAberto(false);
       setNovoProf({ nome: '', cargo: 'FUNCIONARIO' });
       // Recarrega profissionais na grade
-      const { data: profData } = await supabase.from('profissionais').select('id, nome, cargo').eq('salao_id', salaoId).eq('ativo', true).order('nome');
+      const profData = await api.get('/cadastros/profissionais').then(r => r.json());
       setProfissionais(profData || []);
     } catch (err) {
       showToast('ERRO: ' + err.message, 'error');
@@ -537,53 +538,31 @@ export default function Agenda({ salaoId, role }) {
         sequencia: idx + 1,
       }));
 
-      const { data: rpcData, error: rpcError } = await supabase.rpc('criar_atendimento_com_procedimentos', {
-        p_salao_id: salaoId,
-        p_data: dataSelecionada,
-        p_horario: selecao.hora,
-        p_profissional_id: selecao.profId,
-        p_cliente: nomeCliente.toUpperCase(),
-        p_obs: novo.obs || null,
-        p_status: 'AGENDADO',
-        p_procedimentos: dadosServicos,
-      });
-
-      if (rpcError && !isMissingRpc(rpcError)) throw rpcError;
-
-      if (rpcError && isMissingRpc(rpcError)) {
-        // Fallback local enquanto a migração não foi aplicada.
-        const dados = {
-          salao_id: salaoId,
-          data: dataSelecionada,
-          horario: selecao.hora,
-          profissional_id: selecao.profId,
-          procedimento_id: servicos[0].procId,
-          cliente: nomeCliente.toUpperCase(),
-          valor_cobrado: 0,
-          valor_pago: novo.pago ? servicos.reduce((sum, s) => sum + s.valor_cobrado, 0) : 0,
-          status: 'AGENDADO',
-          obs: novo.obs || null,
-        };
-
-        const { data: atendimentoData, error: atendError } = await supabase.from('atendimentos').insert(dados).select();
-        if (atendError) throw atendError;
-
-        const atendimentoId = atendimentoData[0].id;
-        const dadosServicosFallback = servicos.map((s, idx) => ({
-          atendimento_id: atendimentoId,
+      
+      const payload = {
+        cliente: nomeCliente.toUpperCase(),
+        data: dataSelecionada,
+        horario: selecao.hora + ':00',
+        profissional_id: selecao.profId,
+        procedimento_id: servicos[0].procId,
+        comprimento: servicos[0].requer_comprimento ? servicos[0].tamanho : null,
+        valor_cobrado: servicos[0].valor_cobrado,
+        valor_pago: novo.pago ? servicos.reduce((sum, s) => sum + s.valor_cobrado, 0) : 0,
+        status: 'AGENDADO',
+        procedimentos_adicionais: servicos.slice(1).map((s, idx) => ({
           procedimento_id: s.procId,
           comprimento: s.requer_comprimento ? s.tamanho : null,
-          valor_indicado: s.valor_indicado,
           valor_cobrado: s.valor_cobrado,
-          valor_pago: novo.pago ? s.valor_cobrado : 0,
-          sequencia: idx + 1,
-        }));
+          sequencia: idx + 2
+        }))
+      };
 
-        const { error: procError } = await supabase.from('atendimento_procedimentos').insert(dadosServicosFallback);
-        if (procError) throw procError;
-      } else {
-        if (!rpcData) throw new Error('RPC de criação não retornou o id do atendimento');
+      const res = await api.post('/atendimentos', payload);
+      if (!res.ok) {
+         const err = await res.json();
+         throw new Error(err.error || 'Erro ao criar atendimento na API');
       }
+
 
       // Toast com resumo dos serviços
       const totalCobrado = servicos.reduce((sum, s) => sum + s.valor_cobrado, 0);
@@ -687,32 +666,10 @@ export default function Agenda({ salaoId, role }) {
         sequencia: idx + 1,
       }));
 
-      const { error: rpcError } = await supabase.rpc('substituir_procedimentos_atendimento', {
-        p_atendimento_id: atendId,
-        p_procedimentos: novos,
-      });
-
-      if (rpcError && !isMissingRpc(rpcError)) throw rpcError;
-
-      if (rpcError && isMissingRpc(rpcError)) {
-        // Fallback local enquanto a migração não foi aplicada.
-        const { error: delErr } = await supabase.from('atendimento_procedimentos').delete().eq('atendimento_id', atendId);
-        if (delErr) throw delErr;
-
-        const { error: insErr } = await supabase.from('atendimento_procedimentos').insert(
-          novos.map((s, idx) => ({
-            atendimento_id: atendId,
-            procedimento_id: s.procedimento_id,
-            comprimento: s.comprimento,
-            valor_indicado: s.valor_indicado,
-            valor_cobrado: s.valor_cobrado,
-            valor_pago: s.valor_pago,
-            sequencia: idx + 1,
-          }))
-        );
-        if (insErr) throw insErr;
-
-        await supabase.from('atendimentos').update({ procedimento_id: servicosEdicao[0].procId }).eq('id', atendId);
+      const res = await api.put(`/atendimentos/${atendId}/procedimentos`, { procedimentos: novos });
+      if (!res.ok) {
+        const errData = await res.json().catch(() => ({}));
+        throw new Error(errData.error || 'Erro na API');
       }
 
       showToast('✅ SERVIÇOS ATUALIZADOS COM SUCESSO!', 'success');
@@ -755,11 +712,11 @@ export default function Agenda({ salaoId, role }) {
     const novoValorPago = Number(agendamentoSelecionado.valor_pago) > 0 ? 0 : Number(agendamentoSelecionado.valor_cobrado);
 
     try {
-      const { error } = await supabase
-        .from('atendimentos')
-        .update({ valor_pago: novoValorPago })
-        .eq('id', agendamentoSelecionado.id)
-        .eq('salao_id', salaoId);
+      const res = await api.put('/atendimentos/' + agendamentoSelecionado.id, { valor_pago: novoValorPago });
+      if (!res.ok) {
+        const err = await res.json().catch(()=>({}));
+        throw new Error(err.error || 'Erro na API ao atualizar pagamento');
+      }
 
       if (error) throw error;
 
@@ -786,13 +743,11 @@ export default function Agenda({ salaoId, role }) {
 
     setCancelando(true);
     try {
-      const { error } = await supabase
-        .from('atendimentos')
-        .update({ status: 'CANCELADO' })
-        .eq('id', agendamentoSelecionado.id)
-        .eq('salao_id', salaoId);
-
-      if (error) throw error;
+      const res = await api.put('/atendimentos/' + agendamentoSelecionado.id, { status: 'CANCELADO' });
+      if (!res.ok) {
+        const err = await res.json().catch(()=>({}));
+        throw new Error(err.error || 'Erro na API ao cancelar');
+      }
 
       showToast('ATENDIMENTO CANCELADO COM SUCESSO!', 'success');
       setModalCancelarAberto(false);
@@ -809,13 +764,11 @@ export default function Agenda({ salaoId, role }) {
     if (!agendamentoSelecionado) return;
     setCancelando(true); // Reutilizando estado de loading
     try {
-      const { error } = await supabase
-        .from('atendimentos')
-        .update({ status: 'EXECUTADO' })
-        .eq('id', agendamentoSelecionado.id)
-        .eq('salao_id', salaoId);
-
-      if (error) throw error;
+      const res = await api.put('/atendimentos/' + agendamentoSelecionado.id, { status: 'EXECUTADO' });
+      if (!res.ok) {
+        const err = await res.json().catch(()=>({}));
+        throw new Error(err.error || 'Erro na API ao finalizar');
+      }
 
       showToast('✅ ATENDIMENTO FINALIZADO COM SUCESSO!', 'success');
       setModalDetalhesAberto(false);
@@ -875,17 +828,17 @@ export default function Agenda({ salaoId, role }) {
     if (!moverDados) return;
     
     try {
-      const { error } = await supabase
-        .from('atendimentos')
-        .update({
+      const res = await api.put('/atendimentos/' + moverDados.agendId, {
           profissional_id: moverDados.novoProfId,
           horario: moverDados.novaHora + ':00',
           data: moverDados.novaData
-        })
-        .eq('id', moverDados.agendId)
-        .eq('salao_id', salaoId);
+        });
+      if (!res.ok) {
+        const err = await res.json().catch(()=>({}));
+        throw new Error(err.error || 'Erro na API ao mover');
+      }
 
-      if (error) throw error;
+
 
       showToast('✅ AGENDAMENTO MOVIDO COM SUCESSO!', 'success');
       setModalMoverAberto(false);
@@ -985,19 +938,20 @@ export default function Agenda({ salaoId, role }) {
             onClick={async () => {
               try {
                 // Busca nome da proprietária do salão
-                const { data: salaoData } = await supabase.from('saloes').select('nome_proprietaria, nome').eq('id', salaoId).single();
+                const salaoRes = await api.get(`/salao/${salaoId}`);
+                const salaoData = salaoRes.ok ? await salaoRes.json() : null;
                 const nome = salaoData?.nome_proprietaria || 'PROPRIETÁRIA';
-                const { error } = await supabase.from('profissionais').upsert({
-                  salao_id: salaoId,
+                const resUp = await api.post('/cadastros/profissionais', {
                   nome,
                   cargo: 'PROPRIETARIO',
                   salario_fixo: 0,
-                  ativo: true,
-                }, { onConflict: 'salao_id,nome' });
+                  ativo: true
+                });
+                const error = !resUp.ok ? new Error('Erro API') : null;
                 if (error) throw error;
                 showToast(`${nome} ADICIONADA À AGENDA! 👑`, 'success');
                 // Recarrega profissionais
-                const { data: profData } = await supabase.from('profissionais').select('id, nome, cargo').eq('salao_id', salaoId).eq('ativo', true).order('nome');
+                const profData = await api.get('/cadastros/profissionais').then(r => r.json());
                 setProfissionais(profData || []);
               } catch (err) {
                 showToast('ERRO: ' + err.message, 'error');
@@ -1027,12 +981,14 @@ export default function Agenda({ salaoId, role }) {
               <button
                 onClick={async () => {
                   try {
-                    const { data: salaoData } = await supabase.from('saloes').select('nome_proprietaria, nome').eq('id', salaoId).maybeSingle();
+                    const salaoRes = await api.get(`/salao/${salaoId}`);
+                    const salaoData = salaoRes.ok ? await salaoRes.json() : null;
                     const nome = salaoData?.nome_proprietaria || 'PROPRIETÁRIA';
-                    const { error } = await supabase.from('profissionais').insert({ salao_id: salaoId, nome, cargo: 'PROPRIETARIO', salario_fixo: 0, ativo: true });
+                    const resIn2 = await api.post('/cadastros/profissionais', { nome, cargo: 'PROPRIETARIO', salario_fixo: 0, ativo: true });
+                    const error = !resIn2.ok ? new Error('Erro API') : null;
                     if (error) throw error;
                     showToast(`${nome} ADICIONADA À AGENDA! 👑`, 'success');
-                    const { data: profData } = await supabase.from('profissionais').select('id, nome, cargo').eq('salao_id', salaoId).eq('ativo', true).order('nome');
+                    const profData = await api.get('/cadastros/profissionais').then(r => r.json());
                     setProfissionais(profData || []);
                   } catch (err) { showToast('ERRO: ' + err.message, 'error'); }
                 }}

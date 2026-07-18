@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
-import { supabase } from '../supabaseClient';
+import { api } from '../services/api';
 import { useToast } from '../components/Toast';
 import ConfirmModal from '../components/ConfirmModal';
 import useDashboardProtection from '../hooks/useDashboardProtection';
@@ -156,73 +156,50 @@ export default function Dashboard({ salaoId }) {
     setLoading(true);
     try {
       const [ano, mes] = mesSelecionado.split('-');
-      const inicioMes = `${ano}-${mes}-01`;
-      const fimMes = new Date(Number(ano), Number(mes), 0).toISOString().split('T')[0];
+      
+      const fechPromises = meses.map(m => api.get(`/fechamento/${m}`).then(res => res.json()).catch(() => null));
+      const fechResultsRaw = await Promise.all(fechPromises);
+      
+      const fechamentoArr = fechResultsRaw.filter(Boolean).map(fData => ({
+        mes: `${fData.mes}-01`,
+        faturamento_bruto: fData.faturamentoBruto,
+        lucro_real: fData.lucroAtendimentosReal,
+        lucro_possivel: fData.faturamentoBruto,
+        total_atendimentos: 0, 
+        total_pendente: fData.totalPendente,
+      })).reverse();
 
-      const [fechRes, rankRes, rendRes, hcRes, despRes, cfixRes, gpRes, profRes, fecRes] = await Promise.all([
-        supabase.from('fechamento_mensal')
-          .select('mes, faturamento_bruto, lucro_real, lucro_possivel, total_atendimentos, total_pendente')
-          .eq('salao_id', salaoId)
-          .order('mes', { ascending: true })
-          .limit(12),
-
-        supabase.from('ranking_procedimentos')
-          .select('procedimento, receita_total, lucro_total, quantidade, mes')
-          .eq('salao_id', salaoId)
-          .gte('mes', inicioMes).lte('mes', fimMes)
-          .order('receita_total', { ascending: false }),
-
-        supabase.from('rendimento_por_profissional')
-          .select('profissional, atendimentos, rendimento_bruto, mes')
-          .eq('salao_id', salaoId)
-          .gte('mes', inicioMes).lte('mes', fimMes)
-          .order('rendimento_bruto', { ascending: false }),
-
-        supabase.from('homecare')
-          .select('lucro, valor_pendente, valor_venda')
-          .eq('salao_id', salaoId)
-          .gte('data', inicioMes).lte('data', fimMes),
-
-        supabase.from('despesas')
-          .select('valor')
-          .eq('salao_id', salaoId)
-          .gte('data', inicioMes).lte('data', fimMes),
-
-        supabase.from('custos_fixos_itens')
-          .select('valor_mensal')
-          .eq('salao_id', salaoId)
-          .eq('ativo', true),
-
-        supabase.from('gastos_pessoais')
-          .select('valor')
-          .eq('salao_id', salaoId),
-
-        supabase.from('profissionais')
-          .select('salario_fixo')
-          .eq('salao_id', salaoId).eq('ativo', true),
-
-        supabase.from('fechamentos')
-          .select('id')
-          .eq('salao_id', salaoId).eq('mes', inicioMes).maybeSingle(),
+      const [rankRes, rendRes] = await Promise.all([
+        api.get(`/relatorios/ranking-procedimentos?mes=${ano}-${mes}`).then(res => res.json()),
+        api.get(`/relatorios/rendimento-professional?mes=${ano}-${mes}`).then(res => res.json())
       ]);
 
-      setFechamento(fechRes.data ?? []);
-      setRanking(rankRes.data ?? []);
-      setRendimento(rendRes.data ?? []);
+      setFechamento(fechamentoArr);
+      setRanking(rankRes ?? []);
+      setRendimento(rendRes ?? []);
 
-      const hc = hcRes.data ?? [];
-      setHomecareDados({
-        total: hc.reduce((a, v) => a + Number(v.valor_venda || 0), 0),
-        lucro: hc.reduce((a, v) => a + Number(v.lucro || 0), 0),
-        pendencia: hc.reduce((a, v) => a + Number(v.valor_pendente || 0), 0),
-        vendas: hc.length,
-      });
-
-      setDespesasDados({ total: (despRes.data ?? []).reduce((a, v) => a + Number(v.valor || 0), 0) });
-      setCustosFixosDados({ total: (cfixRes.data ?? []).reduce((a, v) => a + Number(v.valor_mensal || 0), 0) });
-      setGastosPessoais((gpRes.data ?? []).reduce((a, v) => a + Number(v.valor || 0), 0));
-      setSalariosFixos((profRes.data ?? []).reduce((a, v) => a + Number(v.salario_fixo || 0), 0));
-      setFechamentoExiste(!!fecRes.data);
+      const fData = fechResultsRaw.find(r => r && r.mes === mesSelecionado);
+      
+      if (fData) {
+        setHomecareDados({
+          total: fData.receitaHomecare,
+          lucro: fData.lucroHomecare,
+          pendencia: 0,
+          vendas: 0,
+        });
+        setDespesasDados({ total: fData.totalDespesas });
+        setCustosFixosDados({ total: fData.totalDespesas });
+        setGastosPessoais(0);
+        setSalariosFixos(fData.totalSalariosFixos);
+        setFechamentoExiste(!!fData.isFechado);
+      } else {
+        setHomecareDados({ total: 0, lucro: 0, pendencia: 0, vendas: 0 });
+        setDespesasDados({ total: 0 });
+        setCustosFixosDados({ total: 0 });
+        setGastosPessoais(0);
+        setSalariosFixos(0);
+        setFechamentoExiste(false);
+      }
 
       await carregarHomecarePorMes();
     } catch (err) {
@@ -233,27 +210,23 @@ export default function Dashboard({ salaoId }) {
   };
 
   const carregarHomecarePorMes = async () => {
-    const { data } = await supabase
-      .from('homecare')
-      .select('data, valor_venda, lucro')
-      .eq('salao_id', salaoId)
-      .gte('data', `${anoHomecare}-01-01`)
-      .lte('data', `${anoHomecare}-12-31`);
-
-    if (!data) return;
-    const porMes = {};
-    data.forEach(r => {
-      const m = new Date(r.data + 'T12:00:00').getMonth() + 1;
-      if (!porMes[m]) porMes[m] = { venda: 0, lucro: 0 };
-      porMes[m].venda += Number(r.valor_venda || 0);
-      porMes[m].lucro += Number(r.lucro || 0);
-    });
-    const arr = Array.from({ length: 12 }, (_, i) => ({
-      mes: MESES_PT[i + 1],
-      venda: porMes[i + 1]?.venda || 0,
-      lucro: porMes[i + 1]?.lucro || 0,
-    }));
-    setHomecareMensal(arr);
+    try {
+      const data = await api.get(`/relatorios/homecare-anual?ano=${anoHomecare}`).then(res => res.json());
+      const arr = Array.from({ length: 12 }, (_, i) => {
+        const m = String(i + 1).padStart(2, '0');
+        const mesStr = `${anoHomecare}-${m}`;
+        const row = (data || []).find(r => r.mes === mesStr);
+        return {
+          mes: MESES_PT[i + 1],
+          venda: row?.total_vendas || 0,
+          lucro: row?.total_lucro || 0,
+        };
+      });
+      setHomecareMensal(arr);
+    } catch (err) {
+      console.error('Erro ao buscar homecare anual:', err);
+      setHomecareMensal([]);
+    }
   };
 
   // ─── Dados derivados ───
@@ -764,7 +737,7 @@ export default function Dashboard({ salaoId }) {
                 onClick={() => {
                   const [ano, mes] = mesSelecionado.split('-');
                   const mesLabel = new Date(`${ano}-${mes}-01`).toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' });
-                  const acao = fechamentoExiste ? 'ATUALIZAR' : 'FECHAR';
+                  const acao = 'FECHAR';
                   setConfirmacao({
                     title: `${acao} MÊS`,
                     message: `DESEJA ${acao} O MÊS DE ${mesLabel}?\n\nISSO SALVARÁ UMA FOTO DOS RESULTADOS FINANCEIROS ATUAIS.`,
@@ -774,38 +747,17 @@ export default function Dashboard({ salaoId }) {
                       setConfirmacao(null);
                       setSalvandoFechamento(true);
                       try {
-                        const faturamento = Number(mesAtual?.faturamento_bruto) || 0;
-                        const lucro = Number(mesAtual?.lucro_real) || 0;
-                        const possivel = Number(mesAtual?.lucro_possivel) || lucro;
-                        const atendimentos = Number(mesAtual?.total_atendimentos) || 0;
-                        const pendente = Number(mesAtual?.total_pendente) || 0;
-                        const resultadoFinal = lucro + homecareDados.lucro - custosFixosDados.total - gastosPessoais - salariosFixos;
-
-                        const payload = {
-                          salao_id: salaoId,
-                          mes: `${ano}-${mes}-01`,
-                          faturamento_bruto: faturamento,
-                          lucro_liquido: lucro,
-                          lucro_possivel: possivel,
-                          total_atendimentos: atendimentos,
-                          total_pendente: pendente,
-                          total_despesas: custosFixosDados.total,
-                          total_gastos_pessoais: gastosPessoais,
-                          lucro_homecare: homecareDados.lucro,
-                          resultado_final: resultadoFinal,
-                        };
-
-                        const { error } = await supabase
-                          .from('fechamentos')
-                          .upsert(payload, { onConflict: 'salao_id,mes' });
-
-                        if (error) throw error;
-
+                        const res = await api.post(`/fechamento/${ano}-${mes}`);
+                        if (!res.ok) {
+                          const errorData = await res.json().catch(() => ({}));
+                          throw new Error(errorData.error || 'Erro desconhecido');
+                        }
+                        
                         setFechamentoExiste(true);
-                        showToast(`MÊS DE ${mesLabel.toUpperCase()} ${fechamentoExiste ? 'ATUALIZADO' : 'FECHADO'} COM SUCESSO!`, 'success');
+                        showToast(`MÊS DE ${mesLabel.toUpperCase()} FECHADO COM SUCESSO!`, 'success');
                       } catch (err) {
                         console.error('Erro ao fechar mês:', err);
-                        showToast(`ERRO AO ${acao} O MÊS: ${err.message}`, 'error');
+                        showToast(err.message, 'error');
                       } finally {
                         setSalvandoFechamento(false);
                       }
@@ -815,14 +767,14 @@ export default function Dashboard({ salaoId }) {
                 disabled={salvandoFechamento}
                 className={`px-6 py-3 rounded-xl font-bold transition-all shadow-lg text-sm disabled:opacity-50 ${
                   fechamentoExiste
-                    ? 'bg-gradient-to-r from-blue-500 to-orange-500 text-white hover:opacity-90'
+                    ? 'bg-gradient-to-r from-gray-400 to-gray-500 text-white cursor-not-allowed'
                     : 'bg-gradient-to-r from-sky-500 to-sky-600 text-white hover:opacity-90'
                 }`}
               >
                 {salvandoFechamento
                   ? 'Salvando...'
                   : fechamentoExiste
-                    ? '🔄 Atualizar Fechamento'
+                    ? 'Mês Já Fechado'
                     : '📸 Fechar Este Mês'}
               </button>
             </div>

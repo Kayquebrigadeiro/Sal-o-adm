@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { supabase } from '../supabaseClient';
+import { api } from '../services/api';
 import { useToast } from '../components/Toast';
 import Modal from '../components/Modal';
 import ConfirmModal from '../components/ConfirmModal';
@@ -40,8 +40,8 @@ const TableRow = ({ proc, config, custoMaterial, isExpanded, onToggleExpand, sal
       debounce(async (field, value) => {
         try {
           const numValue = Number(value) || 0;
-          const { error } = await supabase.from('procedimentos').update({ [field]: numValue }).eq('id', proc.id).eq('salao_id', salaoId);
-          if (error) throw error;
+          const response = await api.put(`/cadastros/procedimentos/${proc.id}`, { [field]: numValue });
+          if (!response.ok) throw new Error('save');
           carregar(); // Recarrega os dados para garantir consistência
         } catch (err) {
           showToast('ERRO AO SALVAR ' + field, 'error');
@@ -64,7 +64,7 @@ const TableRow = ({ proc, config, custoMaterial, isExpanded, onToggleExpand, sal
   const handleUpdate = async (field, value) => {
     try {
       const numValue = Number(value) || 0;
-      await supabase.from('procedimentos').update({ [field]: numValue }).eq('id', proc.id).eq('salao_id', salaoId);
+      await api.put(`/cadastros/procedimentos/${proc.id}`, { [field]: numValue });
     } catch (err) {
       showToast('ERRO AO SALVAR ' + field, 'error');
     }
@@ -81,13 +81,8 @@ const TableRow = ({ proc, config, custoMaterial, isExpanded, onToggleExpand, sal
     if (numGanho === Number(proc.ganho_liquido_desejado)) return; // nada mudou
 
     try {
-      const { error } = await supabase
-        .from('procedimentos')
-        .update({ ganho_liquido_desejado: numGanho })
-        .eq('id', proc.id)
-        .eq('salao_id', salaoId);
-
-      if (error) throw error;
+      const response = await api.put(`/cadastros/procedimentos/${proc.id}`, { ganho_liquido_desejado: numGanho });
+      if (!response.ok) throw new Error('save');
       showToast('✓ Ganho salvo', 'success');
     } catch (err) {
       showToast('ERRO AO SALVAR GANHO', 'error');
@@ -106,12 +101,8 @@ const TableRow = ({ proc, config, custoMaterial, isExpanded, onToggleExpand, sal
     setPrecoG(novoG);
 
     try {
-      const { error } = await supabase.from('procedimentos')
-        .update({ preco_p: novoP, preco_m: novoM, preco_g: novoG })
-        .eq('id', proc.id)
-        .eq('salao_id', salaoId);
-
-      if (error) throw error;
+      const response = await api.put(`/cadastros/procedimentos/${proc.id}`, { preco_p: novoP, preco_m: novoM, preco_g: novoG });
+      if (!response.ok) throw new Error('save');
       showToast(`✓ P: ${fmt(novoP)} | M: ${fmt(novoM)} | G: ${fmt(novoG)}`, 'success');
     } catch (err) {
       showToast('ERRO AO RECALCULAR', 'error');
@@ -210,6 +201,7 @@ export default function Precificacao({ salaoId }) {
   const [catAtiva, setCatAtiva] = useState('SERVICO_CABELO');
 
   const [config, setConfig] = useState({
+    id: null,
     custo_fixo_por_atendimento: 10.65,
     qtd_atendimentos_mes: 100,
   });
@@ -245,27 +237,32 @@ export default function Precificacao({ salaoId }) {
     try {
       // Dispara todas as 4 queries simultaneamente para evitar "waterfall" na rede
       const [cfgRes, procRes, custoRes, catRes] = await Promise.all([
-        supabase.from('configuracoes').select('custo_fixo_por_atendimento, qtd_atendimentos_mes').eq('salao_id', salaoId).maybeSingle(),
-        supabase.from('procedimentos').select('id, nome, categoria, requer_comprimento, preco_p, preco_m, preco_g, ganho_liquido_desejado, custo_variavel, ativo').eq('salao_id', salaoId).eq('ativo', true).order('nome'),
-        supabase.from('custo_composto_procedimento').select('procedimento_id, custo_total_composicao, qtd_produtos').eq('salao_id', salaoId),
-        supabase.from('produtos_catalogo').select('id, nome, preco_compra, qtd_aplicacoes, custo_por_uso, ativo').eq('salao_id', salaoId).eq('ativo', true).order('nome')
+        api.get('/cadastros/configuracoes').then(async r => r.ok ? await r.json() : []),
+        api.get('/cadastros/procedimentos').then(async r => r.ok ? await r.json() : []),
+        api.get('/relatorios/custo-composto-salao').then(async r => r.ok ? await r.json() : []),
+        api.get('/cadastros/produtos').then(async r => r.ok ? await r.json() : [])
       ]);
 
-      if (cfgRes.data) {
+      // Configuracoes: GET retorna array, pegar o primeiro
+      if (Array.isArray(cfgRes) && cfgRes.length > 0) {
+        const cfg = cfgRes[0];
         setConfig({
-          custo_fixo_por_atendimento: Number(cfgRes.data.custo_fixo_por_atendimento),
-          qtd_atendimentos_mes: Number(cfgRes.data.qtd_atendimentos_mes || 100),
+          id: cfg.id,
+          custo_fixo_por_atendimento: Number(cfg.custo_fixo_por_atendimento),
+          qtd_atendimentos_mes: Number(cfg.qtd_atendimentos_mes || 100),
         });
       }
 
-      const procData = procRes.data || [];
-      // Remove PRODUTO_APLICADO localmente se vier do banco
-      setProcedimentos(procData.filter(p => p.categoria !== 'PRODUTO_APLICADO'));
-      setCatalogo(catRes.data || []);
+      const procData = Array.isArray(procRes) ? procRes : [];
+      // Remove PRODUTO_APLICADO e inativos localmente (backend retorna todos)
+      setProcedimentos(procData.filter(p => p.categoria !== 'PRODUTO_APLICADO' && p.ativo));
+      // Filtrar ativos no frontend
+      const catData = Array.isArray(catRes) ? catRes : [];
+      setCatalogo(catData.filter(p => p.ativo));
 
       const custoMap = {};
-      if (custoRes.data) {
-        custoRes.data.forEach(c => {
+      if (Array.isArray(custoRes)) {
+        custoRes.forEach(c => {
           custoMap[c.procedimento_id] = {
             custo_total: Number(c.custo_total_composicao),
             qtd_produtos: Number(c.qtd_produtos)
@@ -282,15 +279,9 @@ export default function Precificacao({ salaoId }) {
 
   const refreshCatalogo = async () => {
     try {
-      const { data, error } = await supabase
-        .from('produtos_catalogo')
-        .select('id, nome, preco_compra, qtd_aplicacoes, custo_por_uso, ativo')
-        .eq('salao_id', salaoId)
-        .eq('ativo', true)
-        .order('nome');
-
-      if (error) throw error;
-      setCatalogo(data || []);
+      const res = await api.get('/cadastros/produtos');
+      const data = res.ok ? await res.json() : [];
+      setCatalogo((Array.isArray(data) ? data : []).filter(p => p.ativo));
     } catch (err) {
       showToast('ERRO AO ATUALIZAR CATÁLOGO DE PRODUTOS', 'error');
     }
@@ -306,7 +297,7 @@ export default function Precificacao({ salaoId }) {
 
   const deletarProc = async (id) => {
     try {
-      await supabase.from('procedimentos').update({ ativo: false }).eq('id', id).eq('salao_id', salaoId);
+      await api.put(`/cadastros/procedimentos/${id}`, { ativo: false });
       showToast('EXCLUÍDO COM SUCESSO', 'success');
       carregar();
     } catch {
@@ -331,20 +322,19 @@ export default function Precificacao({ salaoId }) {
     };
 
     try {
-      const { data, error } = await supabase.from('procedimentos')
-        .upsert([procData], { onConflict: 'salao_id,nome' })
-        .select()
-        .single();
-      if (error) throw error;
+      const response = await api.post('/cadastros/procedimentos', procData);
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error || 'Erro ao salvar');
 
       if (prodsSelecionados.length > 0) {
-        const prodInserts = prodsSelecionados.map(p => ({
-          salao_id: salaoId,
-          procedimento_id: data.id,
-          produto_id: p.id,
-          qtd_usada: Number(p.qtd_usada) || 1
-        }));
-        await supabase.from('procedimento_produtos').insert(prodInserts);
+        // Loop de POST individuais (um por item) - batch não suportado pela rota
+        for (const p of prodsSelecionados) {
+          await api.post('/cadastros/procedimento_produtos', {
+            procedimento_id: data.id,
+            produto_id: p.id,
+            qtd_por_uso: Number(p.qtd_usada) || 1
+          });
+        }
       }
 
       showToast('PROCEDIMENTO ADICIONADO COM SUCESSO!', 'success');
@@ -509,7 +499,14 @@ export default function Precificacao({ salaoId }) {
                 className="w-full bg-transparent outline-none text-lg font-black text-gray-800 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                 value={config.custo_fixo_por_atendimento}
                 onChange={e => updateConfig('custo_fixo_por_atendimento', e.target.value)}
-                onBlur={async () => { try { await supabase.from('configuracoes').update({ custo_fixo_por_atendimento: Number(config.custo_fixo_por_atendimento) }).eq('salao_id', salaoId); showToast('✓', 'success'); } catch { } }}
+                onBlur={async () => {
+                  try {
+                    if (config.id) {
+                      await api.put(`/cadastros/configuracoes/${config.id}`, { custo_fixo_por_atendimento: Number(config.custo_fixo_por_atendimento) });
+                      showToast('✓', 'success');
+                    }
+                  } catch { }
+                }}
               />
             </div>
           </div>
@@ -525,19 +522,19 @@ export default function Precificacao({ salaoId }) {
                 try {
                   const novaQtd = Number(config.qtd_atendimentos_mes) || 1;
                   // Buscar total de custos fixos e recalcular rateio automaticamente
-                  const { data: custos } = await supabase
-                    .from('custos_fixos_itens')
-                    .select('valor')
-                    .eq('salao_id', salaoId);
-                  const totalCustos = (custos || []).reduce((a, c) => a + Number(c.valor || 0), 0);
+                  const custosRes = await api.get('/cadastros/custos-fixos');
+                  const custos = custosRes.ok ? await custosRes.json() : [];
+                  const totalCustos = (Array.isArray(custos) ? custos : []).reduce((a, c) => a + Number(c.valor || 0), 0);
                   const novoRateado = novaQtd > 0
                     ? Number((totalCustos / novaQtd).toFixed(2))
                     : 0;
                   // Atualizar ambos no banco e no state local
-                  await supabase.from('configuracoes').update({
-                    qtd_atendimentos_mes: novaQtd,
-                    custo_fixo_por_atendimento: novoRateado
-                  }).eq('salao_id', salaoId);
+                  if (config.id) {
+                    await api.put(`/cadastros/configuracoes/${config.id}`, {
+                      qtd_atendimentos_mes: novaQtd,
+                      custo_fixo_por_atendimento: novoRateado
+                    });
+                  }
                   updateConfig('custo_fixo_por_atendimento', novoRateado);
                   showToast(`✓ Custo por atendimento: R$ ${novoRateado.toFixed(2)}`, 'success');
                 } catch { showToast('Erro ao salvar', 'error'); }
@@ -770,7 +767,9 @@ export default function Precificacao({ salaoId }) {
           qtdAtendimentos={config.qtd_atendimentos_mes}
           onCustoFixoChange={(rateado) => {
             setConfig(prev => ({ ...prev, custo_fixo_por_atendimento: rateado }));
-            supabase.from('configuracoes').update({ custo_fixo_por_atendimento: rateado }).eq('salao_id', salaoId);
+            if (config.id) {
+              api.put(`/cadastros/configuracoes/${config.id}`, { custo_fixo_por_atendimento: rateado });
+            }
           }}
         />
       )}

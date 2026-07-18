@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { supabase } from '../supabaseClient';
+import api from '../services/api';
 import { useNavigate } from 'react-router-dom';
 import { useToast } from '../components/Toast';
 import ConfirmModal from '../components/ConfirmModal';
@@ -15,37 +15,24 @@ export default function MeusSaloes({ userId }) {
 
   const carregar = async () => {
     setLoading(true);
-    const { data, error } = await supabase
-      .from('saloes')
-      .select(`
-        *,
-        profissionais(count),
-        procedimentos(count)
-      `)
-      .eq('vendedor_id', userId)
-      .is('deletado_em', null)
-      .order('criado_em', { ascending: false });
-
-    if (error) {
-      console.error('Erro ao carregar salões:', error);
-    } else {
+    try {
+      const { data } = await api.get('/salao');
       setSaloes(data || []);
+    } catch (err) {
+      console.error('Erro ao carregar salões:', err);
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   };
 
   const deletar = async (id, nome) => {
     setLoading(true);
     try {
-      const { error } = await supabase.functions.invoke('deletar-salao', {
-        body: { salao_id: id }
-      });
-
-      if (error) throw error;
+      await api.delete(`/salao/${id}`);
       showToast('SALÃO DELETADO', 'success');
       carregar();
     } catch (err) {
-      showToast('ERRO AO DELETAR: ' + err.message, 'error');
+      showToast('ERRO AO DELETAR: ' + (err.response?.data?.error || err.message), 'error');
       setLoading(false);
     }
   };

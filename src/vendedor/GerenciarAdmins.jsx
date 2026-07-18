@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { supabase } from '../supabaseClient';
+import { api } from '../services/api';
 import { useToast } from '../components/Toast';
 import ConfirmModal from '../components/ConfirmModal';
 
@@ -14,23 +14,20 @@ export default function GerenciarAdmins() {
   const [confirmacao, setConfirmacao] = useState(null);
 
   useEffect(() => {
-    supabase.auth.getUser().then(({ data }) => setMeuId(data.user?.id));
+    setMeuId(localStorage.getItem('userId'));
     carregar();
   }, []);
 
   const carregar = async () => {
     setLoading(true);
-    
-    // Usar função RPC que tem acesso ao auth.users
-    const { data, error } = await supabase.rpc('get_admin_emails');
-    
-    if (error) {
-      console.error('Erro ao carregar admins:', error);
-      setAdmins([]);
+    const res = await api.get('/admin');
+    if (res.ok) {
+      const data = await res.json();
+      setAdmins(data);
     } else {
-      setAdmins(data || []);
+      console.error('Erro ao carregar admins:', res.status);
+      setAdmins([]);
     }
-    
     setLoading(false);
   };
 
@@ -39,27 +36,30 @@ export default function GerenciarAdmins() {
     if (form.senha.length < 6) { showToast('SENHA DEVE TER PELO MENOS 6 CARACTERES', 'error'); return; }
     setSalvando(true);
 
-    const { error } = await supabase.functions.invoke('criar-admin', {
-      body: { email: form.email, senha: form.senha, nome: form.nome, vendedor_id: meuId }
-    });
+    const vendedor_id = localStorage.getItem('userId');
+    const res = await api.post('/admin/criar-admin', { email: form.email, senha: form.senha, nome: form.nome, vendedor_id });
 
     setSalvando(false);
-    if (error) { showToast('ERRO: ' + error.message, 'error'); return; }
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      showToast('ERRO: ' + (err.error || res.status), 'error');
+      return;
+    }
 
     setModal(false);
     setForm({ nome: '', email: '', senha: '' });
     carregar();
   };
 
-  const removerAdmin = async (id, nome) => {
+  const removerAdmin = async (id) => {
     setLoading(true);
-    const { data: { user } } = await supabase.auth.getUser();
-
-    const { error } = await supabase.functions.invoke('remover-admin', {
-      body: { user_id: id, admin_solicitante_id: user.id }
-    });
-
-    if (error) { showToast('ERRO: ' + error.message, 'error'); setLoading(false); return; }
+    const res = await api.delete(`/admin/${id}`);
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      showToast('ERRO: ' + (err.error || res.status), 'error');
+      setLoading(false);
+      return;
+    }
     showToast('ADMIN REMOVIDO', 'success');
     carregar();
   };

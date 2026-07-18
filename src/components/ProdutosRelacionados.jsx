@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { supabase } from '../supabaseClient';
+import api from '../services/api';
 import { useToast } from './Toast';
 import ConfirmModal from './ConfirmModal';
 import { Plus, Trash2, Loader2, Package } from 'lucide-react';
@@ -25,14 +25,10 @@ export default function ProdutosRelacionados({ salaoId, servicoId, onUpdate }) {
   const carregar = async () => {
     setLoading(true);
     try {
-      // Dispara as buscas de Catálogo e Vínculos AO MESMO TEMPO (Paralelo)
       const [catRes, vincRes] = await Promise.all([
-        supabase.from('produtos_catalogo').select('id, nome, preco_compra, qtd_aplicacoes, custo_por_uso').eq('salao_id', salaoId).eq('ativo', true).order('nome'),
-        supabase.from('procedimento_produtos').select('procedimento_id, produto_id, qtd_usada').eq('procedimento_id', servicoId)
+        api.get('/cadastros/produtos', { params: { salao_id: salaoId, ativo: true } }),
+        api.get('/cadastros/procedimento_produtos', { params: { procedimento_id: servicoId } })
       ]);
-
-      if (catRes.error) throw catRes.error;
-      if (vincRes.error) throw vincRes.error;
 
       setCatalogo(catRes.data || []);
       setVinculos(vincRes.data || []);
@@ -48,14 +44,12 @@ export default function ProdutosRelacionados({ salaoId, servicoId, onUpdate }) {
     if (!novoProdutoId) return showToast('SELECIONE UM PRODUTO', 'error');
     setSalvando(true);
     try {
-      const { error } = await supabase.from('procedimento_produtos').insert([{
+      await api.post('/cadastros/procedimento_produtos', {
         salao_id: salaoId,
         procedimento_id: servicoId,
         produto_id: novoProdutoId,
-        qtd_usada: Number(novaQtd) || 1
-      }]);
-
-      if (error) throw error;
+        qtd_por_uso: Number(novaQtd) || 1
+      });
 
       showToast('PRODUTO VINCULADO COM SUCESSO!', 'success');
       setNovoProdutoId('');
@@ -64,16 +58,15 @@ export default function ProdutosRelacionados({ salaoId, servicoId, onUpdate }) {
       await carregar();
       if (onUpdate) onUpdate(); // Atualiza a tabela principal
     } catch (err) {
-      showToast('ERRO AO VINCULAR PRODUTO', 'error');
+      showToast('ERRO AO VINCULAR PRODUTO: ' + (err.response?.data?.error || err.message), 'error');
     } finally {
       setSalvando(false);
     }
   };
 
-  const remover = async (produtoId) => {
+  const remover = async (id) => {
     try {
-      const { error } = await supabase.from('procedimento_produtos').delete().eq('procedimento_id', servicoId).eq('produto_id', produtoId).eq('salao_id', salaoId);
-      if (error) throw error;
+      await api.delete(`/cadastros/procedimento_produtos/${id}`);
 
       showToast('REMOVIDO COM SUCESSO!', 'success');
       await carregar();
@@ -109,7 +102,7 @@ export default function ProdutosRelacionados({ salaoId, servicoId, onUpdate }) {
             // Fallback caso a coluna custo_por_uso falhe
             const fallbackMatematica = (Number(p.preco_compra) || 0) / Math.max(Number(p.qtd_aplicacoes) || 1, 1);
             const custoUnitario = Number(p.custo_por_uso) || fallbackMatematica;
-            const custoTotal = custoUnitario * Number(v.qtd_usada);
+            const custoTotal = custoUnitario * (Number(v.qtd_por_uso) || Number(v.qtd_usada) || 1);
 
             return (
               <div key={v.produto_id} className="flex items-center justify-between bg-sky-50/50 border border-sky-100 p-3 rounded-xl transition-all hover:bg-sky-50">
@@ -120,7 +113,7 @@ export default function ProdutosRelacionados({ salaoId, servicoId, onUpdate }) {
                 <div className="flex items-center gap-5">
                   <div className="text-center">
                     <p className="text-[9px] font-bold text-gray-500 uppercase">Qtd Usada</p>
-                    <p className="text-xs font-black text-sky-600">{v.qtd_usada}x</p>
+                    <p className="text-xs font-black text-sky-600">{v.qtd_por_uso || v.qtd_usada || 1}x</p>
                   </div>
                   <div className="text-right w-20">
                     <p className="text-[9px] font-bold text-gray-500 uppercase">Custo</p>
@@ -134,7 +127,7 @@ export default function ProdutosRelacionados({ salaoId, servicoId, onUpdate }) {
                       tone: 'danger',
                       onConfirm: async () => {
                         setConfirmacao(null);
-                        await remover(v.produto_id);
+                        await remover(v.id);
                       },
                     })}
                     className="p-2 text-red-400 hover:bg-red-50 hover:text-red-600 rounded-lg transition-colors"

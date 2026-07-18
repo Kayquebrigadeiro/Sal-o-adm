@@ -1,0 +1,7 @@
+-- Criação da tabela usuarios_auth
+CREATE TABLE IF NOT EXISTS usuarios_auth (
+  id VARCHAR(36) NOT NULL PRIMARY KEY,
+  email VARCHAR(255) NOT NULL UNIQUE,
+  senha_hash VARCHAR(255) NOT NULL,
+  criado_em TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;

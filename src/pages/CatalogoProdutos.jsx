@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { supabase } from '../supabaseClient';
+import api from '../services/api';
 import { useToast } from '../components/Toast';
 import Modal from '../components/Modal';
 import ConfirmModal from '../components/ConfirmModal';
@@ -24,9 +24,15 @@ export default function CatalogoProdutos({ salaoId, onChange }) {
 
   const carregar = async () => {
     setLoading(true);
-    const { data } = await supabase.from('produtos_catalogo').select('id, nome, preco_compra, qtd_aplicacoes, custo_por_uso, ativo').eq('salao_id', salaoId).eq('ativo', true).order('nome');
-    setProdutos(data || []);
-    setLoading(false);
+    try {
+      const { data } = await api.get('/cadastros/produtos', { params: { salao_id: salaoId, ativo: true } });
+      setProdutos(data || []);
+    } catch (error) {
+      console.error(error);
+      showToast('ERRO AO CARREGAR PRODUTOS', 'error');
+    } finally {
+      setLoading(false);
+    }
   };
 
   // ─── CRUD Produto ───
@@ -50,26 +56,30 @@ export default function CatalogoProdutos({ salaoId, onChange }) {
       qtd_aplicacoes: Number(String(form.qtd_aplicacoes).replace(',', '.')) || 1,
       ativo: true
     };
-    let error;
-    if (editando) {
-      ({ error } = await supabase.from('produtos_catalogo').update(dados).eq('id', editando.id).eq('salao_id', salaoId));
-    } else {
-      ({ error } = await supabase.from('produtos_catalogo').upsert([dados], { onConflict: 'salao_id,nome' }));
-    }
-    if (error) showToast('ERRO: ' + error.message, 'error');
-    else {
+    try {
+      if (editando) {
+        await api.put(`/cadastros/produtos/${editando.id}`, dados);
+      } else {
+        await api.post('/cadastros/produtos', dados);
+      }
       showToast('PRODUTO SALVO!', 'success');
       setModalProd(false);
       await carregar();
       if (onChange) onChange();
+    } catch (error) {
+      showToast('ERRO: ' + (error.response?.data?.error || error.message), 'error');
     }
   };
 
   const deletarProduto = async (id) => {
-    await supabase.from('produtos_catalogo').update({ ativo: false }).eq('id', id).eq('salao_id', salaoId);
-    showToast('PRODUTO REMOVIDO', 'success');
-    await carregar();
-    if (onChange) onChange();
+    try {
+      await api.delete(`/cadastros/produtos/${id}`);
+      showToast('PRODUTO REMOVIDO', 'success');
+      await carregar();
+      if (onChange) onChange();
+    } catch (error) {
+      showToast('ERRO AO REMOVER: ' + (error.response?.data?.error || error.message), 'error');
+    }
   };
 
   // Preview no modal

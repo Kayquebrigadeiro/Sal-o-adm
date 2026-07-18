@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { supabase } from '../supabaseClient';
+import { api } from '../services/api';
 import { Scissors, Eye, EyeOff, Loader2, User, Lock, ArrowRight } from 'lucide-react';
 
 export default function Login() {
@@ -17,31 +17,27 @@ export default function Login() {
     try {
       let emailParaLogin = login.trim().toLowerCase();
 
-      // Se não tem @, é a tentativa de entrar com o Username
-      if (!emailParaLogin.includes('@')) {
-        const { data: emailDescoberto, error: rpcError } = await supabase.rpc('get_email_from_username', {
-          p_username: emailParaLogin
-        });
-
-        if (rpcError || !emailDescoberto) {
-          setErro('Usuário não encontrado ou inativo.');
-          setLoading(false);
-          return;
-        }
-        emailParaLogin = emailDescoberto;
-      }
-
-      // Login real no Supabase com o E-mail
-      const { error: signInError } = await supabase.auth.signInWithPassword({
+      // Chamada direta para a nova API (agora o backend aceita username e email)
+      const response = await api.post('/auth/login', {
         email: emailParaLogin,
-        password: senha.trim(),
+        senha: senha.trim()
       });
 
-      if (signInError) throw signInError;
+      const data = await response.json();
 
-      // Sucesso! Não precisamos recarregar a página. 
-      // O App.jsx tem um listener (onAuthStateChange) que vai detectar o SIGNED_IN
-      // e atualizar a tela automaticamente.
+      if (!response.ok) {
+        throw new Error(data.error || 'Credenciais inválidas.');
+      }
+
+      // Salva dados essenciais da sessão no localStorage
+      localStorage.setItem('authToken', data.token);
+      localStorage.setItem('userEmail', data.email);
+      localStorage.setItem('userRole', data.cargo);
+      if (data.salao_id) localStorage.setItem('salaoId', data.salao_id);
+      if (data.user_id) localStorage.setItem('userId', data.user_id);
+
+      // Recarrega a página para o App.jsx pegar o novo estado do localStorage
+      window.location.reload();
 
     } catch (err) {
       console.error('Erro no login:', err);

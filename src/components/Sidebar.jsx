@@ -1,6 +1,5 @@
 import { NavLink } from 'react-router-dom';
 import { useState } from 'react';
-import { supabase } from '../supabaseClient';
 import {
   CalendarDays, LayoutDashboard, Calculator, PackageOpen,
   Settings, LogOut, Users, Package, Scissors, ChevronLeft,
@@ -29,29 +28,10 @@ export default function Sidebar({ role, email, salaoNome }) {
     menuItens = visiveis;
   }
 
-  const handleLogout = async () => {
-    try {
-      setSaindo(true);
-
-      // 1. Limpar tudo do localStorage manualmente
-      // (o Supabase às vezes deixa resquícios)
-      Object.keys(localStorage).forEach(key => {
-        if (key.startsWith('sb-') || key.includes('supabase')) {
-          localStorage.removeItem(key);
-        }
-      });
-
-      // 2. Chamar o signOut do Supabase
-      await supabase.auth.signOut({ scope: 'local' });
-
-      // 3. Forçar reload completo para limpar memória do React
-      window.location.href = '/';
-
-    } catch (err) {
-      console.error('Erro ao sair:', err);
-      // Mesmo com erro, forçar redirect
-      window.location.href = '/';
-    }
+  const handleLogout = () => {
+    setSaindo(true);
+    localStorage.clear();
+    window.location.href = '/';
   };
 
   return (

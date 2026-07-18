@@ -1,5 +1,4 @@
 import { useState, useEffect } from 'react';
-import { supabase } from '../supabaseClient';
 import { useToast } from '../components/Toast';
 import { Search, CreditCard, ShieldAlert, CalendarClock, CheckCircle } from 'lucide-react';
 
@@ -27,7 +26,7 @@ export default function Assinaturas() {
   const carregarAssinaturas = async () => {
     setCarregando(true);
     try {
-      const { data: { user } } = await supabase.auth.getUser();
+      const userId = localStorage.getItem('userId');
       
       const { data, error } = await supabase
         .from('saloes')
@@ -38,7 +37,7 @@ export default function Assinaturas() {
             planos ( valor_mensal )
           )
         `)
-        .eq('vendedor_id', user.id)
+        .eq('vendedor_id', userId)
         .order('nome');
 
       if (error) throw error;
@@ -77,7 +76,7 @@ export default function Assinaturas() {
     setSalvando(true);
 
     try {
-      const { data: { user } } = await supabase.auth.getUser();
+      const userId = localStorage.getItem('userId');
       const ass = salaoSelecionado.assinatura;
 
       // 1. Calcular novas datas

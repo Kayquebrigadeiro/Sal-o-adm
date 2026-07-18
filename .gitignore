@@ -1,39 +1,156 @@
-# dependencies
+# ============================================
+# DEPENDENCIES
+# ============================================
 node_modules/
 .pnp
 .pnp.js
+yarn.lock
+package-lock.json.bak
 
-# testing
-coverage/
-
-# production
-dist/
-build/
-
-# misc
-.DS_Store
+# ============================================
+# ENVIRONMENT VARIABLES (CRITICAL - SENSÍVEIS)
+# ============================================
 .env
 .env.local
+.env.*.local
 .env.development.local
 .env.test.local
 .env.production.local
+.env.production
+.env.staging
+.env.development
+.env.test
 
-# logs
+# ============================================
+# BUILD & DISTRIBUTION
+# ============================================
+dist/
+build/
+*.tsbuildinfo
+
+# ============================================
+# LOGS & DEBUG (podem conter dados sensíveis)
+# ============================================
+logs/
+*.log
 npm-debug.log*
+npm-error.log*
 yarn-debug.log*
 yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
+*.log.bak
+debug.log
 
-# editor
+# ============================================
+# EDITOR & IDE
+# ============================================
 .vscode/
 .idea/
 *.swp
 *.swo
 *~
-
-# Supabase
-.supabase/
-
-# OS
+*.sublime-project
+*.sublime-workspace
+.DS_Store
+.AppleDouble
+.LSOverride
 Thumbs.db
+*.bak
+
+# ============================================
+# OS SPECIFIC
+# ============================================
+.DS_Store
+.AppleDouble
+.LSOverride
+.TemporaryItems
+.Trashes
+.VolumeIcon.icns
+Thumbs.db
+ehthumbs.db
+
+# ============================================
+# TESTING
+# ============================================
+coverage/
+.nyc_output/
+*.lcov
+
+# ============================================
+# RUNTIME & CACHE
+# ============================================
+tmp/
+temp/
+.cache/
+.eslintcache
+.node-gyp/
+*.pid
+*.pid.lock
+
+# ============================================
+# SUPABASE (Legacy)
+# ============================================
+.supabase/
+supabase/
+
+# ============================================
+# BACKEND SPECIFIC (Node.js)
+# ============================================
+backend-node/node_modules/
+backend-node/dist/
+backend-node/build/
+backend-node/.env
+backend-node/.env.*.local
+backend-node/.env.*
+
+# ============================================
+# CREDENTIALS & KEYS (NEVER COMMIT)
+# ============================================
+*.pem
+*.key
+*.pub
+*.der
+.ssh/
+*.jks
+*.keystore
+credentials.json
+service-account-key.json
+
+# ============================================
+# SENSITIVE FILES
+# ============================================
+secrets/
+.secrets/
+private/
+.private/
+**/secrets/**
+**/.secrets/**
+
+# ============================================
+# DATABASE & DATA
+# ============================================
+*.db
+*.sqlite
+*.sqlite3
+dump.sql
+backup/
+*.sql.bak
+.data/
+
+# ============================================
+# AUDIT & LOCK FILES (development only)
+# ============================================
+package-lock.json.bak
+yarn.lock.bak
+
+# ============================================
+# IDE GENERATED
+# ============================================
+.project
+.classpath
+.c9/
+*.launch
+.settings/
+*.sublime-workspace
+*.sublime-project

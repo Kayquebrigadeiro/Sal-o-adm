@@ -1,0 +1,142 @@
+# ============================================
+# DEPENDENCIES
+# ============================================
+node_modules/
+.pnp
+.pnp.js
+package-lock.json.bak
+
+# ============================================
+# ENVIRONMENT VARIABLES (CRITICAL - SENSÍVEIS)
+# ============================================
+.env
+.env.local
+.env.*.local
+.env.development.local
+.env.test.local
+.env.production.local
+.env.production
+.env.staging
+.env.development
+.env.test
+
+# ============================================
+# BUILD & DISTRIBUTION
+# ============================================
+dist/
+build/
+*.tsbuildinfo
+
+# ============================================
+# LOGS & DEBUG (podem conter dados sensíveis)
+# ============================================
+logs/
+*.log
+npm-debug.log*
+npm-error.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+*.log.bak
+debug.log
+
+# ============================================
+# EDITOR & IDE
+# ============================================
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+*.sublime-project
+*.sublime-workspace
+.DS_Store
+.AppleDouble
+.LSOverride
+Thumbs.db
+*.bak
+
+# ============================================
+# OS SPECIFIC
+# ============================================
+.DS_Store
+.AppleDouble
+.LSOverride
+.TemporaryItems
+.Trashes
+.VolumeIcon.icns
+Thumbs.db
+ehthumbs.db
+
+# ============================================
+# TESTING & COVERAGE
+# ============================================
+coverage/
+.nyc_output/
+*.lcov
+test-report.md
+test-report.html
+
+# ============================================
+# RUNTIME & CACHE
+# ============================================
+tmp/
+temp/
+.cache/
+.eslintcache
+.node-gyp/
+*.pid
+*.pid.lock
+
+# ============================================
+# CREDENTIALS & KEYS (NEVER COMMIT)
+# ============================================
+*.pem
+*.key
+*.pub
+*.der
+.ssh/
+*.jks
+*.keystore
+credentials.json
+service-account-key.json
+
+# ============================================
+# SENSITIVE FILES
+# ============================================
+secrets/
+.secrets/
+private/
+.private/
+**/secrets/**
+**/.secrets/**
+
+# ============================================
+# DATABASE & DATA
+# ============================================
+*.db
+*.sqlite
+*.sqlite3
+dump.sql
+backup/
+*.sql.bak
+.data/
+data/
+
+# ============================================
+# API & CONNECTION FILES
+# ============================================
+postman_collection.json.bak
+api-keys.json
+
+# ============================================
+# IDE GENERATED
+# ============================================
+.project
+.classpath
+.c9/
+*.launch
+.settings/
+*.sublime-workspace
+*.sublime-project

@@ -315,7 +315,7 @@ async function atualizarAtendimento(req, res) {
   
   try {
     const { id } = req.params;
-    const { valor_pago, status } = req.body;
+    const { valor_pago, status, profissional_id, horario, data } = req.body;
     const salao_id = req.user.salao_id;
     
     const [atendimentos] = await connection.query(
@@ -329,7 +329,9 @@ async function atualizarAtendimento(req, res) {
     
     const atual = atendimentos[0];
     
-    if (await mesEstaFechado(connection, salao_id, atual.data)) {
+    // Verificar se o mês NOVO está fechado (se data está sendo mudada)
+    const dataParaVerificar = data || atual.data;
+    if (await mesEstaFechado(connection, salao_id, dataParaVerificar)) {
       connection.release();
       return res.status(403).json({ error: 'Este mês já foi fechado e não pode mais ser alterado.' });
     }
@@ -337,14 +339,78 @@ async function atualizarAtendimento(req, res) {
     let query = 'UPDATE atendimentos SET atualizado_em = NOW()';
     let params = [];
     
+    // Atualizar valor_pago (recalcula valor_pendente)
     if (valor_pago !== undefined) {
       const vPendente = parseFloat(atual.valor_cobrado) - parseFloat(valor_pago);
       query += ', valor_pago = ?, valor_pendente = ?';
       params.push(valor_pago, vPendente);
     }
+    
+    // Atualizar status
     if (status !== undefined) {
       query += ', status = ?';
       params.push(status);
+    }
+    
+    // Atualizar horario
+    if (horario !== undefined) {
+      query += ', horario = ?';
+      params.push(horario);
+    }
+    
+    // Atualizar data
+    if (data !== undefined) {
+      query += ', data = ?';
+      params.push(data);
+    }
+    
+    // SE profissional_id está sendo atualizado, recalcular valores financeiros
+    if (profissional_id !== undefined && profissional_id !== atual.profissional_id) {
+      // Buscar novo profissional
+      const [profissionais] = await connection.query(
+        'SELECT cargo, porcentagem_comissao FROM profissionais WHERE id = ? AND salao_id = ?',
+        [profissional_id, salao_id]
+      );
+      
+      if (profissionais.length === 0) {
+        connection.release();
+        return res.status(404).json({ error: 'Profissional não encontrado' });
+      }
+      
+      const novoProf = profissionais[0];
+      
+      // Buscar configurações para recalcular
+      const [configs] = await connection.query(
+        'SELECT taxa_maquininha_pct, custo_fixo_por_atendimento FROM configuracoes WHERE salao_id = ? ORDER BY atualizado_em DESC LIMIT 1',
+        [salao_id]
+      );
+      
+      const config = configs?.[0] || { taxa_maquininha_pct: 0, custo_fixo_por_atendimento: 0 };
+      
+      // Recalcular valores com novo profissional
+      const valoresCalculados = calcularValoresAtendimento({
+        valorCobrado: parseFloat(atual.valor_cobrado),
+        taxaMaquininhaPct: parseFloat(config.taxa_maquininha_pct),
+        custoFixoPorAtendimento: parseFloat(config.custo_fixo_por_atendimento),
+        cargoProfissional: novoProf.cargo,
+        porcComissao: novoProf.porcentagem_comissao || 0,
+        custoVariavel: parseFloat(atual.custo_variavel) || 0
+      });
+      
+      // Adicionar campos financeiros atualizados
+      query += ', profissional_id = ?, valor_maquininha = ?, valor_profissional = ?, custo_fixo = ?, lucro_liquido = ?, lucro_possivel = ?';
+      params.push(
+        profissional_id,
+        valoresCalculados.valorMaquininha,
+        valoresCalculados.valorProfissional,
+        valoresCalculados.custoFixo,
+        valoresCalculados.lucroLiquido,
+        valoresCalculados.lucroPossivel
+      );
+    } else if (profissional_id !== undefined) {
+      // Profissional_id é igual ao atual, então só atualiza sem recalcular
+      query += ', profissional_id = ?';
+      params.push(profissional_id);
     }
     
     query += ' WHERE id = ? AND salao_id = ?';

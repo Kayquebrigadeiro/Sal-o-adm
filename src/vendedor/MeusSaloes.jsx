@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import api from '../services/api';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { useToast } from '../components/Toast';
 import ConfirmModal from '../components/ConfirmModal';
 
@@ -10,8 +10,9 @@ export default function MeusSaloes({ userId }) {
   const [loading, setLoading] = useState(true);
   const [confirmacao, setConfirmacao] = useState(null);
   const navigate = useNavigate();
+  const location = useLocation();
 
-  useEffect(() => { carregar(); }, [userId]);
+  useEffect(() => { carregar(); }, [userId, location.key]);
 
   const carregar = async () => {
     setLoading(true);

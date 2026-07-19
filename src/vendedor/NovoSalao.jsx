@@ -235,12 +235,45 @@ export default function NovoSalao({ userId }) {
           <p className="text-sm text-gray-500">
             A conta de <strong>{form.email_proprietaria}</strong> já está ativa.
           </p>
-          <p className="text-xs text-gray-500">
-            Lembre-se de entregar a senha temporária para a proprietária.
+          
+          {/* Credenciais novamente exibidas na Etapa 4 */}
+          <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-4 space-y-3 mt-6">
+            <p className="text-sm font-semibold text-emerald-800 uppercase tracking-wide">
+              Credenciais de Acesso
+            </p>
+            <div>
+              <p className="text-xs text-emerald-600 mb-0.5">Login (E-mail)</p>
+              <p className="font-mono font-bold text-gray-800 break-all">
+                {form.email_proprietaria}
+              </p>
+            </div>
+            <div>
+              <p className="text-xs text-emerald-600 mb-0.5">Senha Temporária</p>
+              <p className="font-mono font-bold text-gray-800 text-lg tracking-widest">
+                {senhaGerada}
+              </p>
+            </div>
+          </div>
+
+          {/* Aviso visual em destaque */}
+          <div className="bg-red-50 border border-red-300 rounded-xl p-4 flex gap-3 mt-6">
+            <span className="text-red-600 text-lg font-bold mt-0.5">⚠️</span>
+            <div className="text-left">
+              <p className="text-sm text-red-800 font-semibold">
+                Anote esta senha AGORA!
+              </p>
+              <p className="text-xs text-red-700 mt-1">
+                Ela <strong>não será mostrada novamente</strong> nesta tela. Se precisar consultá-la depois, acesse a listagem de salões e clique no botão "Ver Logins Gerados".
+              </p>
+            </div>
+          </div>
+
+          <p className="text-xs text-gray-500 mt-4">
+            Lembre-se de entregar a senha temporária para a proprietária pessoalmente.
           </p>
           <button
             onClick={() => navigate('/admin/saloes')}
-            className="mt-4 px-6 py-3 bg-sky-500 text-white font-bold rounded-xl hover:bg-white"
+            className="mt-4 px-6 py-3 bg-sky-500 text-white font-bold rounded-xl hover:bg-sky-600"
           >
             Voltar para Salões
           </button>

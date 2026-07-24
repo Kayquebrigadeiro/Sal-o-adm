@@ -10,7 +10,7 @@ async function criarAdmin(req, res) {
     const auth_user_id = randomUUID();
     const senha_hash = await bcrypt.hash(senha, 10);
 
-    await pool.query('INSERT INTO usuarios_auth (id, email, senha_hash) VALUES (?, ?, ?)', [auth_user_id, email, senha_hash]);
+    const [result] = await pool.query('INSERT INTO usuarios_auth (id, email, senha_hash) VALUES (?, ?, ?)', [auth_user_id, email, senha_hash]); if (!result.affectedRows) throw new Error('Erro ao inserir usuário');
     await pool.query('INSERT INTO perfis_acesso (auth_user_id, salao_id, cargo, username) VALUES (?, ?, ?, ?)', [auth_user_id, null, 'VENDEDOR', nome || email]);
 
     return res.json({ sucesso: true, user_id: auth_user_id });

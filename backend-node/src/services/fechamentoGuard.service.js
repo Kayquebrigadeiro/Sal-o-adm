@@ -13,7 +13,9 @@ async function mesEstaFechado(connection, salao_id, data) {
   const [rows] = await connection.query(
     "SELECT id FROM fechamentos WHERE salao_id = ? AND DATE_FORMAT(mes, '%Y-%m') = DATE_FORMAT(?, '%Y-%m') LIMIT 1",
     [salao_id, data]
-  );
+  ).catch((err) => {
+    throw new Error(`Erro ao verificar se o mês está fechado: ${err.message}`);
+  });
   return rows.length > 0;
 }
 

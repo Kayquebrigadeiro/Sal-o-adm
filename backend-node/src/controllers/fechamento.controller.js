@@ -20,7 +20,9 @@ async function calcularDadosFechamento(salao_id, mes) {
   const [faturamentoBruto] = await pool.query(
     `SELECT COALESCE(SUM(valor_cobrado), 0) as total FROM atendimentos WHERE salao_id = ? AND status = 'EXECUTADO' AND DATE(data) >= ? AND DATE(data) < ?`,
     [salao_id, mesInicio, mesFimStr]
-  );
+  ).catch((error) => {
+    throw new Error(`Erro ao executar query: ${error.message}`);
+  });
   
   const [receitaRecebida] = await pool.query(
     `SELECT COALESCE(SUM(valor_pago), 0) as total FROM atendimentos WHERE salao_id = ? AND status = 'EXECUTADO' AND DATE(data) >= ? AND DATE(data) < ?`,

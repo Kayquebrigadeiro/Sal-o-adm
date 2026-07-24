@@ -94,6 +94,9 @@ function createCRUDController(nomeTabela, campos = []) {
       try {
         const salao_id = req.user.salao_id;
         let dados = mapearCampos(nomeTabela, { ...req.body, salao_id });
+if (typeof dados !== 'object' || Array.isArray(dados) || dados === null || Object.keys(dados).length === 0) {
+  return res.status(400).json({ error: 'Dados inválidos ou vazios' });
+}
     if (typeof dados !== 'object' || Array.isArray(dados) || dados === null) {
       return res.status(400).json({ error: 'Dados inválidos' });
     }

@@ -5,7 +5,7 @@ const { randomUUID } = require('crypto');
 async function criarAdmin(req, res) {
   try {
     const { email, senha, nome, vendedor_id } = req.body;
-    if (!email || !senha) return res.status(400).json({ error: 'Missing fields' });
+    if (!email || !senha || senha.length < 8) return res.status(400).json({ error: 'Senha deve ter pelo menos 8 caracteres' });
 
     const auth_user_id = randomUUID();
     const senha_hash = await bcrypt.hash(senha, 10);

@@ -8,6 +8,7 @@ const pool = require('../config/db');
  * @returns {Promise<boolean>} true se o mês estiver fechado
  */
 async function mesEstaFechado(connection, salao_id, data) {
+  if (typeof salao_id !== 'number' && typeof salao_id !== 'string') throw new Error('salao_id deve ser um número ou string');
   if (!data) return false;
   
   const [rows] = await connection.query(

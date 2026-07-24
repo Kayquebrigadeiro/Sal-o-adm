@@ -12,7 +12,7 @@ async function login(req, res) {
     let user = null;
 
     if (identificador.includes('@')) {
-      const [rows] = await pool.query('SELECT id, email, senha_hash FROM usuarios_auth WHERE email = ?', [identificador]).catch((err) => { throw new Error(`Erro ao buscar usuário: ${err.message}`); });
+      const [rows] = await pool.query('SELECT id, email, senha_hash FROM usuarios_auth WHERE email = ?', [identificador]).catch((err) => { throw new Error(`Erro ao buscar usuário: ${err.message}`); }); if (!rows || rows.length === 0) { return res.status(404).json({ error: 'Usuário não encontrado' }); }
       user = rows[0];
     } else {
       const [perfis] = await pool.query('SELECT auth_user_id FROM perfis_acesso WHERE username = ?', [identificador]);

@@ -33,8 +33,12 @@ import signal
 import difflib
 import datetime
 import subprocess
-import urllib.request
-import urllib.error
+
+try:
+    import requests
+except ImportError:
+    print("ERRO: requests não instalado. Execute: pip install requests --break-system-packages")
+    sys.exit(1)
 
 # ==================== CARREGAR .ENV ====================
 
@@ -141,43 +145,45 @@ def call_groq(system_prompt, user_prompt):
     """Chama a API da Groq com timeout, retry e rate limiting."""
     global _request_timestamps, _requests_today
 
-    body = json.dumps({
+    payload = {
         "model": GROQ_MODEL,
         "messages": [
             {"role": "system", "content": system_prompt},
             {"role": "user", "content": user_prompt},
         ],
         "temperature": 0.2,
-    }).encode("utf-8")
+    }
 
     for attempt in range(1, MAX_RETRIES_PER_CALL + 1):
         _throttle()
-        req = urllib.request.Request(
-            GROQ_URL,
-            data=body,
-            headers={
-                "Authorization": f"Bearer {GROQ_API_KEY}",
-                "Content-Type": "application/json",
-            },
-            method="POST",
-        )
         try:
-            with urllib.request.urlopen(req, timeout=REQUEST_TIMEOUT_SECONDS) as resp:
-                data = json.loads(resp.read().decode("utf-8"))
-                _request_timestamps.append(time.time())
-                _requests_today += 1
-                return data["choices"][0]["message"]["content"]
-        except urllib.error.HTTPError as e:
-            if e.code == 429:
+            resp = requests.post(
+                GROQ_URL,
+                json=payload,
+                headers={
+                    "Authorization": f"Bearer {GROQ_API_KEY}",
+                    "Content-Type": "application/json",
+                },
+                timeout=REQUEST_TIMEOUT_SECONDS,
+            )
+            if resp.status_code == 429:
                 wait = 20 * attempt
                 log(f"  (429 da Groq, esperando {wait}s antes de tentar de novo — tentativa {attempt})")
                 time.sleep(wait)
                 continue
-            else:
-                log(f"  Erro HTTP {e.code} da Groq: {e.read().decode('utf-8', errors='ignore')[:300]}")
+            if resp.status_code != 200:
+                log(f"  Erro HTTP {resp.status_code} da Groq: {resp.text[:300]}")
                 return None
-        except (urllib.error.URLError, TimeoutError) as e:
-            log(f"  Timeout/erro de rede na chamada à Groq: {e} (tentativa {attempt})")
+            data = resp.json()
+            _request_timestamps.append(time.time())
+            _requests_today += 1
+            return data["choices"][0]["message"]["content"]
+        except requests.exceptions.Timeout:
+            log(f"  Timeout na chamada à Groq (tentativa {attempt})")
+            time.sleep(5 * attempt)
+            continue
+        except requests.exceptions.RequestException as e:
+            log(f"  Erro de rede na chamada à Groq: {e} (tentativa {attempt})")
             time.sleep(5 * attempt)
             continue
 
@@ -256,9 +262,10 @@ def subir_servidor_staging():
     )
     for _ in range(20):
         try:
-            urllib.request.urlopen(f"{BASE_URL}/health", timeout=2)
-            log("Servidor de staging no ar.")
-            return True
+            resp = requests.get(f"{BASE_URL}/health", timeout=2)
+            if resp.status_code == 200:
+                log("Servidor de staging no ar.")
+                return True
         except Exception:
             time.sleep(1)
     log("ERRO: servidor de staging não respondeu a tempo.")
@@ -281,17 +288,13 @@ def http_json(method, path, body=None, token=None):
     headers = {"Content-Type": "application/json"}
     if token:
         headers["Authorization"] = f"Bearer {token}"
-    data = json.dumps(body).encode("utf-8") if body is not None else None
-    req = urllib.request.Request(f"{BASE_URL}{path}", data=data, headers=headers, method=method)
     try:
-        with urllib.request.urlopen(req, timeout=10) as resp:
-            return resp.status, json.loads(resp.read().decode("utf-8"))
-    except urllib.error.HTTPError as e:
+        resp = requests.request(method, f"{BASE_URL}{path}", json=body, headers=headers, timeout=10)
         try:
-            return e.code, json.loads(e.read().decode("utf-8"))
+            return resp.status_code, resp.json()
         except Exception:
-            return e.code, None
-    except Exception as e:
+            return resp.status_code, None
+    except requests.exceptions.RequestException as e:
         return None, str(e)
 
 

@@ -94,6 +94,9 @@ function createCRUDController(nomeTabela, campos = []) {
       try {
         const salao_id = req.user.salao_id;
         let dados = mapearCampos(nomeTabela, { ...req.body, salao_id });
+    if (Object.keys(dados).length === 0) {
+      return res.status(400).json({ error: 'Nenhum campo fornecido' });
+    }
         
         // Mapeamento de campos para tabelas que não possuem 'nome'
         // Mapeia 'nome' para 'descricao' para tabelas que usam esse campo

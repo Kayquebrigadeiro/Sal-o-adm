@@ -73,7 +73,7 @@ async function verifyDashboardPassword(req, res) {
     }
 
     // Comparação direta (PIN curto de conveniência, não senha crítica)
-    const match = password === config.dashboard_pin;
+    const match = bcrypt.compareSync(password, config.dashboard_pin);
     return res.json({ authorized: match });
   } catch (err) {
     console.error(err);

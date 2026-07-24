@@ -5,7 +5,7 @@ const { randomUUID } = require('crypto');
 async function criarAdmin(req, res) {
   try {
     const { email, senha, nome, vendedor_id } = req.body; if (vendedor_id && typeof vendedor_id !== 'number') return res.status(400).json({ error: 'vendedor_id deve ser um número' });
-    if (!email || !senha || !nome || senha.length < 8) return res.status(400).json({ error: 'Todos os campos são obrigatórios e a senha deve ter pelo menos 8 caracteres' });
+    if (!email || !senha || !nome || senha.length < 8 || !vendedor_id) return res.status(400).json({ error: 'Todos os campos são obrigatórios, vendedor_id é necessário e a senha deve ter pelo menos 8 caracteres' });
 
     const auth_user_id = randomUUID();
     const senha_hash = await bcrypt.hash(senha, 10);

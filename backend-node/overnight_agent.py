@@ -18,6 +18,10 @@ Como rodar:
 
 O script cuida de subir o próprio servidor de staging, então não
 precisa deixar o `npm run dev` rodando à parte.
+
+CREDENCIAIS:
+    As credenciais são lidas do arquivo .env (copie .env.example para .env
+    e preencha com seus valores). NUNCA coloque credenciais diretamente aqui.
 """
 
 import os
@@ -32,11 +36,37 @@ import subprocess
 import urllib.request
 import urllib.error
 
-# ==================== CONFIGURAÇÃO ====================
+# ==================== CARREGAR .ENV ====================
 
-GROQ_API_KEY = "SUA_GROQ_API_KEY_AQUI"
-GROQ_MODEL = "llama-3.3-70b-versatile"
+def _carregar_env(caminho_env=None):
+    """Carrega variáveis de ambiente de um arquivo .env no mesmo diretório do script."""
+    if caminho_env is None:
+        caminho_env = os.path.join(os.path.dirname(os.path.abspath(__file__)), ".env")
+    if not os.path.exists(caminho_env):
+        print(f"ERRO: Arquivo .env não encontrado em: {caminho_env}")
+        print("Copie .env.example para .env e preencha com as credenciais.")
+        sys.exit(1)
+    with open(caminho_env, "r", encoding="utf-8") as f:
+        for linha in f:
+            linha = linha.strip()
+            if not linha or linha.startswith("#") or "=" not in linha:
+                continue
+            chave, _, valor = linha.partition("=")
+            chave = chave.strip()
+            valor = valor.strip().strip("\"'")
+            os.environ.setdefault(chave, valor)
+
+_carregar_env()
+
+# ==================== CONFIGURAÇÃO (lida do .env) ====================
+
+GROQ_API_KEY = os.environ.get("GROQ_API_KEY", "")
+GROQ_MODEL = os.environ.get("GROQ_MODEL", "llama-3.3-70b-versatile")
 GROQ_URL = "https://api.groq.com/openai/v1/chat/completions"
+
+if not GROQ_API_KEY:
+    print("ERRO: GROQ_API_KEY não definida no .env")
+    sys.exit(1)
 
 # Limites reais do plano gratuito da Groq (confirmados em jul/2026) — deixe
 # uma margem de segurança, não use o limite exato.
@@ -50,14 +80,14 @@ MAX_RUNTIME_HOURS = 7
 MAX_ITERATIONS = 60                 # trava dura, independente do tempo
 
 # --- Ambiente de STAGING (nunca mude isso pra produção) ---
-STAGING_PORT = "3334"
+STAGING_PORT = os.environ.get("STAGING_PORT", "3334")
 STAGING_ENV = {
-    "DB_HOST": "gateway01.us-east-1.prod.aws.tidbcloud.com",
-    "DB_PORT": "4000",
-    "DB_USER": "4XRD3gzt9E45R8U.root",
-    "DB_PASSWORD": "7y3TogV0XfYqvMcL",
-    "DB_NAME": "SalaosecretoStaging",
-    "JWT_SECRET": "01292769cd6f7365e0385c2509fd61c31f802155c3b0ad437d3bce14a6bbe137",
+    "DB_HOST": os.environ.get("DB_HOST", ""),
+    "DB_PORT": os.environ.get("DB_PORT", "4000"),
+    "DB_USER": os.environ.get("DB_USER", ""),
+    "DB_PASSWORD": os.environ.get("DB_PASSWORD", ""),
+    "DB_NAME": os.environ.get("DB_NAME", "SalaosecretoStaging"),
+    "JWT_SECRET": os.environ.get("JWT_SECRET", ""),
     "PORT": STAGING_PORT,
     "ALLOWED_ORIGINS": "http://localhost:5173",
 }
@@ -65,8 +95,8 @@ BASE_URL = f"http://localhost:{STAGING_PORT}"
 
 # Login de teste usado para os smoke tests (crie esse usuário no staging
 # antes de rodar, mesmo processo que já fizemos manualmente).
-TEST_VENDEDOR_EMAIL = "vendedor-staging@teste.com"
-TEST_VENDEDOR_SENHA = "Staging123!"
+TEST_VENDEDOR_EMAIL = os.environ.get("TEST_VENDEDOR_EMAIL", "vendedor-staging@teste.com")
+TEST_VENDEDOR_SENHA = os.environ.get("TEST_VENDEDOR_SENHA", "Staging123!")
 
 PROJECT_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__)))
 BRANCH_NAME = f"overnight-groq-{datetime.date.today().isoformat()}"

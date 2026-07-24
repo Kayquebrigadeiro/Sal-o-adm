@@ -120,7 +120,7 @@ async function listarSaloes(req, res) {
 
 async function atualizarSalao(req, res) {
   const { id } = req.params;
-  const { nome, nome_proprietaria, telefone } = req.body;
+  const { nome, nome_proprietaria, telefone } = req.body; if (!nome || !nome_proprietaria || !telefone) return res.status(400).json({ error: 'Missing fields' });
   if (req.user.salao_id !== id && req.user.cargo !== 'VENDEDOR') {
     return res.status(403).json({ error: 'Acesso negado' });
   }

@@ -140,3 +140,6 @@ api-keys.json
 .settings/
 *.sublime-workspace
 *.sublime-project
+
+# Relatórios do agente noturno
+overnight_report_*.md

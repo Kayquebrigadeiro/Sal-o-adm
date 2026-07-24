@@ -9,7 +9,7 @@ const pool = require('../config/db');
  */
 async function mesEstaFechado(connection, salao_id, data) {
   if (typeof salao_id !== 'number' && typeof salao_id !== 'string') throw new Error('salao_id deve ser um número ou string');
-  if (!data) return false;
+  if (!data || !(typeof data === 'string' || data instanceof Date)) throw new Error('data deve ser uma string no formato YYYY-MM-DD ou um objeto Date');
   
   const [rows] = await connection.query(
     "SELECT id FROM fechamentos WHERE salao_id = ? AND DATE_FORMAT(mes, '%Y-%m') = DATE_FORMAT(?, '%Y-%m') LIMIT 1",

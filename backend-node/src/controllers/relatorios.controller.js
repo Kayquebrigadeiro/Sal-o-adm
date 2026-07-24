@@ -80,35 +80,42 @@ async function obterRendimentoProfissional(req, res) {
     const salao_id = req.user.salao_id;
     const { mes } = req.query;
 
+    let mesInicioVal = '';
+    if (mes) {
+      if (!/^\d{4}-\d{2}$/.test(mes)) {
+        return res.status(400).json({ error: 'Formato de mês inválido (use YYYY-MM)' });
+      }
+      mesInicioVal = `${mes}-01`;
+    } else {
+      const d = new Date();
+      mesInicioVal = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-01`;
+    }
+
     let query = `
       SELECT
-        a.salao_id,
-        DATE_FORMAT(a.data, '%Y-%m-01') as mes,
+        p.salao_id,
+        ? as mes,
         p.nome as profissional,
         p.cargo,
         SUM(IF(a.status = 'EXECUTADO', 1, 0)) as atendimentos,
         SUM(IF(a.status = 'EXECUTADO', a.valor_cobrado, 0)) as rendimento_bruto,
         SUM(IF(a.status = 'EXECUTADO', a.valor_cobrado, 0)) as faturamento_gerado
-      FROM atendimentos a
-      JOIN profissionais p ON p.id = a.profissional_id
-      WHERE a.salao_id = ?
+      FROM profissionais p
+      LEFT JOIN atendimentos a ON p.id = a.profissional_id AND a.salao_id = p.salao_id
     `;
-    const params = [salao_id];
+    const params = [mesInicioVal];
 
     if (mes) {
-      if (!/^\d{4}-\d{2}$/.test(mes)) {
-        return res.status(400).json({ error: 'Formato de mês inválido (use YYYY-MM)' });
-      }
-      const mesInicio = `${mes}-01`;
-      const mesFim = new Date(mes + '-01');
-      mesFim.setMonth(mesFim.getMonth() + 1);
-      const mesFimStr = mesFim.toISOString().split('T')[0];
+      const [anoStr, mesStrParte] = mes.split('-');
+      const dataFim = new Date(parseInt(anoStr, 10), parseInt(mesStrParte, 10), 1);
+      const mesFimStr = `${dataFim.getFullYear()}-${String(dataFim.getMonth() + 1).padStart(2, '0')}-01`;
 
       query += ` AND a.data >= ? AND a.data < ?`;
-      params.push(mesInicio, mesFimStr);
+      params.push(mesInicioVal, mesFimStr);
     }
 
-    query += ` GROUP BY a.salao_id, DATE_FORMAT(a.data, '%Y-%m-01'), p.id, p.nome, p.cargo`;
+    query += ` WHERE p.salao_id = ? AND p.ativo = 1 GROUP BY p.salao_id, p.id, p.nome, p.cargo`;
+    params.push(salao_id);
 
     const [rows] = await pool.query(query, params);
 

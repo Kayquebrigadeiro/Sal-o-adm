@@ -17,7 +17,8 @@ export default function MeusSaloes({ userId }) {
   const carregar = async () => {
     setLoading(true);
     try {
-      const { data } = await api.get('/salao');
+      const res = await api.get('/salao');
+      const data = res.ok ? await res.json() : [];
       setSaloes(data || []);
     } catch (err) {
       console.error('Erro ao carregar salões:', err);

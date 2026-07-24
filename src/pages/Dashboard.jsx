@@ -169,14 +169,18 @@ export default function Dashboard({ salaoId }) {
         total_pendente: fData.totalPendente,
       })).reverse();
 
-      const [rankRes, rendRes] = await Promise.all([
+      const [rankRes, rendRes, custosFixosRes] = await Promise.all([
         api.get(`/relatorios/ranking-procedimentos?mes=${ano}-${mes}`).then(res => res.json()),
-        api.get(`/relatorios/rendimento-professional?mes=${ano}-${mes}`).then(res => res.json())
+        api.get(`/relatorios/rendimento-professional?mes=${ano}-${mes}`).then(res => res.json()),
+        api.get('/cadastros/custos-fixos').then(res => res.json().catch(() => []))
       ]);
 
       setFechamento(fechamentoArr);
       setRanking(rankRes ?? []);
       setRendimento(rendRes ?? []);
+
+      const custosFixosList = Array.isArray(custosFixosRes?.data) ? custosFixosRes.data : (Array.isArray(custosFixosRes) ? custosFixosRes : []);
+      const totalCustosFixos = custosFixosList.reduce((acc, c) => acc + Number(c.valor || 0), 0);
 
       const fData = fechResultsRaw.find(r => r && r.mes === mesSelecionado);
       
@@ -188,14 +192,14 @@ export default function Dashboard({ salaoId }) {
           vendas: 0,
         });
         setDespesasDados({ total: fData.totalDespesas });
-        setCustosFixosDados({ total: fData.totalDespesas });
-        setGastosPessoais(0);
+        setCustosFixosDados({ total: totalCustosFixos });
+        setGastosPessoais(fData.totalGastosPessoais || 0);
         setSalariosFixos(fData.totalSalariosFixos);
         setFechamentoExiste(!!fData.isFechado);
       } else {
         setHomecareDados({ total: 0, lucro: 0, pendencia: 0, vendas: 0 });
         setDespesasDados({ total: 0 });
-        setCustosFixosDados({ total: 0 });
+        setCustosFixosDados({ total: totalCustosFixos });
         setGastosPessoais(0);
         setSalariosFixos(0);
         setFechamentoExiste(false);

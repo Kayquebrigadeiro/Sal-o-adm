@@ -22,7 +22,7 @@ Essa chave está **incorreta** e por isso está dando timeout.
 ```javascript
 import { createClient } from '@supabase/supabase-js';
 
-const supabaseUrl = 'https://SEU_PROJETO_SUPABASE_REF.supabase.co';
+const supabaseUrl = 'https://seu-projeto.supabase.co';
 const supabaseKey = 'COLE_AQUI_A_CHAVE_ANON_PUBLIC'; // Deve começar com eyJ...
 
 export const supabase = createClient(supabaseUrl, supabaseKey);
@@ -41,7 +41,7 @@ A chave **anon public** tem estas características:
 - ✅ Começa com `eyJ`
 - ✅ É muito longa (centenas de caracteres)
 - ✅ Parece um JWT (tem pontos separando 3 partes)
-- ✅ Exemplo: `SEU_TOKEN_JWT_EXEMPLO...`
+- ✅ Exemplo: `SUA_CHAVE_ANON_AQUI...`
 
 A chave que você está usando:
 - ❌ Começa com `sb_publishable_`

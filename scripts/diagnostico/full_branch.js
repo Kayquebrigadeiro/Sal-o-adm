@@ -12,7 +12,7 @@ async function login(req, res) {
     let user = null;
 
     if (identificador.includes('@')) {
-      const [rows] = await pool.query('SELECT id, email, senha_hash FROM usuarios_auth WHERE email = ?', [identificador]);
+      const [rows] = await pool.query('SELECT id, email, senha_hash FROM usuarios_auth WHERE email = ?', [identificador]).catch((err) => { throw new Error(`Erro ao buscar usuário: ${err.message}`); }); if (!rows || rows.length === 0) { return res.status(404).json({ error: 'Usuário não encontrado' }); }
       user = rows[0];
     } else {
       const [perfis] = await pool.query('SELECT auth_user_id FROM perfis_acesso WHERE username = ?', [identificador]);
@@ -73,7 +73,7 @@ async function verifyDashboardPassword(req, res) {
     }
 
     // Comparação direta (PIN curto de conveniência, não senha crítica)
-    const match = password === config.dashboard_pin;
+    const match = bcrypt.compareSync(password, config.dashboard_pin);
     return res.json({ authorized: match });
   } catch (err) {
     console.error(err);

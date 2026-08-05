@@ -92,7 +92,8 @@ temp/
 # SUPABASE (Legacy)
 # ============================================
 .supabase/
-supabase/
+supabase/.temp/
+supabase/.branches/
 
 # ============================================
 # BACKEND SPECIFIC (Node.js)

@@ -120,15 +120,22 @@ async function listarSaloes(req, res) {
 
 async function atualizarSalao(req, res) {
   const { id } = req.params;
-  const { nome, nome_proprietaria, telefone } = req.body; if (!nome || !nome_proprietaria || !telefone) return res.status(400).json({ error: 'Missing fields' });
+  const { nome, nome_proprietaria, telefone } = req.body;
+  if (!nome && !nome_proprietaria && !telefone) return res.status(400).json({ error: 'Pelo menos um campo (nome, nome_proprietaria, telefone) é obrigatório' });
   if (req.user.salao_id !== id && req.user.cargo !== 'VENDEDOR') {
     return res.status(403).json({ error: 'Acesso negado' });
   }
 
   try {
+    const fields = [];
+    const values = [];
+    if (nome !== undefined) { fields.push('nome = ?'); values.push(nome); }
+    if (nome_proprietaria !== undefined) { fields.push('nome_proprietaria = ?'); values.push(nome_proprietaria); }
+    if (telefone !== undefined) { fields.push('telefone = ?'); values.push(telefone); }
+    values.push(id);
     await pool.query(
-      'UPDATE saloes SET nome = ?, nome_proprietaria = ?, telefone = ? WHERE id = ?',
-      [nome, nome_proprietaria, telefone, id]
+      `UPDATE saloes SET ${fields.join(', ')} WHERE id = ?`,
+      values
     );
     return res.json({ sucesso: true });
   } catch (err) {

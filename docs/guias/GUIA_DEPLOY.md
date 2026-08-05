@@ -63,8 +63,8 @@ VITE_SUPABASE_ANON_KEY=sua-chave-anon-aqui
 ```javascript
 import { createClient } from '@supabase/supabase-js';
 
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || 'https://SEU_PROJETO_SUPABASE_REF.supabase.co';
-const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY || 'SUA_CHAVE_SUPABASE_ANON';
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || 'https://seu-projeto.supabase.co';
+const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY || 'SUA_CHAVE_ANON_AQUI';
 
 export const supabase = createClient(supabaseUrl, supabaseKey);
 ```
@@ -125,8 +125,8 @@ git push -u origin main
 Clique em **"Environment Variables"** e adicione:
 
 ```
-VITE_SUPABASE_URL = https://SEU_PROJETO_SUPABASE_REF.supabase.co
-VITE_SUPABASE_ANON_KEY = SUA_CHAVE_SUPABASE_ANON
+VITE_SUPABASE_URL = https://seu-projeto.supabase.co
+VITE_SUPABASE_ANON_KEY = SUA_CHAVE_ANON_AQUI
 ```
 
 ### 3.5 Deploy

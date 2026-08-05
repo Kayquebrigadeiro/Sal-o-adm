@@ -24,7 +24,7 @@
 
 | Item | Status | Valor |
 |------|--------|-------|
-| URL do Supabase | ✅ OK | `https://SEU_PROJETO_SUPABASE_REF.supabase.co` |
+| URL do Supabase | ✅ OK | `https://seu-projeto.supabase.co` |
 | Anon Key | ✅ OK | Configurada com fallback |
 | Variáveis de ambiente | ✅ OK | `VITE_SUPABASE_URL` e `VITE_SUPABASE_ANON_KEY` |
 | Fallback para dev | ✅ OK | Funciona sem .env local |
@@ -108,8 +108,8 @@
 #    - Build Command: npm run build
 #    - Output Directory: dist
 # 6. Adicione as variáveis de ambiente:
-VITE_SUPABASE_URL=https://SEU_PROJETO_SUPABASE_REF.supabase.co
-VITE_SUPABASE_ANON_KEY=SUA_CHAVE_SUPABASE_ANON
+VITE_SUPABASE_URL=https://seu-projeto.supabase.co
+VITE_SUPABASE_ANON_KEY=SUA_CHAVE_ANON_AQUI
 # 7. Clique em "Deploy"
 # 8. Aguarde 2-3 minutos
 # 9. ✅ PRONTO!

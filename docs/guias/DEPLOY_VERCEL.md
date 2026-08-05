@@ -13,7 +13,7 @@ Antes de fazer deploy, você precisa das seguintes informações:
 
 **Como pegar:**
 1. Acesse: https://supabase.com/dashboard/project/SEU_PROJETO_SUPABASE_REF/settings/api
-2. Copie a **Project URL** (ex: `https://SEU_PROJETO_SUPABASE_REF.supabase.co`)
+2. Copie a **Project URL** (ex: `https://seu-projeto.supabase.co`)
 3. Copie a **anon public** key (começa com `eyJ...`)
 
 ---
@@ -46,7 +46,7 @@ vercel
 
 ### **Variável 1:**
 - **Name:** `VITE_SUPABASE_URL`
-- **Value:** `https://SEU_PROJETO_SUPABASE_REF.supabase.co`
+- **Value:** `https://seu-projeto.supabase.co`
 - **Environments:** ✅ Production, ✅ Preview, ✅ Development
 
 ### **Variável 2:**

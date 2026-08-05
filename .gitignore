@@ -155,3 +155,11 @@ yarn.lock.bak
 .settings/
 *.sublime-workspace
 *.sublime-project
+
+# ============================================
+# BACKUPS & DUMPS
+# ============================================
+backup/
+*.dump
+*.sql.bak
+.dump/

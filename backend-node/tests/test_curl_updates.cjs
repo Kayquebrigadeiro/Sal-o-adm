@@ -14,7 +14,7 @@ const connection_config = {
   }
 };
 
-const JWT_SECRET = '1730e31699d01c4763200afa6ec4496cae9d5ee3570689c63b943e93b4066ed1';
+const JWT_SECRET = process.env.JWT_SECRET;
 
 async function testCurlUpdates() {
   let conn;

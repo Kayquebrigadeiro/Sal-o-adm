@@ -30,16 +30,26 @@ const generalLimiter = rateLimit({
   legacyHeaders: false,
 });
 
-// Rate limit restrito para login (20 tentativas/15min por IP)
+// Rate limit restrito para login (100 tentativas/15min por IP — ajustado para produção real)
 const loginLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
-  max: 20,
+  max: 100,
   standardHeaders: true,
   legacyHeaders: false,
   message: { error: 'Muitas tentativas de login. Tente novamente em 15 minutos.' },
 });
 
 app.use(generalLimiter);
+
+// Headers de segurança (equivalente ao helmet, sem dependência extra)
+app.use((req, res, next) => {
+  res.setHeader('X-Content-Type-Options', 'nosniff');
+  res.setHeader('X-Frame-Options', 'DENY');
+  res.setHeader('X-XSS-Protection', '1; mode=block');
+  res.setHeader('Referrer-Policy', 'no-referrer');
+  res.setHeader('Cache-Control', 'no-store');
+  next();
+});
 
 // CORS configuration for production
 const allowedOrigins = (process.env.ALLOWED_ORIGINS || 'http://localhost:5173').split(',').map(origin => origin.trim());

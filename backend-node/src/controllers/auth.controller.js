@@ -2,12 +2,44 @@ const pool = require('../config/db');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 
+// Proteção contra força bruta: contagem de tentativas falhas por IP
+const loginAttempts = new Map();
+const MAX_ATTEMPTS = 5;
+const LOCKOUT_MS = 15 * 60 * 1000; // 15 minutos
+
+function isLockedOut(ip) {
+  const record = loginAttempts.get(ip);
+  if (!record) return false;
+  if (record.count >= MAX_ATTEMPTS) {
+    if (Date.now() - record.firstAttempt < LOCKOUT_MS) return true;
+    loginAttempts.delete(ip); // janela expirou, reseta
+  }
+  return false;
+}
+
+function registerFailedAttempt(ip) {
+  const record = loginAttempts.get(ip) || { count: 0, firstAttempt: Date.now() };
+  record.count++;
+  record.firstAttempt = record.firstAttempt || Date.now();
+  loginAttempts.set(ip, record);
+}
+
+function clearAttempts(ip) {
+  loginAttempts.delete(ip);
+}
+
 async function login(req, res) {
   try {
     const { email, senha } = req.body;
     const identificador = email; // Manteve o nome 'email' no payload por compatibilidade
-    
+    const ip = req.ip || req.connection.remoteAddress;
+
     if (!identificador || !senha) return res.status(400).json({ error: 'email/identificador and senha are required' });
+
+    // Bloqueio por força bruta
+    if (isLockedOut(ip)) {
+      return res.status(429).json({ error: 'Muitas tentativas falhas. Tente novamente em 15 minutos.' });
+    }
 
     let user = null;
 
@@ -22,10 +54,18 @@ async function login(req, res) {
       }
     }
 
-    if (!user) return res.status(401).json({ error: 'Invalid credentials' });
+    if (!user) {
+      registerFailedAttempt(ip);
+      return res.status(401).json({ error: 'Invalid credentials' });
+    }
 
     const match = await bcrypt.compare(senha, user.senha_hash);
-    if (!match) return res.status(401).json({ error: 'Invalid credentials' });
+    if (!match) {
+      registerFailedAttempt(ip);
+      return res.status(401).json({ error: 'Invalid credentials' });
+    }
+
+    clearAttempts(ip);
 
     const [perfisData] = await pool.query('SELECT auth_user_id, salao_id, cargo FROM perfis_acesso WHERE auth_user_id = ?', [user.id]);
     const perfil = perfisData[0] || {};

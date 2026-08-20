@@ -3,7 +3,8 @@
  * Roda contra o servidor em execução (porta 3333)
  */
 require('dotenv').config();
-const pool = require('./src/config/db');
+const path = require('path');
+const pool = require(path.join(__dirname, '..', 'src', 'config', 'db'));
 
 const BASE = 'http://localhost:3333';
 const SENHA = 'SUA_SENHA_DE_TESTE';
@@ -22,7 +23,11 @@ function check(label, cond, detail = '') {
 }
 
 async function api(method, path, body = null, token = null) {
-  const opts = { method, headers: { 'Content-Type': 'application/json' } };
+  const opts = {
+    method,
+    headers: { 'Content-Type': 'application/json' },
+    signal: AbortSignal.timeout(10000) // 10s timeout p/ não travar a bateria
+  };
   if (token) opts.headers['Authorization'] = `Bearer ${token}`;
   if (body) opts.body = JSON.stringify(body);
   const res = await fetch(`${BASE}${path}`, opts);

@@ -5,8 +5,13 @@ set -euo pipefail
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 cd "$ROOT_DIR"
 
-echo "Installing dependencies (npm ci)..."
-npm install --silent
+# Instala dependências apenas se node_modules não existir (evita lentidão a cada execução)
+if [ ! -d "node_modules" ]; then
+  echo "Installing dependencies (npm install)..."
+  npm install --silent --no-audit --no-fund
+else
+  echo "Dependencies already installed (skipping npm install)"
+fi
 
 # Start server in background
 echo "Starting server..."

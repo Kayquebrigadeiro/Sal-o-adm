@@ -6,7 +6,7 @@ module.exports = function (req, res, next) {
     const token = authHeader.replace("Bearer ", "").trim() || authHeader;
     if (!token) return res.status(401).json({ error: 'Token not provided' });
 
-    const payload = jwt.verify(token, process.env.JWT_SECRET || 'secret');
+    const payload = jwt.verify(token, process.env.JWT_SECRET);
     // expected payload: { auth_user_id, salao_id, cargo }
     req.user = payload;
     return next();

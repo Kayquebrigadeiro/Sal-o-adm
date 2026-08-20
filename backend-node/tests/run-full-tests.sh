@@ -2,8 +2,9 @@
 # Helper to install deps, start server in background, run test runner, and stop the server.
 # Usage: bash run-full-tests.sh
 set -euo pipefail
-ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-cd "$ROOT_DIR"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+BACKEND_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
+cd "$BACKEND_DIR"
 
 # Instala dependências apenas se node_modules não existir (evita lentidão a cada execução)
 if [ ! -d "node_modules" ]; then
@@ -39,7 +40,7 @@ done
 
 # Run the Node test runner
 echo "Running test runner"
-node run-full-tests.js
+node tests/run-full-tests.js
 EXIT_CODE=$?
 
 echo "Test runner exited with $EXIT_CODE"

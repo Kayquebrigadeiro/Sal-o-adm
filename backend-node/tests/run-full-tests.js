@@ -6,8 +6,10 @@ require('dotenv').config();
 const path = require('path');
 const pool = require(path.join(__dirname, '..', 'src', 'config', 'db'));
 
-const BASE = 'http://localhost:3333';
-const SENHA = 'SUA_SENHA_DE_TESTE';
+const BASE = process.env.BASE_URL || 'http://localhost:3333';
+const SENHA = process.env.TEST_VENDEDOR_SENHA || process.env.VENDOR_PASSWORD || 'SUA_SENHA_DE_TESTE';
+const EMAIL_VENDEDOR = process.env.TEST_VENDEDOR_EMAIL || process.env.VENDOR_EMAIL || 'SEU_EMAIL_DE_TESTE@exemplo.com';
+const EMAIL_PROP = process.env.TEST_PROP_EMAIL || 'salaoteste@teste.com';
 
 let TOKEN_VENDEDOR = null;
 let TOKEN_PROP = null;
@@ -49,15 +51,15 @@ async function main() {
   // ========== B.1 AUTENTICAÇÃO ==========
   console.log('─── B.1 Autenticação ───');
 
-  const loginV = await login('SEU_EMAIL_DE_TESTE@exemplo.com', SENHA);
+  const loginV = await login(EMAIL_VENDEDOR, SENHA);
   TOKEN_VENDEDOR = loginV.ok ? loginV.data.token : null;
   check('Login VENDEDOR com email', !!TOKEN_VENDEDOR);
 
-  const loginP = await login('salaoteste@teste.com', SENHA);
+  const loginP = await login(EMAIL_PROP, SENHA);
   TOKEN_PROP = loginP.ok ? loginP.data.token : null;
   check('Login PROPRIETARIO com email', !!TOKEN_PROP);
 
-  const r2 = await login('salaoteste@teste.com', 'senha_errada_xyz');
+  const r2 = await login(EMAIL_PROP, 'senha_errada_xyz');
   check('Login com senha errada retorna 401', r2.status === 401, `status=${r2.status}`);
 
   const r3 = await api('GET', '/atendimentos', null, 'token_invalido_aqui');

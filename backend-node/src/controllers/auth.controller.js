@@ -76,7 +76,7 @@ async function login(req, res) {
       cargo: perfil.cargo || null
     };
 
-    const token = jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: '7d' });
+    const token = jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: '24h' });
 
     // Adicionado email e user_id no retorno para facilitar a montagem da sessao no frontend
     return res.json({ 

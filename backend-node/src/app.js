@@ -22,18 +22,18 @@ if (process.env.SENTRY_DSN) {
   app.use(Sentry.Handlers.requestHandler());
 }
 
-// Rate limiting geral (300 req/15min por IP)
+// Rate limiting geral (configurável via env, default 300 req/15min por IP)
 const generalLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
-  max: 300,
+  max: parseInt(process.env.RATE_LIMIT_MAX) || 300,
   standardHeaders: true,
   legacyHeaders: false,
 });
 
-// Rate limit restrito para login (100 tentativas/15min por IP — ajustado para produção real)
+// Rate limit restrito para login (configurável via env, default 100 tentativas/15min por IP)
 const loginLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
-  max: 100,
+  max: parseInt(process.env.LOGIN_RATE_LIMIT_MAX) || 100,
   standardHeaders: true,
   legacyHeaders: false,
   message: { error: 'Muitas tentativas de login. Tente novamente em 15 minutos.' },

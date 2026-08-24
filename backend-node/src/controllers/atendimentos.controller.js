@@ -7,6 +7,7 @@ const pool = require('../config/db');
 const { v4: uuidv4 } = require('uuid');
 const { calcularValoresAtendimento } = require('../services/financialEngine.service');
 const { mesEstaFechado } = require('../services/fechamentoGuard.service');
+const { invalidarFechamentoCache } = require('./fechamento.controller');
 
 /**
  * POST /atendimentos
@@ -91,7 +92,9 @@ async function criarAtendimento(req, res) {
     );
     
     // Se houver produtos associados, calcular custo_variavel; senão, usar fallback do procedimento
-    let custoVariavel = proc.custo_variavel || 0;
+    // IMPORTANTE: MySQL devuelve DECIMAL como string ("10.00"), por eso se convierte a número
+    // para que roundToDecimal del financialEngine no lo descarte (typeof !== 'number' → 0)
+    let custoVariavel = parseFloat(proc.custo_variavel) || 0;
     if (produtosAssociados.length > 0) {
       // Transformar dados para o formato esperado por calcularCustoVariavelInsumos
       const { calcularCustoVariavelInsumos } = require('../services/financialEngine.service');
@@ -157,7 +160,8 @@ async function criarAtendimento(req, res) {
           [procAd.procedimento_id, salao_id]
         );
         
-        let custoVariavelAd = procAdData[0].custo_variavel || 0;
+        // IMPORTANTE: MySQL devuelve DECIMAL como string, convertir a número
+        let custoVariavelAd = parseFloat(procAdData[0].custo_variavel) || 0;
         if (produtosAdicionais.length > 0) {
           const { calcularCustoVariavelInsumos } = require('../services/financialEngine.service');
           const produtos = produtosAdicionais.map(p => ({
@@ -195,6 +199,9 @@ async function criarAtendimento(req, res) {
     }
     
     await connection.commit();
+
+    // Invalidar cache de fechamento del mes afectado
+    invalidarFechamentoCache(salao_id, data);
     
     res.status(201).json({
       sucesso: true,
@@ -417,6 +424,10 @@ async function atualizarAtendimento(req, res) {
     params.push(id, salao_id);
     
     await connection.query(query, params);
+
+    // Invalidar cache de fechamento del mes afectado (nuevo y anterior)
+    invalidarFechamentoCache(salao_id, dataParaVerificar);
+    if (data && data !== dataParaVerificar) invalidarFechamentoCache(salao_id, data);
     
     res.json({ sucesso: true, message: 'Atendimento atualizado com sucesso' });
   } catch (err) {
@@ -457,6 +468,9 @@ async function deletarAtendimento(req, res) {
     if (result.affectedRows === 0) {
       return res.status(404).json({ error: 'Atendimento não encontrado' });
     }
+
+    // Invalidar cache de fechamento del mes afectado
+    invalidarFechamentoCache(salao_id, atend[0].data);
     
     res.json({ sucesso: true, message: 'Atendimento deletado com sucesso' });
   } catch (err) {
@@ -683,6 +697,10 @@ async function substituirProcedimentosAtendimento(req, res) {
     );
 
     await connection.commit();
+
+    // Invalidar cache de fechamento del mes afectado
+    invalidarFechamentoCache(salao_id, atend.data);
+
     res.json({ sucesso: true, message: 'Procedimentos atualizados com sucesso' });
   } catch (err) {
     try { await connection.rollback(); } catch (e) {}

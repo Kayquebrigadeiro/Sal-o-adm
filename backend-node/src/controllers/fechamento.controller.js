@@ -4,7 +4,12 @@
  */
 
 const pool = require('../config/db');
+const NodeCache = require('node-cache');
 const { calcularSaudeFinanceira } = require('../services/financialEngine.service');
+
+// Cache en memoria para fechamento mensal (TTL 30s)
+// Clave: `${salao_id}:${mes}` — se invalida al crear/editar/borrar registros del mes
+const fechamentoCache = new NodeCache({ stdTTL: 30, checkperiod: 5 });
 
 /**
  * GET /fechamento/:mes
@@ -108,6 +113,30 @@ async function calcularDadosFechamento(salao_id, mes) {
 }
 
 /**
+ * Invalida el cache de fechamento para un salão y mes específicos.
+ * Se llama al crear/editar/borrar registros que afectan el fechamento
+ * (atendimentos, homecare, despesas, gastos_pessoais, procedimentos_paralelos).
+ * @param {string} salao_id
+ * @param {string} data - Fecha en formato YYYY-MM-DD (se extrae el mes)
+ */
+function invalidarFechamentoCache(salao_id, data) {
+  if (!salao_id || data === undefined || data === null || data === '') return;
+
+  let mes;
+  if (data instanceof Date) {
+    if (isNaN(data.getTime())) return;
+    mes = `${data.getFullYear()}-${String(data.getMonth() + 1).padStart(2, '0')}`;
+  } else if (typeof data === 'string' && /^\d{4}-\d{1,2}/.test(data)) {
+    mes = data.substring(0, 7); // YYYY-MM
+  } else {
+    // Formato inesperado: no invalidar nada para no romper el cache de otros meses
+    return;
+  }
+
+  fechamentoCache.del(`${salao_id}:${mes}`);
+}
+
+/**
  * GET /fechamento/:mes
  */
 async function obterFechamentoMensal(req, res) {
@@ -118,7 +147,16 @@ async function obterFechamentoMensal(req, res) {
     if (!/^\d{4}-\d{2}$/.test(mes)) {
       return res.status(400).json({ error: 'Formato de mês inválido (use YYYY-MM)' });
     }
-    
+
+    const clave = `${salao_id}:${mes}`;
+
+    // Cache hit: devolver datos cacheados (TTL 30s)
+    const cacheado = fechamentoCache.get(clave);
+    if (cacheado) {
+      return res.json(cacheado);
+    }
+
+    // Cache miss: calcular y guardar en cache
     const dados = await calcularDadosFechamento(salao_id, mes);
 
     const dataMes = `${mes}-01`;
@@ -127,7 +165,10 @@ async function obterFechamentoMensal(req, res) {
       [salao_id, dataMes]
     );
 
-    res.json({ mes, isFechado: existente.length > 0, ...dados });
+    const respuesta = { mes, isFechado: existente.length > 0, ...dados };
+    fechamentoCache.set(clave, respuesta);
+
+    res.json(respuesta);
     
   } catch (error) {
     console.error('Erro ao obter fechamento:', error);
@@ -203,5 +244,6 @@ async function salvarFechamentoMensal(req, res) {
 
 module.exports = {
   obterFechamentoMensal,
-  salvarFechamentoMensal
+  salvarFechamentoMensal,
+  invalidarFechamentoCache
 };

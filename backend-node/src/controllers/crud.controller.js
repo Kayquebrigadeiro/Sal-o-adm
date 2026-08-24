@@ -6,6 +6,16 @@
 const pool = require('../config/db');
 const { v4: uuidv4 } = require('uuid');
 const { mesEstaFechado } = require('../services/fechamentoGuard.service');
+const { invalidarFechamentoCache } = require('./fechamento.controller');
+
+// Tabelas que afetam o fechamento mensal e a coluna usada como data-base.
+// gastos_pessoais NÃO possui coluna `data` — o mês é derivado de `criado_em`.
+const TABELAS_FECHAMENTO = {
+  homecare: 'data',
+  despesas: 'data',
+  procedimentos_paralelos: 'data',
+  gastos_pessoais: 'criado_em'
+};
 
 /**
  * Mapeia campos de entrada para campos de banco de dados
@@ -94,15 +104,10 @@ function createCRUDController(nomeTabela, campos = []) {
       try {
         const salao_id = req.user.salao_id;
         let dados = mapearCampos(nomeTabela, { ...req.body, salao_id });
-if (typeof dados !== 'object' || Array.isArray(dados) || dados === null || Object.keys(dados).length === 0) {
-  return res.status(400).json({ error: 'Dados inválidos ou vazios' });
-}
-    if (typeof dados !== 'object' || Array.isArray(dados) || dados === null) {
-      return res.status(400).json({ error: 'Dados inválidos' });
-    }
-    if (Object.keys(dados).length === 0) {
-      return res.status(400).json({ error: 'Nenhum campo fornecido' });
-    }
+
+        if (typeof dados !== 'object' || Array.isArray(dados) || dados === null || Object.keys(dados).length === 0) {
+          return res.status(400).json({ error: 'Dados inválidos ou vazios' });
+        }
         
         // Mapeamento de campos para tabelas que não possuem 'nome'
         // Mapeia 'nome' para 'descricao' para tabelas que usam esse campo
@@ -141,6 +146,10 @@ if (typeof dados !== 'object' || Array.isArray(dados) || dados === null || Objec
           if (!dados.custo_produto) dados.custo_produto = 0;
           if (!dados.valor_venda) dados.valor_venda = 0;
           if (!dados.valor_pago) dados.valor_pago = 0;
+          // Reforço de robustez: calcular valor_pendente y lucro en el backend
+          // (capa extra de protección contra datos manipulados viniendo de la API)
+          dados.valor_pendente = parseFloat(dados.valor_venda || 0) - parseFloat(dados.valor_pago || 0);
+          dados.lucro = parseFloat(dados.valor_venda || 0) - parseFloat(dados.custo_produto || 0);
         }
         
         // Adicionar defaults para procedimentos_paralelos
@@ -177,6 +186,13 @@ if (typeof dados !== 'object' || Array.isArray(dados) || dados === null || Objec
           `INSERT INTO ${nomeTabela} (${camposNomes}) VALUES (${placeholders})`,
           valores
         );
+
+        // Invalidar cache de fechamento se a tabela afeta o fechamento mensal
+        const colunaDataCriar = TABELAS_FECHAMENTO[nomeTabela];
+        if (colunaDataCriar) {
+          const fechaRegistro = dados[colunaDataCriar] || dados.criado_em || new Date().toISOString().split('T')[0];
+          invalidarFechamentoCache(salao_id, fechaRegistro);
+        }
         
         res.status(201).json({
           id: dados.id,
@@ -210,6 +226,18 @@ if (typeof dados !== 'object' || Array.isArray(dados) || dados === null || Objec
         // Mapear campos antes de atualizar
         let dadosUpdate = mapearCampos(nomeTabela, { ...req.body });
         
+        // Capturar a data anterior do registro para invalidar o cache do mês correto
+        // (gastos_pessoais não tem coluna `data`; usa criado_em)
+        const colunaDataUpd = TABELAS_FECHAMENTO[nomeTabela];
+        let dataAnterior = null;
+        if (colunaDataUpd) {
+          const [regAnterior] = await pool.query(
+            `SELECT ${colunaDataUpd} AS dt FROM ${nomeTabela} WHERE id = ? AND salao_id = ?`,
+            [id, salao_id]
+          );
+          dataAnterior = regAnterior[0]?.dt || null;
+        }
+        
         // Aplicar mesma lógica de mapeamento de nome que na criação
         const tabelasComDescricao = ['custos_fixos_itens', 'despesas', 'procedimentos_paralelos'];
         if (tabelasComDescricao.includes(nomeTabela) && dadosUpdate.nome && !dadosUpdate.descricao) {
@@ -224,6 +252,21 @@ if (typeof dados !== 'object' || Array.isArray(dados) || dados === null || Objec
         if (nomeTabela === 'homecare' && dadosUpdate.nome && !dadosUpdate.cliente) {
           dadosUpdate.cliente = dadosUpdate.nome;
           delete dadosUpdate.nome;
+        }
+
+        // Reforço de robustez: recalcular valor_pendente y lucro en el backend
+        // si cambian valor_venda, valor_pago o custo_produto (capa extra de protección)
+        if (nomeTabela === 'homecare') {
+          const [hcAtual] = await pool.query(
+            `SELECT valor_venda, valor_pago, custo_produto FROM ${nomeTabela} WHERE id = ? AND salao_id = ?`,
+            [id, salao_id]
+          );
+          const hc = hcAtual[0] || {};
+          const valorVenda = dadosUpdate.valor_venda !== undefined ? dadosUpdate.valor_venda : hc.valor_venda;
+          const valorPago = dadosUpdate.valor_pago !== undefined ? dadosUpdate.valor_pago : hc.valor_pago;
+          const custoProduto = dadosUpdate.custo_produto !== undefined ? dadosUpdate.custo_produto : hc.custo_produto;
+          dadosUpdate.valor_pendente = parseFloat(valorVenda || 0) - parseFloat(valorPago || 0);
+          dadosUpdate.lucro = parseFloat(valorVenda || 0) - parseFloat(custoProduto || 0);
         }
 
         const tabelasComData = ['despesas', 'homecare', 'procedimentos_paralelos'];
@@ -255,6 +298,13 @@ if (typeof dados !== 'object' || Array.isArray(dados) || dados === null || Objec
           `UPDATE ${nomeTabela} SET ${camposUpdate} WHERE id = ? AND salao_id = ?`,
           valores
         );
+
+        // Invalidar cache de fechamento do mês anterior e do novo mês (se mudou)
+        if (colunaDataUpd) {
+          const dataNova = dadosUpdate[colunaDataUpd] !== undefined ? dadosUpdate[colunaDataUpd] : dataAnterior;
+          if (dataAnterior) invalidarFechamentoCache(salao_id, dataAnterior);
+          if (dataNova && dataNova !== dataAnterior) invalidarFechamentoCache(salao_id, dataNova);
+        }
         
         res.json({ id, message: `${nomeTabela} atualizado com sucesso` });
       } catch (error) {
@@ -280,6 +330,18 @@ if (typeof dados !== 'object' || Array.isArray(dados) || dados === null || Objec
           }
         }
         
+        // Capturar a data do registro ANTES de deletar, para invalidar o cache
+        // do mês correto (gastos_pessoais não tem coluna `data`; usa criado_em)
+        const colunaDataDel = TABELAS_FECHAMENTO[nomeTabela];
+        let dataRegistro = null;
+        if (colunaDataDel) {
+          const [regDel] = await pool.query(
+            `SELECT ${colunaDataDel} AS dt FROM ${nomeTabela} WHERE id = ? AND salao_id = ?`,
+            [id, salao_id]
+          );
+          dataRegistro = regDel[0]?.dt || null;
+        }
+
         const [resultado] = await pool.query(
           `DELETE FROM ${nomeTabela} WHERE id = ? AND salao_id = ?`,
           [id, salao_id]
@@ -287,6 +349,11 @@ if (typeof dados !== 'object' || Array.isArray(dados) || dados === null || Objec
         
         if (resultado.affectedRows === 0) {
           return res.status(404).json({ error: `${nomeTabela} não encontrado` });
+        }
+
+        // Invalidar cache de fechamento do mês do registro removido
+        if (dataRegistro) {
+          invalidarFechamentoCache(salao_id, dataRegistro);
         }
         
         res.json({ id, message: `${nomeTabela} removido com sucesso` });

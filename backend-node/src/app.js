@@ -1,3 +1,4 @@
+require("dotenv").config();
 const express = require('express');
 const cors = require('cors');
 const rateLimit = require('express-rate-limit');
@@ -13,14 +14,8 @@ const relatoriosRoutes = require('./routes/relatorios.routes');
 
 const app = express();
 
-// Sentry (opcional via SENTRY_DSN)
-if (process.env.SENTRY_DSN) {
-  Sentry.init({
-    dsn: process.env.SENTRY_DSN,
-    environment: process.env.NODE_ENV || 'development',
-  });
-  app.use(Sentry.Handlers.requestHandler());
-}
+// Sentry (opcional via SENTRY_DSN) — init feito em src/instrument.js (expressIntegration)
+// O error handler do Sentry é registrado em `setupExpressErrorHandler` abaixo (antes do handler genérico).
 
 // Rate limiting geral (configurável via env, default 300 req/15min por IP)
 const generalLimiter = rateLimit({
@@ -82,7 +77,7 @@ app.get('/health', (req, res) => res.json({ ok: true }));
 
 // Sentry error handler (deve vir antes do handler genérico)
 if (process.env.SENTRY_DSN) {
-  app.use(Sentry.Handlers.errorHandler());
+  Sentry.setupExpressErrorHandler(app);
 }
 
 // generic error handler

@@ -19,15 +19,28 @@ export default function Assinaturas() {
   });
   const [salvando, setSalvando] = useState(false);
 
+  // Módulo desativado temporariamente por decisão de negócios
+  // (mesmo padrão do Configuracoes.jsx). Ver roadmap.md.
+  const [moduloDesativado, setModuloDesativado] = useState(false);
+
   useEffect(() => {
     carregarAssinaturas();
   }, []);
 
   const carregarAssinaturas = async () => {
+    // DESATIVADO TEMPORARIAMENTE — aviso explícito na tela, sem erro silencioso.
+    setModuloDesativado(true);
+    setCarregando(false);
+    return;
+
+    /* DESATIVADO TEMPORARIAMENTE (código original mantido para reativação futura.
+       Ao reativar, lembrar de adicionar: import { supabase } from '../supabaseClient';
+       — antes o supabase era usado sem import, o que gerava
+       "ReferenceError: supabase is not defined" exibido como toast. */
     setCarregando(true);
     try {
       const userId = localStorage.getItem('userId');
-      
+
       const { data, error } = await supabase
         .from('saloes')
         .select(`
@@ -54,7 +67,7 @@ export default function Assinaturas() {
           const venc = new Date(ass.proximo_vencimento + 'T00:00:00');
           dias = Math.ceil((venc - hoje) / (1000 * 60 * 60 * 24));
         }
-        
+
         return {
           ...s,
           assinatura: ass || null,
@@ -72,6 +85,7 @@ export default function Assinaturas() {
 
   const handleRenovar = async (e) => {
     e.preventDefault();
+    if (moduloDesativado) return;
     if (!salaoSelecionado) return;
     setSalvando(true);
 
@@ -129,6 +143,7 @@ export default function Assinaturas() {
   };
 
   const abrirModal = (salao) => {
+    if (moduloDesativado) return;
     setSalaoSelecionado(salao);
     setRenovacaoForm({
       forma_pagamento: 'PIX',
@@ -153,6 +168,18 @@ export default function Assinaturas() {
           <p className="text-gray-500 mt-1">Controle de pagamentos e acessos dos seus salões.</p>
         </div>
       </div>
+
+      {moduloDesativado && (
+        <div className="mb-6 flex items-start gap-3 bg-amber-50 border border-amber-200 text-amber-800 rounded-xl p-4">
+          <ShieldAlert className="w-5 h-5 mt-0.5 shrink-0" />
+          <div>
+            <p className="font-semibold">Módulo de assinaturas desativado temporariamente.</p>
+            <p className="text-sm text-amber-700 mt-0.5">
+              Isso é intencional (decisão de negócios), não um erro. Será reativado em uma sprint futura.
+            </p>
+          </div>
+        </div>
+      )}
 
       <div className="grid grid-cols-3 gap-4 mb-8">
         <div className="bg-white p-5 rounded-xl border border-gray-200 shadow-sm flex items-center gap-4">

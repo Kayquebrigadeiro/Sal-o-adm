@@ -11,12 +11,15 @@ const fs = require('fs');
 const path = require('path');
 
 const BASE_URL = process.env.BASE_URL || 'http://localhost:3334';
-const VENDEDOR = { email: 'vendedor-staging@teste.com', senha: 'Staging123!' };
+const VENDEDOR = {
+  email: process.env.VENDEDOR_EMAIL || 'vendedor-staging@teste.com',
+  senha: process.env.VENDEDOR_SENHA || 'Staging123!',
+};
 const SALAO = {
-  email: 'beleza.real@teste.com',
-  senha: 'BelezaReal123!',
-  nome: 'Mariana Costa',
-  nome_salao: 'Salão Beleza Real',
+  email: process.env.SALAO_EMAIL || 'beleza.real@teste.com',
+  senha: process.env.SALAO_SENHA || 'BelezaReal123!',
+  nome: process.env.SALAO_NOME || 'Mariana Costa',
+  nome_salao: process.env.SALAO_NOME_SALAO || 'Salão Beleza Real',
   telefone: '11988887777',
 };
 const TAXA_MAQUININHA = 4.5;

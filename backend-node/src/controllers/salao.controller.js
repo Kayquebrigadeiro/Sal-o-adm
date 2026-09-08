@@ -165,8 +165,11 @@ async function obterSalao(req, res) {
     return res.status(403).json({ error: 'Acesso negado' });
   }
   try {
-    const [rows] = await pool.query('SELECT nome, nome_proprietaria, telefone FROM saloes WHERE id = ?', [id]);
-    return res.json(rows[0] || {});
+    const [rows] = await pool.query('SELECT nome, nome_proprietaria, telefone, criado_em FROM saloes WHERE id = ?', [id]);
+    if (!rows[0]) {
+      return res.status(404).json({ error: 'Salão não encontrado ou deletado' });
+    }
+    return res.json(rows[0]);
   } catch (err) {
     console.error(err);
     return res.status(500).json({ error: 'Failed to fetch salao' });

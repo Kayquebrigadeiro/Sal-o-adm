@@ -16,13 +16,17 @@ export default function GerenciarSalao({ userId }) {
   const carregarDados = async () => {
     setLoading(true);
     try {
-      const { data: salaoData } = await api.get(`/salao/${salaoId}`);
-      setSalao(salaoData || null);
+      const res = await api.get(`/salao/${salaoId}`);
+      const salaoData = res.ok ? await res.json() : null;
+      // O endpoint retorna objeto vazio quando o salão não existe
+      setSalao(salaoData && salaoData.nome ? salaoData : null);
 
-      const { data: loginsData } = await api.get('/admin/logins-gerados', { params: { salao_id: salaoId } });
-      setLogins(loginsData || []);
+      const loginsRes = await api.get('/admin/logins-gerados', { params: { salao_id: salaoId } });
+      const loginsData = loginsRes.ok ? await loginsRes.json() : [];
+      setLogins(Array.isArray(loginsData) ? loginsData : []);
     } catch (err) {
       console.error('Erro ao carregar dados:', err);
+      setSalao(null);
     } finally {
       setLoading(false);
     }

@@ -5,9 +5,9 @@
     "nome": "Mariana Costa",
     "nome_salao": "Salão Beleza Real",
     "telefone": "11988887777",
-    "salao_id": "df8ee394-b4c2-4a14-8692-6eda6d3ffe3d"
+    "salao_id": "fd5427ed-1d3b-4a59-b224-3a41870f0787"
   },
-  "gerado_em": "2026-09-04T23:31:26.385Z",
+  "gerado_em": "2026-09-08T23:44:53.223Z",
   "meses": {
     "2026-07": {
       "independente": {
@@ -24,8 +24,8 @@
         "homecareQtd": 4,
         "paralelosValor": 412,
         "paralelosQtd": 2,
-        "despesasValor": 730,
-        "despesasQtd": 3,
+        "despesasValor": 180,
+        "despesasQtd": 1,
         "gastosValor": 770,
         "gastosQtd": 2,
         "adicionaisValor": 340,
@@ -33,24 +33,24 @@
       },
       "api": {
         "mes": "2026-07",
-        "isFechado": false,
-        "faturamentoBruto": "7228.00",
-        "receitaRecebida": "6349.82",
-        "totalPendente": "878.18",
-        "receitaHomecare": "773.00",
-        "receitaParalelos": "412.00",
-        "receitaTotalCaixa": "7228.00773.00412.00",
-        "lucroAtendimentosReal": "3011.46",
-        "lucroPossivel": "3336.75",
+        "isFechado": true,
+        "faturamentoBruto": 7568,
+        "receitaRecebida": 6349.82,
+        "totalPendente": 1218.18,
+        "receitaHomecare": 773,
+        "receitaParalelos": 412,
+        "receitaTotalCaixa": 8753,
+        "lucroAtendimentosReal": 3125.91,
+        "lucroPossivel": 3466.5,
         "totalAtendimentos": 47,
-        "lucroHomecare": "479.00",
-        "totalDespesas": "180.00",
-        "totalSalariosFixos": "3000.00",
-        "totalGastosPessoais": "770.00",
-        "saudeFinanceira": 0,
-        "margemLucro": 0
+        "lucroHomecare": 479,
+        "totalDespesas": 180,
+        "totalSalariosFixos": 3000,
+        "totalGastosPessoais": 770,
+        "saudeFinanceira": 424.91,
+        "margemLucro": "35.71"
       },
-      "isFechado": false
+      "isFechado": true
     },
     "2026-08": {
       "independente": {
@@ -67,8 +67,8 @@
         "homecareQtd": 4,
         "paralelosValor": 426,
         "paralelosQtd": 2,
-        "despesasValor": 830,
-        "despesasQtd": 3,
+        "despesasValor": 0,
+        "despesasQtd": 0,
         "gastosValor": 570,
         "gastosQtd": 2,
         "adicionaisValor": 660,
@@ -76,24 +76,24 @@
       },
       "api": {
         "mes": "2026-08",
-        "isFechado": false,
-        "faturamentoBruto": "6074.00",
-        "receitaRecebida": "5488.05",
-        "totalPendente": "585.95",
-        "receitaHomecare": "936.00",
-        "receitaParalelos": "426.00",
-        "receitaTotalCaixa": "6074.00936.00426.00",
-        "lucroAtendimentosReal": "2988.30",
-        "lucroPossivel": "3261.65",
+        "isFechado": true,
+        "faturamentoBruto": 6734,
+        "receitaRecebida": 5488.05,
+        "totalPendente": 1245.95,
+        "receitaHomecare": 936,
+        "receitaParalelos": 426,
+        "receitaTotalCaixa": 8096,
+        "lucroAtendimentosReal": 3276.35,
+        "lucroPossivel": 3579.4,
         "totalAtendimentos": 41,
-        "lucroHomecare": "630.00",
-        "totalDespesas": "0",
-        "totalSalariosFixos": "3000.00",
-        "totalGastosPessoais": "570.00",
-        "saudeFinanceira": 0,
-        "margemLucro": 0
+        "lucroHomecare": 630,
+        "totalDespesas": 0,
+        "totalSalariosFixos": 3000,
+        "totalGastosPessoais": 570,
+        "saudeFinanceira": 906.35,
+        "margemLucro": "40.47"
       },
-      "isFechado": false
+      "isFechado": true
     },
     "2026-09": {
       "independente": {
@@ -110,8 +110,8 @@
         "homecareQtd": 4,
         "paralelosValor": 398,
         "paralelosQtd": 2,
-        "despesasValor": 750,
-        "despesasQtd": 3,
+        "despesasValor": 340,
+        "despesasQtd": 1,
         "gastosValor": 600,
         "gastosQtd": 2,
         "adicionaisValor": 540,
@@ -120,113 +120,102 @@
       "api": {
         "mes": "2026-09",
         "isFechado": false,
-        "faturamentoBruto": "4367.00",
-        "receitaRecebida": "3943.55",
-        "totalPendente": "423.45",
-        "receitaHomecare": "778.00",
-        "receitaParalelos": "398.00",
-        "receitaTotalCaixa": "4367.00778.00398.00",
-        "lucroAtendimentosReal": "1568.07",
-        "lucroPossivel": "1764.60",
+        "faturamentoBruto": 4907,
+        "receitaRecebida": 3943.55,
+        "totalPendente": 963.45,
+        "receitaHomecare": 778,
+        "receitaParalelos": 398,
+        "receitaTotalCaixa": 6083,
+        "lucroAtendimentosReal": 1834.77,
+        "lucroPossivel": 2055.6,
         "totalAtendimentos": 36,
-        "lucroHomecare": "475.00",
-        "totalDespesas": "340.00",
-        "totalSalariosFixos": "3000.00",
-        "totalGastosPessoais": "600.00",
-        "saudeFinanceira": 0,
-        "margemLucro": 0
+        "lucroHomecare": 475,
+        "totalDespesas": 340,
+        "totalSalariosFixos": 3000,
+        "totalGastosPessoais": 600,
+        "saudeFinanceira": -1030.23,
+        "margemLucro": "30.16"
       },
       "isFechado": false
     }
   },
-  "divergencias": [],
+  "divergencias": [
+    {
+      "mes": "2026-07",
+      "campo": "faturamentoBruto (soma valor_cobrado EXECUTADO)",
+      "esperado": 7228,
+      "api": 7568,
+      "diff": 340
+    },
+    {
+      "mes": "2026-07",
+      "campo": "totalPendente",
+      "esperado": 878.18,
+      "api": 1218.18,
+      "diff": 340
+    },
+    {
+      "mes": "2026-07",
+      "campo": "lucroAtendimentosReal (soma lucro_liquido EXECUTADO)",
+      "esperado": 3011.46,
+      "api": 3125.91,
+      "diff": 114.45
+    },
+    {
+      "mes": "2026-08",
+      "campo": "faturamentoBruto (soma valor_cobrado EXECUTADO)",
+      "esperado": 6074,
+      "api": 6734,
+      "diff": 660
+    },
+    {
+      "mes": "2026-08",
+      "campo": "totalPendente",
+      "esperado": 585.95,
+      "api": 1245.95,
+      "diff": 660
+    },
+    {
+      "mes": "2026-08",
+      "campo": "lucroAtendimentosReal (soma lucro_liquido EXECUTADO)",
+      "esperado": 2988.3,
+      "api": 3276.35,
+      "diff": 288.05
+    },
+    {
+      "mes": "2026-09",
+      "campo": "faturamentoBruto (soma valor_cobrado EXECUTADO)",
+      "esperado": 4367,
+      "api": 4907,
+      "diff": 540
+    },
+    {
+      "mes": "2026-09",
+      "campo": "totalPendente",
+      "esperado": 423.45,
+      "api": 963.45,
+      "diff": 540
+    },
+    {
+      "mes": "2026-09",
+      "campo": "lucroAtendimentosReal (soma lucro_liquido EXECUTADO)",
+      "esperado": 1568.07,
+      "api": 1834.77,
+      "diff": 266.7
+    }
+  ],
   "erros": [
-    "despesa Manutenção do ar-condicionado: {\"error\":\"Erro ao criar despesas\"}",
-    "despesa Impulsionamento no Instagram: {\"error\":\"Erro ao criar despesas\"}",
-    "despesa Compra extra de descolorante: {\"error\":\"Erro ao criar despesas\"}",
-    "despesa Manutenção da chapinha: {\"error\":\"Erro ao criar despesas\"}",
-    "despesa Reposição de esmaltes: {\"error\":\"Erro ao criar despesas\"}",
-    "despesa Compra de luvas e toucas: {\"error\":\"Erro ao criar despesas\"}",
-    "despesa Manutenção do secador: {\"error\":\"Erro ao criar despesas\"}",
-    "POST fechamento 2026-07: {\"error\":\"Erro ao salvar fechamento mensal\"}",
-    "POST fechamento 2026-08: {\"error\":\"Erro ao salvar fechamento mensal\"}"
+    "despesa Manutenção do ar-condicionado: {\"error\":\"tipo inválido, use um dos seguintes: ALUGUEL, ENERGIA, AGUA, INTERNET, MATERIAL, EQUIPAMENTO, FORNECEDOR, FUNCIONARIO, OUTRO, PRODUTO\"}",
+    "despesa Impulsionamento no Instagram: {\"error\":\"tipo inválido, use um dos seguintes: ALUGUEL, ENERGIA, AGUA, INTERNET, MATERIAL, EQUIPAMENTO, FORNECEDOR, FUNCIONARIO, OUTRO, PRODUTO\"}",
+    "despesa Compra extra de descolorante: {\"error\":\"tipo inválido, use um dos seguintes: ALUGUEL, ENERGIA, AGUA, INTERNET, MATERIAL, EQUIPAMENTO, FORNECEDOR, FUNCIONARIO, OUTRO, PRODUTO\"}",
+    "despesa Manutenção da chapinha: {\"error\":\"tipo inválido, use um dos seguintes: ALUGUEL, ENERGIA, AGUA, INTERNET, MATERIAL, EQUIPAMENTO, FORNECEDOR, FUNCIONARIO, OUTRO, PRODUTO\"}",
+    "despesa Reposição de esmaltes: {\"error\":\"tipo inválido, use um dos seguintes: ALUGUEL, ENERGIA, AGUA, INTERNET, MATERIAL, EQUIPAMENTO, FORNECEDOR, FUNCIONARIO, OUTRO, PRODUTO\"}",
+    "despesa Compra de luvas e toucas: {\"error\":\"tipo inválido, use um dos seguintes: ALUGUEL, ENERGIA, AGUA, INTERNET, MATERIAL, EQUIPAMENTO, FORNECEDOR, FUNCIONARIO, OUTRO, PRODUTO\"}",
+    "despesa Manutenção do secador: {\"error\":\"tipo inválido, use um dos seguintes: ALUGUEL, ENERGIA, AGUA, INTERNET, MATERIAL, EQUIPAMENTO, FORNECEDOR, FUNCIONARIO, OUTRO, PRODUTO\"}"
   ],
   "achados": [
-    "Fallback P/M/G de \"Progressiva\": preco_m=null, preco_g=null no banco (NULL — o backend Node NÃO aplica o fallback 1.2x/1.3x no cadastro; em produção isso era trigger do Postgres)",
-    "Fallback P/M/G de \"Limpeza de Pele\": preco_m=null, preco_g=null no banco (NULL — o backend Node NÃO aplica o fallback 1.2x/1.3x no cadastro; em produção isso era trigger do Postgres)",
-    "Fallback P/M/G de \"Botox Capilar\": preco_m=null, preco_g=null no banco (NULL — o backend Node NÃO aplica o fallback 1.2x/1.3x no cadastro; em produção isso era trigger do Postgres)",
-    "Guarda de mês fechado: POST /atendimentos em 2026-07 retornou 201 (esperado 403): {\"sucesso\":true,\"id\":\"db6566b4-bd3c-4343-ade0-7ee31ea93b46\",\"salao_id\":\"df8ee394-b4c2-4a14-8692-6eda6d3ffe3d\",\"data\":\"2026-07-15\",\"horario\":\"10:00:00\",\"cliente\":\"Teste Guarda\",\"profissional_id\":\"b25b5a06-1098-473f-a7ea-ef8f5dd74628\",\"procedimento_id\":\"ac6f63ef-615e-41af-b378-55581a129817\",\"valor_cobrado\":70,\"valor_pago\":0,\"valor_pendente\":70,\"valor_maquininha\":3.15,\"valor_profissional\":14,\"custo_fixo\":25,\"custo_variavel\":5,\"lucro_liquido\":22.85,\"lucro_possivel\":26,\"status\":\"AGENDADO\"}"
-  ],
-  "complemento": {
-    "despesas_recriadas_com_tipo_valido": [
-      {
-        "mes": "2026-07",
-        "data": "2026-07-09",
-        "descricao": "Manutenção do ar-condicionado",
-        "valor": 250,
-        "tipo": "EQUIPAMENTO"
-      },
-      {
-        "mes": "2026-07",
-        "data": "2026-07-22",
-        "descricao": "Impulsionamento no Instagram",
-        "valor": 300,
-        "tipo": "OUTRO"
-      },
-      {
-        "mes": "2026-08",
-        "data": "2026-08-25",
-        "descricao": "Compra extra de descolorante",
-        "valor": 420,
-        "tipo": "PRODUTO"
-      },
-      {
-        "mes": "2026-08",
-        "data": "2026-08-11",
-        "descricao": "Manutenção da chapinha",
-        "valor": 150,
-        "tipo": "EQUIPAMENTO"
-      },
-      {
-        "mes": "2026-08",
-        "data": "2026-08-18",
-        "descricao": "Reposição de esmaltes",
-        "valor": 260,
-        "tipo": "PRODUTO"
-      },
-      {
-        "mes": "2026-09",
-        "data": "2026-09-08",
-        "descricao": "Compra de luvas e toucas",
-        "valor": 190,
-        "tipo": "PRODUTO"
-      },
-      {
-        "mes": "2026-09",
-        "data": "2026-09-28",
-        "descricao": "Manutenção do secador",
-        "valor": 220,
-        "tipo": "EQUIPAMENTO"
-      }
-    ],
-    "reteste_post_fechamento": {
-      "2026-07": {
-        "status": 500,
-        "resposta": {
-          "error": "Erro ao salvar fechamento mensal"
-        }
-      },
-      "2026-08": {
-        "status": 500,
-        "resposta": {
-          "error": "Erro ao salvar fechamento mensal"
-        }
-      }
-    },
-    "despesas_esperado_por_mes": {
-      "2026-07": 730,
-      "2026-08": 830,
-      "2026-09": 750
-    }
-  }
+    "Fallback P/M/G de \"Progressiva\": preco_m=300.00, preco_g=325.00 no banco (preenchido automaticamente)",
+    "Fallback P/M/G de \"Limpeza de Pele\": preco_m=132.00, preco_g=143.00 no banco (preenchido automaticamente)",
+    "Fallback P/M/G de \"Botox Capilar\": preco_m=216.00, preco_g=234.00 no banco (preenchido automaticamente)"
+  ]
 }

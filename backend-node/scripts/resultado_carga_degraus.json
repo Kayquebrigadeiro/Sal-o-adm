@@ -1,0 +1,200 @@
+{
+  "data": "2026-09-05T23:47:22.925Z",
+  "resumo": [
+    {
+      "fase": 5,
+      "reqs": 150,
+      "erros": 0,
+      "wall": 31.269,
+      "rps": 4.8,
+      "rotas": {
+        "agenda": {
+          "n": 30,
+          "avg": 231,
+          "p95": 459,
+          "max": 490
+        },
+        "criar_atendimento": {
+          "n": 30,
+          "avg": 1194,
+          "p95": 1502,
+          "max": 1653
+        },
+        "atualizar_atendimento": {
+          "n": 30,
+          "avg": 432,
+          "p95": 528,
+          "max": 721
+        },
+        "homecare": {
+          "n": 30,
+          "avg": 320,
+          "p95": 476,
+          "max": 558
+        },
+        "fechamento": {
+          "n": 30,
+          "avg": 1718,
+          "p95": 1970,
+          "max": 2032
+        }
+      }
+    },
+    {
+      "fase": 10,
+      "reqs": 300,
+      "erros": 0,
+      "wall": 32.703,
+      "rps": 9.2,
+      "rotas": {
+        "agenda": {
+          "n": 60,
+          "avg": 257,
+          "p95": 441,
+          "max": 465
+        },
+        "criar_atendimento": {
+          "n": 60,
+          "avg": 1203,
+          "p95": 1684,
+          "max": 1964
+        },
+        "atualizar_atendimento": {
+          "n": 60,
+          "avg": 415,
+          "p95": 497,
+          "max": 577
+        },
+        "homecare": {
+          "n": 60,
+          "avg": 299,
+          "p95": 395,
+          "max": 623
+        },
+        "fechamento": {
+          "n": 60,
+          "avg": 1894,
+          "p95": 2498,
+          "max": 3264
+        }
+      }
+    },
+    {
+      "fase": 20,
+      "reqs": 600,
+      "erros": 0,
+      "wall": 30.362,
+      "rps": 19.8,
+      "rotas": {
+        "agenda": {
+          "n": 120,
+          "avg": 204,
+          "p95": 344,
+          "max": 428
+        },
+        "criar_atendimento": {
+          "n": 120,
+          "avg": 1030,
+          "p95": 1190,
+          "max": 1472
+        },
+        "atualizar_atendimento": {
+          "n": 120,
+          "avg": 441,
+          "p95": 678,
+          "max": 724
+        },
+        "homecare": {
+          "n": 120,
+          "avg": 323,
+          "p95": 481,
+          "max": 511
+        },
+        "fechamento": {
+          "n": 120,
+          "avg": 1721,
+          "p95": 1931,
+          "max": 2039
+        }
+      }
+    },
+    {
+      "fase": 35,
+      "reqs": 1050,
+      "erros": 0,
+      "wall": 38.457,
+      "rps": 27.3,
+      "rotas": {
+        "agenda": {
+          "n": 210,
+          "avg": 276,
+          "p95": 468,
+          "max": 823
+        },
+        "criar_atendimento": {
+          "n": 210,
+          "avg": 1182,
+          "p95": 1802,
+          "max": 1852
+        },
+        "atualizar_atendimento": {
+          "n": 210,
+          "avg": 554,
+          "p95": 876,
+          "max": 1047
+        },
+        "homecare": {
+          "n": 210,
+          "avg": 408,
+          "p95": 716,
+          "max": 1074
+        },
+        "fechamento": {
+          "n": 210,
+          "avg": 2569,
+          "p95": 3002,
+          "max": 3293
+        }
+      }
+    },
+    {
+      "fase": 50,
+      "reqs": 1500,
+      "erros": 0,
+      "wall": 54.599,
+      "rps": 27.5,
+      "rotas": {
+        "agenda": {
+          "n": 300,
+          "avg": 440,
+          "p95": 951,
+          "max": 1412
+        },
+        "criar_atendimento": {
+          "n": 300,
+          "avg": 1522,
+          "p95": 2208,
+          "max": 2569
+        },
+        "atualizar_atendimento": {
+          "n": 300,
+          "avg": 873,
+          "p95": 1400,
+          "max": 1582
+        },
+        "homecare": {
+          "n": 300,
+          "avg": 736,
+          "p95": 1167,
+          "max": 1667
+        },
+        "fechamento": {
+          "n": 300,
+          "avg": 3942,
+          "p95": 4796,
+          "max": 6246
+        }
+      }
+    }
+  ]
+}

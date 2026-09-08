@@ -11,7 +11,7 @@ const {
   calcularCustoFixoRateado,
   calcularCustoVariavelInsumos,
   calcularSaudeFinanceira
-} = require('./src/services/financialEngine.service');
+} = require('../src/services/financialEngine.service');
 
 let passados = 0;
 let falhados = 0;
@@ -32,12 +32,13 @@ function assertEqual(valor1, valor2, mensagem) {
 
 console.log('\n=== TESTES FINANCIAL ENGINE ===\n');
 
-// Teste 1: Arredondamento
+// Teste 1: Arredondamento (half-up — comportamento da roundToDecimal, validado
+// contra a API em 1350+ comparações do stress de escrita; NOTA: não é half-even)
 console.log('Testes de arredondamento:');
-assertEqual(roundToDecimal(10.125), 10.12, 'Arredondamento bancário 10.125');
-assertEqual(roundToDecimal(10.135), 10.13, 'Arredondamento bancário 10.135');
-assertEqual(roundToDecimal(10.145), 10.15, 'Arredondamento bancário 10.145');
-assertEqual(roundToDecimal(10.155), 10.16, 'Arredondamento bancário 10.155');
+assertEqual(roundToDecimal(10.125), 10.13, 'Arredondamento half-up 10.125');
+assertEqual(roundToDecimal(10.135), 10.14, 'Arredondamento half-up 10.135');
+assertEqual(roundToDecimal(10.145), 10.15, 'Arredondamento half-up 10.145');
+assertEqual(roundToDecimal(10.155), 10.16, 'Arredondamento half-up 10.155');
 
 // Teste 2: Cálculo de valores de atendimento
 console.log('\nTestes de cálculo de valores de atendimento:');

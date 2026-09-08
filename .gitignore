@@ -163,3 +163,8 @@ backup/
 *.dump
 *.sql.bak
 .dump/
+
+# ============================================
+# BINÁRIOS DE FERRAMENTAS DE TESTE (não versionar)
+# ============================================
+backend-node/scripts/k6

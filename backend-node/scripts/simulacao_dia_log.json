@@ -1,0 +1,175 @@
+{
+  "summary": {
+    "atendimentosCriados": 6,
+    "atendimentosExecutados": 2,
+    "atendimentosCancelados": 1,
+    "atendimentosPagos": 2,
+    "receitaBruta": 420,
+    "lucroLiquido": 62,
+    "pendenciasAbertas": 0
+  },
+  "log": [
+    {
+      "timestamp": "2026-08-21 23:51:56",
+      "route": "/atendimentos",
+      "method": "POST",
+      "status": 201,
+      "responseTime": 1057,
+      "expected": "201",
+      "actual": "id=26688fbf-9a1b-49c7-95d8-c58325a1a793"
+    },
+    {
+      "timestamp": "2026-08-21 23:51:57",
+      "route": "/atendimentos",
+      "method": "POST",
+      "status": 201,
+      "responseTime": 973,
+      "expected": "201",
+      "actual": "id=c6ad35af-d510-4c1c-b017-2e2184bd5fe5"
+    },
+    {
+      "timestamp": "2026-08-21 23:51:58",
+      "route": "/atendimentos",
+      "method": "POST",
+      "status": 201,
+      "responseTime": 971,
+      "expected": "201",
+      "actual": "id=637cf070-a8e5-44ba-8298-5d2ebeb623b0"
+    },
+    {
+      "timestamp": "2026-08-21 23:51:58",
+      "route": "/atendimentos/26688fbf-9a1b-49c7-95d8-c58325a1a793",
+      "method": "PUT",
+      "status": 200,
+      "responseTime": 402,
+      "expected": "200",
+      "actual": "Atendimento atualizado com sucesso"
+    },
+    {
+      "timestamp": "2026-08-21 23:51:59",
+      "route": "/atendimentos/26688fbf-9a1b-49c7-95d8-c58325a1a793",
+      "method": "PUT",
+      "status": 200,
+      "responseTime": 379,
+      "expected": "200",
+      "actual": "Atendimento atualizado com sucesso"
+    },
+    {
+      "timestamp": "2026-08-21 23:51:59",
+      "route": "/atendimentos/c6ad35af-d510-4c1c-b017-2e2184bd5fe5",
+      "method": "PUT",
+      "status": 200,
+      "responseTime": 378,
+      "expected": "200",
+      "actual": "Atendimento atualizado com sucesso"
+    },
+    {
+      "timestamp": "2026-08-21 23:51:59",
+      "route": "/atendimentos/637cf070-a8e5-44ba-8298-5d2ebeb623b0",
+      "method": "PUT",
+      "status": 200,
+      "responseTime": 381,
+      "expected": "200",
+      "actual": "Atendimento atualizado com sucesso"
+    },
+    {
+      "timestamp": "2026-08-21 23:52:00",
+      "route": "/cadastros/homecare",
+      "method": "POST",
+      "status": 201,
+      "responseTime": 252,
+      "expected": "201",
+      "actual": "id=aef68b76-1d99-403a-ad39-34215f8ce8e0"
+    },
+    {
+      "timestamp": "2026-08-21 23:52:00",
+      "route": "/atendimentos/26688fbf-9a1b-49c7-95d8-c58325a1a793",
+      "method": "PUT",
+      "status": 200,
+      "responseTime": 369,
+      "expected": "200",
+      "actual": "Atendimento atualizado com sucesso"
+    },
+    {
+      "timestamp": "2026-08-21 23:52:00",
+      "route": "/atendimentos/c6ad35af-d510-4c1c-b017-2e2184bd5fe5",
+      "method": "PUT",
+      "status": 200,
+      "responseTime": 376,
+      "expected": "200",
+      "actual": "Atendimento atualizado com sucesso"
+    },
+    {
+      "timestamp": "2026-08-21 23:52:02",
+      "route": "/atendimentos",
+      "method": "POST",
+      "status": 201,
+      "responseTime": 1407,
+      "expected": "201",
+      "actual": "id=e02a62d6-7879-41b3-ab62-26d706cd2b9d"
+    },
+    {
+      "timestamp": "2026-08-21 23:52:02",
+      "route": "/cadastros/despesas",
+      "method": "POST",
+      "status": 201,
+      "responseTime": 289,
+      "expected": "201",
+      "actual": "id=1a144f83-3314-4fc5-b4a0-73a7bb5361f4"
+    },
+    {
+      "timestamp": "2026-08-21 23:52:04",
+      "route": "/fechamento/2025-02",
+      "method": "GET",
+      "status": 200,
+      "responseTime": 1953,
+      "expected": "200",
+      "actual": "receita=160.00"
+    },
+    {
+      "timestamp": "2026-08-21 23:52:05",
+      "route": "/atendimentos",
+      "method": "POST",
+      "status": 201,
+      "responseTime": 1259,
+      "expected": "201",
+      "actual": "id=5715d667-b3e4-48a4-91b6-465699d4ec9f"
+    },
+    {
+      "timestamp": "2026-08-21 23:52:06",
+      "route": "/atendimentos",
+      "method": "POST",
+      "status": 201,
+      "responseTime": 1051,
+      "expected": "201",
+      "actual": "id=a360d82f-4aed-4887-a00e-82e9e5cb2dea"
+    },
+    {
+      "timestamp": "2026-08-21 23:52:06",
+      "route": "/atendimentos?data=2025-02-15",
+      "method": "GET",
+      "status": 200,
+      "responseTime": 132,
+      "expected": "200",
+      "actual": "count=4"
+    },
+    {
+      "timestamp": "2026-08-21 23:52:07",
+      "route": "/atendimentos?data=2025-02-15",
+      "method": "GET",
+      "status": 200,
+      "responseTime": 127,
+      "expected": "200",
+      "actual": "count=4"
+    },
+    {
+      "timestamp": "2026-08-21 23:52:07",
+      "route": "/atendimentos?data=2025-02-15",
+      "method": "GET",
+      "status": 200,
+      "responseTime": 127,
+      "expected": "200",
+      "actual": "count=4"
+    }
+  ]
+}

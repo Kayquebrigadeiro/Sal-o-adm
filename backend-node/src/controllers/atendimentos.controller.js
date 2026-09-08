@@ -117,9 +117,21 @@ async function criarAtendimento(req, res) {
     });
     
     const atendimento_id = uuidv4();
-    
+
     const vPago = valor_pago || 0;
     const vPendente = parseFloat(valor_cobrado) - parseFloat(vPago);
+
+    // Acumuladores: agregam procedimento principal + procedimentos_adicionais.
+    // Replicam a MESMA lógica de agregação já aplicada em substituirProcedimentosAtendimento,
+    // garantindo que os adicionais entrem nos totais do atendimento já na criação.
+    let totalValorCobrado = parseFloat(valor_cobrado) || 0;
+    let totalValorPago = parseFloat(vPago) || 0;
+    let totalValorMaquininha = valoresCalculados.valorMaquininha;
+    let totalValorProfissional = valoresCalculados.valorProfissional;
+    let totalCustoFixo = valoresCalculados.custoFixo;
+    let totalCustoVariavel = valoresCalculados.custoVariavel;
+    let totalLucroLiquido = valoresCalculados.lucroLiquido;
+    let totalLucroPossivel = valoresCalculados.lucroPossivel;
 
     // Inserir atendimento com valores calculados
     await connection.query(
@@ -184,6 +196,17 @@ async function criarAtendimento(req, res) {
         const proc_ad_id = uuidv4();
         const adVPago = procAd.valor_pago || 0;
         const adVPendente = parseFloat(procAd.valor_cobrado) - parseFloat(adVPago);
+
+        // Acumular os valores do adicional nos totais do atendimento
+        totalValorCobrado += parseFloat(procAd.valor_cobrado) || 0;
+        totalValorPago += parseFloat(adVPago) || 0;
+        totalValorMaquininha += valoresAd.valorMaquininha;
+        totalValorProfissional += valoresAd.valorProfissional;
+        totalCustoFixo += valoresAd.custoFixo;
+        totalCustoVariavel += valoresAd.custoVariavel;
+        totalLucroLiquido += valoresAd.lucroLiquido;
+        totalLucroPossivel += valoresAd.lucroPossivel;
+
         await connection.query(
           `INSERT INTO atendimento_procedimentos 
            (id, atendimento_id, procedimento_id, comprimento, valor_indicado, valor_cobrado, valor_pago, valor_pendente, sequencia, criado_em, atualizado_em)
@@ -197,12 +220,45 @@ async function criarAtendimento(req, res) {
         );
       }
     }
-    
+
+    // Persistir os totais agregados (principal + adicionais) na linha do atendimento,
+    // espelhando o comportamento do PUT /:id/procedimentos
+    if (Array.isArray(procedimentos_adicionais) && procedimentos_adicionais.length > 0) {
+      const totalPendenteAgg = totalValorCobrado - totalValorPago;
+      await connection.query(
+        `UPDATE atendimentos SET
+          valor_cobrado = ?,
+          valor_pago = ?,
+          valor_pendente = ?,
+          valor_maquininha = ?,
+          valor_profissional = ?,
+          custo_fixo = ?,
+          custo_variavel = ?,
+          lucro_liquido = ?,
+          lucro_possivel = ?,
+          atualizado_em = NOW()
+         WHERE id = ? AND salao_id = ?`,
+        [
+          totalValorCobrado.toFixed(2),
+          totalValorPago.toFixed(2),
+          totalPendenteAgg.toFixed(2),
+          totalValorMaquininha.toFixed(2),
+          totalValorProfissional.toFixed(2),
+          totalCustoFixo.toFixed(2),
+          totalCustoVariavel.toFixed(2),
+          totalLucroLiquido.toFixed(2),
+          totalLucroPossivel.toFixed(2),
+          atendimento_id,
+          salao_id
+        ]
+      );
+    }
+
     await connection.commit();
 
     // Invalidar cache de fechamento del mes afectado
     invalidarFechamentoCache(salao_id, data);
-    
+
     res.status(201).json({
       sucesso: true,
       id: atendimento_id,
@@ -212,15 +268,15 @@ async function criarAtendimento(req, res) {
       cliente,
       profissional_id,
       procedimento_id,
-      valor_cobrado,
-      valor_pago: vPago,
-      valor_pendente: vPendente,
-      valor_maquininha: valoresCalculados.valorMaquininha,
-      valor_profissional: valoresCalculados.valorProfissional,
-      custo_fixo: valoresCalculados.custoFixo,
-      custo_variavel: valoresCalculados.custoVariavel,
-      lucro_liquido: valoresCalculados.lucroLiquido,
-      lucro_possivel: valoresCalculados.lucroPossivel,
+      valor_cobrado: Number(totalValorCobrado.toFixed(2)),
+      valor_pago: Number(totalValorPago.toFixed(2)),
+      valor_pendente: Number((totalValorCobrado - totalValorPago).toFixed(2)),
+      valor_maquininha: Number(totalValorMaquininha.toFixed(2)),
+      valor_profissional: Number(totalValorProfissional.toFixed(2)),
+      custo_fixo: Number(totalCustoFixo.toFixed(2)),
+      custo_variavel: Number(totalCustoVariavel.toFixed(2)),
+      lucro_liquido: Number(totalLucroLiquido.toFixed(2)),
+      lucro_possivel: Number(totalLucroPossivel.toFixed(2)),
       status: status || 'AGENDADO'
     });
     

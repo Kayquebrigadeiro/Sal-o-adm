@@ -4,7 +4,7 @@ import App from './App.jsx'
 import ErrorBoundary from './components/ErrorBoundary.jsx'
 import './index.css'
 
-const CURRENT_APP_VERSION = 'v8.1.1';
+const CURRENT_APP_VERSION = 'v8.1.2';
 const storedVersion = localStorage.getItem('app_version');
 
 if (storedVersion !== CURRENT_APP_VERSION) {

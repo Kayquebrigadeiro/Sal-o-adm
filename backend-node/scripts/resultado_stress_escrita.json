@@ -1,0 +1,164 @@
+{
+  "data": "2026-09-05T00:47:21.895Z",
+  "fases": [
+    5,
+    10,
+    20,
+    35,
+    50
+  ],
+  "pool": 50,
+  "atendPorMes": 20,
+  "comparacoes": 1350,
+  "divergencias": [
+    {
+      "salao": "loadtest1@teste.com",
+      "mes": "2026-08",
+      "campo": "lucroHomecare",
+      "esperado": 1210,
+      "api": 3130
+    },
+    {
+      "salao": "loadtest2@teste.com",
+      "mes": "2026-08",
+      "campo": "lucroHomecare",
+      "esperado": 1235,
+      "api": 3555
+    },
+    {
+      "salao": "loadtest3@teste.com",
+      "mes": "2026-08",
+      "campo": "lucroHomecare",
+      "esperado": 1108,
+      "api": 4548
+    },
+    {
+      "salao": "loadtest4@teste.com",
+      "mes": "2026-08",
+      "campo": "lucroHomecare",
+      "esperado": 1261,
+      "api": 2541
+    },
+    {
+      "salao": "loadtest5@teste.com",
+      "mes": "2026-08",
+      "campo": "lucroHomecare",
+      "esperado": 1064,
+      "api": 2904
+    },
+    {
+      "salao": "loadtest6@teste.com",
+      "mes": "2026-08",
+      "campo": "lucroHomecare",
+      "esperado": 1029,
+      "api": 2789
+    },
+    {
+      "salao": "loadtest7@teste.com",
+      "mes": "2026-08",
+      "campo": "lucroHomecare",
+      "esperado": 637,
+      "api": 3357
+    },
+    {
+      "salao": "loadtest8@teste.com",
+      "mes": "2026-08",
+      "campo": "lucroHomecare",
+      "esperado": 1073,
+      "api": 3073
+    },
+    {
+      "salao": "loadtest9@teste.com",
+      "mes": "2026-08",
+      "campo": "lucroHomecare",
+      "esperado": 1239,
+      "api": 2759
+    },
+    {
+      "salao": "loadtest10@teste.com",
+      "mes": "2026-08",
+      "campo": "lucroHomecare",
+      "esperado": 966,
+      "api": 2886
+    },
+    {
+      "salao": "loadtest11@teste.com",
+      "mes": "2026-08",
+      "campo": "lucroHomecare",
+      "esperado": 621,
+      "api": 2301
+    },
+    {
+      "salao": "loadtest12@teste.com",
+      "mes": "2026-08",
+      "campo": "lucroHomecare",
+      "esperado": 621,
+      "api": 2381
+    },
+    {
+      "salao": "loadtest13@teste.com",
+      "mes": "2026-08",
+      "campo": "lucroHomecare",
+      "esperado": 921,
+      "api": 3481
+    },
+    {
+      "salao": "loadtest14@teste.com",
+      "mes": "2026-08",
+      "campo": "lucroHomecare",
+      "esperado": 578,
+      "api": 2978
+    },
+    {
+      "salao": "loadtest15@teste.com",
+      "mes": "2026-08",
+      "campo": "lucroHomecare",
+      "esperado": 965,
+      "api": 3605
+    },
+    {
+      "salao": "loadtest16@teste.com",
+      "mes": "2026-08",
+      "campo": "lucroHomecare",
+      "esperado": 664,
+      "api": 2584
+    },
+    {
+      "salao": "loadtest17@teste.com",
+      "mes": "2026-08",
+      "campo": "lucroHomecare",
+      "esperado": 672,
+      "api": 3152
+    },
+    {
+      "salao": "loadtest18@teste.com",
+      "mes": "2026-08",
+      "campo": "lucroHomecare",
+      "esperado": 787,
+      "api": 2467
+    },
+    {
+      "salao": "loadtest19@teste.com",
+      "mes": "2026-08",
+      "campo": "lucroHomecare",
+      "esperado": 644,
+      "api": 2884
+    },
+    {
+      "salao": "loadtest20@teste.com",
+      "mes": "2026-08",
+      "campo": "lucroHomecare",
+      "esperado": 907,
+      "api": 2667
+    }
+  ],
+  "totalErrosApi": 120,
+  "errosPorTipo": {
+    "atend": 120
+  },
+  "fechamentos": {
+    "sucesso": 100,
+    "jaFechado": 0,
+    "erro": 0
+  }
+}

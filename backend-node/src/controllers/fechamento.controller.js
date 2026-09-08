@@ -49,7 +49,7 @@ async function calcularDadosFechamento(salao_id, mes) {
     [salao_id, mesInicio, mesFimStr]
   );
   
-  const receitaTotalCaixa = faturamentoBruto[0].total + receitaHomecare[0].total + receitaParalelos[0].total;
+  // receitaTotalCaixa é calculada adiante a partir dos valores normalizados (toNum)
   
   const [lucroAtendimentos] = await pool.query(
     `SELECT COALESCE(SUM(lucro_liquido), 0) as total FROM atendimentos WHERE salao_id = ? AND status = 'EXECUTADO' AND DATE(data) >= ? AND DATE(data) < ?`,
@@ -85,30 +85,54 @@ async function calcularDadosFechamento(salao_id, mes) {
     `SELECT COALESCE(SUM(valor), 0) as total FROM gastos_pessoais WHERE salao_id = ? AND DATE(criado_em) >= ? AND DATE(criado_em) < ?`,
     [salao_id, mesInicio, mesFimStr]
   );
-  
+
+  // IMPORTANTE: mysql2 retorna colunas DECIMAL como string. Somar strings com '+'
+  // concatena (ex: '3011.46' + '479.00' = '3011.46479.00') e gera NaN em
+  // resultado_final, quebrando o INSERT do fechamento. Normalizar TUDO para
+  // número antes de qualquer aritmética.
+  const toNum = (v) => {
+    const n = Number(v);
+    return Number.isFinite(n) ? n : 0;
+  };
+
+  const faturamentoBrutoTotal = toNum(faturamentoBruto[0].total);
+  const receitaRecebidaTotal = toNum(receitaRecebida[0].total);
+  const totalPendenteTotal = toNum(totalPendente[0].total);
+  const receitaHomecareTotal = toNum(receitaHomecare[0].total);
+  const receitaParalelosTotal = toNum(receitaParalelos[0].total);
+  const lucroAtendimentosTotal = toNum(lucroAtendimentos[0].total);
+  const lucroPossivelTotal = toNum(lucroPossivel[0].total);
+  const totalAtendimentosCount = toNum(totalAtendimentos[0].total);
+  const lucroHomecareTotal = toNum(lucroHomecare[0].total);
+  const totalDespesasTotal = toNum(totalDespesas[0].total);
+  const totalSalariosTotal = toNum(totalSalarios[0].total);
+  const totalGastosPessoaisTotal = toNum(totalGastosPessoais[0].total);
+
+  const receitaTotalCaixa = faturamentoBrutoTotal + receitaHomecareTotal + receitaParalelosTotal;
+
   const saudeFinanceira = calcularSaudeFinanceira({
-    lucroAtendimentosReal: lucroAtendimentos[0].total,
-    lucroHomecare: lucroHomecare[0].total,
-    totalDespesas: totalDespesas[0].total,
-    totalSalarios: totalSalarios[0].total
+    lucroAtendimentosReal: lucroAtendimentosTotal,
+    lucroHomecare: lucroHomecareTotal,
+    totalDespesas: totalDespesasTotal,
+    totalSalarios: totalSalariosTotal
   });
-  
+
   return {
-    faturamentoBruto: faturamentoBruto[0].total,
-    receitaRecebida: receitaRecebida[0].total,
-    totalPendente: totalPendente[0].total,
-    receitaHomecare: receitaHomecare[0].total,
-    receitaParalelos: receitaParalelos[0].total,
+    faturamentoBruto: faturamentoBrutoTotal,
+    receitaRecebida: receitaRecebidaTotal,
+    totalPendente: totalPendenteTotal,
+    receitaHomecare: receitaHomecareTotal,
+    receitaParalelos: receitaParalelosTotal,
     receitaTotalCaixa,
-    lucroAtendimentosReal: lucroAtendimentos[0].total,
-    lucroPossivel: lucroPossivel[0].total,
-    totalAtendimentos: totalAtendimentos[0].total,
-    lucroHomecare: lucroHomecare[0].total,
-    totalDespesas: totalDespesas[0].total,
-    totalSalariosFixos: totalSalarios[0].total,
-    totalGastosPessoais: totalGastosPessoais[0].total,
+    lucroAtendimentosReal: lucroAtendimentosTotal,
+    lucroPossivel: lucroPossivelTotal,
+    totalAtendimentos: totalAtendimentosCount,
+    lucroHomecare: lucroHomecareTotal,
+    totalDespesas: totalDespesasTotal,
+    totalSalariosFixos: totalSalariosTotal,
+    totalGastosPessoais: totalGastosPessoaisTotal,
     saudeFinanceira,
-    margemLucro: receitaTotalCaixa > 0 ? ((lucroAtendimentos[0].total / receitaTotalCaixa) * 100).toFixed(2) : 0
+    margemLucro: receitaTotalCaixa > 0 ? ((lucroAtendimentosTotal / receitaTotalCaixa) * 100).toFixed(2) : 0
   };
 }
 

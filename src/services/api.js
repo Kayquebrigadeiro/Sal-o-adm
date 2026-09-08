@@ -16,13 +16,18 @@ async function fetchWithAuth(url, options = {}) {
     headers,
   });
 
-  if (response.status === 401) {
-    localStorage.removeItem('authToken');
-    localStorage.removeItem('userEmail');
-    localStorage.removeItem('userRole');
-    localStorage.removeItem('salaoId');
-    localStorage.removeItem('userId');
-    // window.location.href = '/'; // Redireciona para o login
+  if (response.status === 401 && !url.includes('/auth/login')) {
+    // Sessão inválida/expirada: limpa o storage e volta ao login.
+    // (Sem isso o app ficava em estado "zumbi": token apagado, mas usuário
+    // ainda navegando — e toda requisição seguinte virava 401 "Token not provided".)
+    try {
+      localStorage.removeItem('authToken');
+      localStorage.removeItem('userEmail');
+      localStorage.removeItem('userRole');
+      localStorage.removeItem('salaoId');
+      localStorage.removeItem('userId');
+    } catch (e) { /* ignore */ }
+    window.location.replace('/');
   }
 
   return response;

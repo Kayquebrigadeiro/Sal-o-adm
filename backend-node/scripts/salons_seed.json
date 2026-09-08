@@ -1,0 +1,2214 @@
+[
+  {
+    "email": "loadtest1@teste.com",
+    "senha": "LoadTest123!",
+    "salao_id": "97697edc-df6b-4afa-b448-53e8f66bd4a6",
+    "auth_user_id": "d4eaa984-4d7c-4b94-9358-419bb57adf5e",
+    "profissionais": [
+      {
+        "id": "9cd128cf-fa1b-410c-85ff-e710d389f99b",
+        "cargo": "PROPRIETARIO",
+        "comissao": 0
+      },
+      {
+        "id": "210a22e1-35d4-4ab6-8db5-f1c996c0ca9f",
+        "cargo": "FUNCIONARIO",
+        "comissao": 40
+      },
+      {
+        "id": "3d5c6335-7183-4e97-9936-ff3728f6b28c",
+        "cargo": "FUNCIONARIO",
+        "comissao": 30
+      }
+    ],
+    "procedimentos": [
+      {
+        "id": "83eeaab2-62a5-4edd-a5ff-8cca4854b125",
+        "nome": "Coloração",
+        "preco_p": 80
+      },
+      {
+        "id": "afb3d58a-ff07-4e08-8df7-fd43bd87cc16",
+        "nome": "Progressiva",
+        "preco_p": 250
+      },
+      {
+        "id": "451a99df-d19d-4d7a-b4af-afbaac56ef17",
+        "nome": "Corte",
+        "preco_p": 60
+      },
+      {
+        "id": "4eafe709-5679-416b-a37d-491e6b412805",
+        "nome": "Hidratação",
+        "preco_p": 120
+      }
+    ]
+  },
+  {
+    "email": "loadtest2@teste.com",
+    "senha": "LoadTest123!",
+    "salao_id": "09ead6c4-815f-449a-b4a1-de1325f251ef",
+    "auth_user_id": "a033ba4d-ba2a-4526-ae06-1a5acec4b899",
+    "profissionais": [
+      {
+        "id": "d2545d3c-05cb-4cf5-a6c2-8428777b8447",
+        "cargo": "PROPRIETARIO",
+        "comissao": 0
+      },
+      {
+        "id": "fd9f6165-863f-40bb-ac06-26dd4efa2760",
+        "cargo": "FUNCIONARIO",
+        "comissao": 40
+      },
+      {
+        "id": "468ec935-e060-498f-ae3c-327cad125310",
+        "cargo": "FUNCIONARIO",
+        "comissao": 30
+      }
+    ],
+    "procedimentos": [
+      {
+        "id": "da11677a-223c-4e88-afa3-46b6d16634a2",
+        "nome": "Coloração",
+        "preco_p": 80
+      },
+      {
+        "id": "ae090819-8eee-4596-adf6-bacadbab9ad7",
+        "nome": "Progressiva",
+        "preco_p": 250
+      },
+      {
+        "id": "6721ed0d-784d-4bb5-8854-6d9b2beb4738",
+        "nome": "Corte",
+        "preco_p": 60
+      },
+      {
+        "id": "1aef7d3a-7c2c-4c10-bb7a-9bf0b1fd98e3",
+        "nome": "Hidratação",
+        "preco_p": 120
+      }
+    ]
+  },
+  {
+    "email": "loadtest3@teste.com",
+    "senha": "LoadTest123!",
+    "salao_id": "c847f6fa-6d8b-4466-9e46-a5b529a5fcbc",
+    "auth_user_id": "686b2d57-6556-4b68-89c3-2acd3695d624",
+    "profissionais": [
+      {
+        "id": "6c52c276-4073-40de-9419-0294cf7f848d",
+        "cargo": "PROPRIETARIO",
+        "comissao": 0
+      },
+      {
+        "id": "f9542d61-826e-4b61-aca5-0593cea80e2d",
+        "cargo": "FUNCIONARIO",
+        "comissao": 40
+      },
+      {
+        "id": "743fe964-2d20-4d9d-a223-aafc9f6eaa26",
+        "cargo": "FUNCIONARIO",
+        "comissao": 30
+      }
+    ],
+    "procedimentos": [
+      {
+        "id": "d72ab4e7-1e29-4fb4-9691-8e95cd6c7c13",
+        "nome": "Coloração",
+        "preco_p": 80
+      },
+      {
+        "id": "5657aab7-c2bb-409b-829b-aba26bd5a69e",
+        "nome": "Progressiva",
+        "preco_p": 250
+      },
+      {
+        "id": "67d75bb3-e36b-49a7-a0ad-00bbf4a84a00",
+        "nome": "Corte",
+        "preco_p": 60
+      },
+      {
+        "id": "fef56588-884a-4eab-ae08-2fe1f11f7163",
+        "nome": "Hidratação",
+        "preco_p": 120
+      }
+    ]
+  },
+  {
+    "email": "loadtest4@teste.com",
+    "senha": "LoadTest123!",
+    "salao_id": "bb3d0388-63c6-4ec0-b0bf-8eb6dcef94d6",
+    "auth_user_id": "bf8fc957-dcd1-42c8-bdbb-af216192de34",
+    "profissionais": [
+      {
+        "id": "706119e8-91a2-4dee-8411-b255ed159686",
+        "cargo": "PROPRIETARIO",
+        "comissao": 0
+      },
+      {
+        "id": "109e2e46-9b2a-4710-8802-bccbedb9bae5",
+        "cargo": "FUNCIONARIO",
+        "comissao": 40
+      },
+      {
+        "id": "ddc8274b-70bd-4177-bec0-020ada5eb49a",
+        "cargo": "FUNCIONARIO",
+        "comissao": 30
+      }
+    ],
+    "procedimentos": [
+      {
+        "id": "1894b404-c1e0-44d6-834d-c4d3ee1574a9",
+        "nome": "Coloração",
+        "preco_p": 80
+      },
+      {
+        "id": "9cb4e729-287d-4477-8f49-c728a8bd953c",
+        "nome": "Progressiva",
+        "preco_p": 250
+      },
+      {
+        "id": "ca64c41a-bae0-4bd8-8ce3-cdfa253d0fa8",
+        "nome": "Corte",
+        "preco_p": 60
+      },
+      {
+        "id": "615a9e07-0a04-479d-9bc6-fb68ea760d46",
+        "nome": "Hidratação",
+        "preco_p": 120
+      }
+    ]
+  },
+  {
+    "email": "loadtest5@teste.com",
+    "senha": "LoadTest123!",
+    "salao_id": "886a51a3-b9d7-476a-9161-f00423f8ddac",
+    "auth_user_id": "b4d8ea42-990c-4b41-b205-f9e95923d8f6",
+    "profissionais": [
+      {
+        "id": "b4518005-bc7f-41c6-aeef-c5814d8c2b2f",
+        "cargo": "PROPRIETARIO",
+        "comissao": 0
+      },
+      {
+        "id": "1672f4cd-1da9-4d74-9bd9-5d6617aa19e2",
+        "cargo": "FUNCIONARIO",
+        "comissao": 40
+      },
+      {
+        "id": "c8c7b61d-77c5-43fd-8cb7-bea50533e6e6",
+        "cargo": "FUNCIONARIO",
+        "comissao": 30
+      }
+    ],
+    "procedimentos": [
+      {
+        "id": "b53d577d-2a95-4880-aec4-e6b8be401c9f",
+        "nome": "Coloração",
+        "preco_p": 80
+      },
+      {
+        "id": "13bdafbc-e4db-4aca-9aea-e3f2fc3088a3",
+        "nome": "Progressiva",
+        "preco_p": 250
+      },
+      {
+        "id": "0fe9fdc8-146d-4289-8b79-73b55d7fb945",
+        "nome": "Corte",
+        "preco_p": 60
+      },
+      {
+        "id": "aec0ff62-ab9f-4496-bef1-60e905eaa730",
+        "nome": "Hidratação",
+        "preco_p": 120
+      }
+    ]
+  },
+  {
+    "email": "loadtest6@teste.com",
+    "senha": "LoadTest123!",
+    "salao_id": "ea66094a-0b71-4443-9080-cc678d1ae67c",
+    "auth_user_id": "d79964ec-711d-4bd9-858c-aecb5c15c481",
+    "profissionais": [
+      {
+        "id": "63b626cc-e672-48a4-9a44-757e225332b5",
+        "cargo": "PROPRIETARIO",
+        "comissao": 0
+      },
+      {
+        "id": "ed5e572c-2391-44c7-ab74-b1c6b7813671",
+        "cargo": "FUNCIONARIO",
+        "comissao": 40
+      },
+      {
+        "id": "0cb4885e-dfa2-454e-a0a4-e9f21a7f9819",
+        "cargo": "FUNCIONARIO",
+        "comissao": 30
+      }
+    ],
+    "procedimentos": [
+      {
+        "id": "627be8a9-8275-45a5-afde-74fc07cb8b2a",
+        "nome": "Coloração",
+        "preco_p": 80
+      },
+      {
+        "id": "94a39015-fb30-4e6d-a91a-12a3475507fe",
+        "nome": "Progressiva",
+        "preco_p": 250
+      },
+      {
+        "id": "7913820e-a06c-4cd7-8d6d-3816558d9d6e",
+        "nome": "Corte",
+        "preco_p": 60
+      },
+      {
+        "id": "13212470-04e6-4471-b334-591247ef6e8e",
+        "nome": "Hidratação",
+        "preco_p": 120
+      }
+    ]
+  },
+  {
+    "email": "loadtest7@teste.com",
+    "senha": "LoadTest123!",
+    "salao_id": "814ab1ac-7a46-4ddc-b298-094bfaae23e9",
+    "auth_user_id": "71903479-0c55-4f74-a6fb-808c135a3277",
+    "profissionais": [
+      {
+        "id": "e7237293-c17d-4d77-9ccc-ef410244e258",
+        "cargo": "PROPRIETARIO",
+        "comissao": 0
+      },
+      {
+        "id": "f9263f95-4943-4156-bdd6-67b580eb9c2d",
+        "cargo": "FUNCIONARIO",
+        "comissao": 40
+      },
+      {
+        "id": "726c6c05-214c-452b-8b36-1d9d5309a7cd",
+        "cargo": "FUNCIONARIO",
+        "comissao": 30
+      }
+    ],
+    "procedimentos": [
+      {
+        "id": "a8eac0cd-68e3-45d9-9fbf-6dd5b6e364ed",
+        "nome": "Coloração",
+        "preco_p": 80
+      },
+      {
+        "id": "c9bf1880-6fc4-4d26-b1ce-9c8a2facb31e",
+        "nome": "Progressiva",
+        "preco_p": 250
+      },
+      {
+        "id": "6bc6b9e5-a953-4cb8-87b2-3e1d5259e24b",
+        "nome": "Corte",
+        "preco_p": 60
+      },
+      {
+        "id": "519d3dcb-f25e-44f2-9583-fb30a760e9e1",
+        "nome": "Hidratação",
+        "preco_p": 120
+      }
+    ]
+  },
+  {
+    "email": "loadtest8@teste.com",
+    "senha": "LoadTest123!",
+    "salao_id": "e2fbb8db-3531-422c-addd-77a54a20ce69",
+    "auth_user_id": "cc634a80-4662-4850-936c-e67c3788bf69",
+    "profissionais": [
+      {
+        "id": "c1b4dca8-22c2-4ba5-b030-04f9b474c1ae",
+        "cargo": "PROPRIETARIO",
+        "comissao": 0
+      },
+      {
+        "id": "7d0cacae-7c46-4718-8a95-09c2f1fa431f",
+        "cargo": "FUNCIONARIO",
+        "comissao": 40
+      },
+      {
+        "id": "4f9f0b4f-c8db-4c5b-90c0-8e8252767dd8",
+        "cargo": "FUNCIONARIO",
+        "comissao": 30
+      }
+    ],
+    "procedimentos": [
+      {
+        "id": "dfc0cfa8-14cd-42c3-ab64-8c4acb9625ea",
+        "nome": "Coloração",
+        "preco_p": 80
+      },
+      {
+        "id": "427a4e58-0142-459c-9c9f-9b993142a299",
+        "nome": "Progressiva",
+        "preco_p": 250
+      },
+      {
+        "id": "a9dc04ab-2bec-4fb9-84b1-314efc596ea1",
+        "nome": "Corte",
+        "preco_p": 60
+      },
+      {
+        "id": "20b7b893-666e-4a46-8e06-12151363a966",
+        "nome": "Hidratação",
+        "preco_p": 120
+      }
+    ]
+  },
+  {
+    "email": "loadtest9@teste.com",
+    "senha": "LoadTest123!",
+    "salao_id": "6847b160-d2bd-480d-8b3d-f0269970c429",
+    "auth_user_id": "c909d155-254e-4dee-87a2-1dd3d557b918",
+    "profissionais": [
+      {
+        "id": "dac2b406-2846-47e5-80bc-429ffadfad55",
+        "cargo": "PROPRIETARIO",
+        "comissao": 0
+      },
+      {
+        "id": "4c69481e-26d8-4bd8-9f65-8cb38ae5783c",
+        "cargo": "FUNCIONARIO",
+        "comissao": 40
+      },
+      {
+        "id": "d54dde5c-67b7-4d29-aa8a-292048427e44",
+        "cargo": "FUNCIONARIO",
+        "comissao": 30
+      }
+    ],
+    "procedimentos": [
+      {
+        "id": "20206196-8725-490d-ac68-356675ffaf8d",
+        "nome": "Coloração",
+        "preco_p": 80
+      },
+      {
+        "id": "f5d8166c-4a7e-42ff-a978-800f1323e67a",
+        "nome": "Progressiva",
+        "preco_p": 250
+      },
+      {
+        "id": "58691db2-f2ab-4af4-81e8-fec166d845a8",
+        "nome": "Corte",
+        "preco_p": 60
+      },
+      {
+        "id": "d37615ba-b7b5-47a9-9f3f-54397c8f7502",
+        "nome": "Hidratação",
+        "preco_p": 120
+      }
+    ]
+  },
+  {
+    "email": "loadtest10@teste.com",
+    "senha": "LoadTest123!",
+    "salao_id": "cf6d3596-b302-44fb-bec6-7f71d3f3b301",
+    "auth_user_id": "a16e570c-7a3d-4606-b975-fe560887df71",
+    "profissionais": [
+      {
+        "id": "9165475e-459b-45c6-bddf-dfa87ff3ebab",
+        "cargo": "PROPRIETARIO",
+        "comissao": 0
+      },
+      {
+        "id": "e2fc5905-5d1c-4d23-801c-ef5a69b2d626",
+        "cargo": "FUNCIONARIO",
+        "comissao": 40
+      },
+      {
+        "id": "b1bde9da-5f89-41d5-a33b-563f3675d831",
+        "cargo": "FUNCIONARIO",
+        "comissao": 30
+      }
+    ],
+    "procedimentos": [
+      {
+        "id": "0bbca0a4-8d80-4bf1-b6f0-b9ab6cd630c2",
+        "nome": "Coloração",
+        "preco_p": 80
+      },
+      {
+        "id": "40325f2f-8401-4270-811e-da7f1b4f4672",
+        "nome": "Progressiva",
+        "preco_p": 250
+      },
+      {
+        "id": "52119298-5cb1-4d73-b882-349cc70ecd5b",
+        "nome": "Corte",
+        "preco_p": 60
+      },
+      {
+        "id": "ff7dbb47-a290-4c5a-b039-cf41a0985b2e",
+        "nome": "Hidratação",
+        "preco_p": 120
+      }
+    ]
+  },
+  {
+    "email": "loadtest11@teste.com",
+    "senha": "LoadTest123!",
+    "salao_id": "f9a7fc92-260c-47a6-ac9b-5a014c44e3c5",
+    "auth_user_id": "38e2331a-984c-4d70-8376-8c4f0552b27d",
+    "profissionais": [
+      {
+        "id": "40d30280-08ca-4373-855b-e82d95ca6e0c",
+        "cargo": "PROPRIETARIO",
+        "comissao": 0
+      },
+      {
+        "id": "6a91ba2e-61cf-4579-be03-d897e26e8e36",
+        "cargo": "FUNCIONARIO",
+        "comissao": 40
+      },
+      {
+        "id": "bfc94aaf-7cd0-436c-af25-18b6dd0fe817",
+        "cargo": "FUNCIONARIO",
+        "comissao": 30
+      }
+    ],
+    "procedimentos": [
+      {
+        "id": "6e631da1-a2b8-4f4c-876a-dc54609ea9df",
+        "nome": "Coloração",
+        "preco_p": 80
+      },
+      {
+        "id": "a078095b-a008-4e72-a7ad-e99417b5cc0d",
+        "nome": "Progressiva",
+        "preco_p": 250
+      },
+      {
+        "id": "8d809b22-6253-4d2a-b1d0-6cbab5e6d07d",
+        "nome": "Corte",
+        "preco_p": 60
+      },
+      {
+        "id": "5681d086-8348-4c28-a4f5-f0d32359424b",
+        "nome": "Hidratação",
+        "preco_p": 120
+      }
+    ]
+  },
+  {
+    "email": "loadtest12@teste.com",
+    "senha": "LoadTest123!",
+    "salao_id": "9d81ab13-bbc0-479b-906f-8e22207d1c4c",
+    "auth_user_id": "f3ba595f-0662-4d0f-abc4-81b5f4ad8029",
+    "profissionais": [
+      {
+        "id": "c29626b9-c776-434b-bea2-e928c04cbd73",
+        "cargo": "PROPRIETARIO",
+        "comissao": 0
+      },
+      {
+        "id": "c1f635d4-59f4-484e-b326-29527a8ee256",
+        "cargo": "FUNCIONARIO",
+        "comissao": 40
+      },
+      {
+        "id": "312a2cdd-9611-4a12-af25-55b081970f52",
+        "cargo": "FUNCIONARIO",
+        "comissao": 30
+      }
+    ],
+    "procedimentos": [
+      {
+        "id": "f4313a53-3a22-42a5-aa7f-1f80ae8f3924",
+        "nome": "Coloração",
+        "preco_p": 80
+      },
+      {
+        "id": "d1a17ff7-86c2-457c-b2cb-7f49ed610daa",
+        "nome": "Progressiva",
+        "preco_p": 250
+      },
+      {
+        "id": "f1c8dddc-9797-46c4-b186-1157e0c69265",
+        "nome": "Corte",
+        "preco_p": 60
+      },
+      {
+        "id": "ccdb7eb8-4f8f-42db-b257-513450794b54",
+        "nome": "Hidratação",
+        "preco_p": 120
+      }
+    ]
+  },
+  {
+    "email": "loadtest13@teste.com",
+    "senha": "LoadTest123!",
+    "salao_id": "fb1dfd61-3d53-4ce6-ad2d-3d56bf223cb4",
+    "auth_user_id": "5aeafb23-cb39-4d65-81a4-7b45c838535f",
+    "profissionais": [
+      {
+        "id": "d06e7dd4-1996-457f-99fb-f65c2a2598b7",
+        "cargo": "PROPRIETARIO",
+        "comissao": 0
+      },
+      {
+        "id": "9a5b3b36-41b5-4c1e-adb9-c7e5c7aac9a1",
+        "cargo": "FUNCIONARIO",
+        "comissao": 40
+      },
+      {
+        "id": "64972bf6-63a5-4bc1-8ccf-1e066deccb84",
+        "cargo": "FUNCIONARIO",
+        "comissao": 30
+      }
+    ],
+    "procedimentos": [
+      {
+        "id": "5494aca6-b950-483d-8174-3bc13a5e66fe",
+        "nome": "Coloração",
+        "preco_p": 80
+      },
+      {
+        "id": "1b4c34a8-723d-4f23-8760-eab50dc9f18f",
+        "nome": "Progressiva",
+        "preco_p": 250
+      },
+      {
+        "id": "f206c2a5-c6f0-47bf-a9c8-b61621b9b0ee",
+        "nome": "Corte",
+        "preco_p": 60
+      },
+      {
+        "id": "f7f578ae-74e9-47b9-a12c-35ae63621eea",
+        "nome": "Hidratação",
+        "preco_p": 120
+      }
+    ]
+  },
+  {
+    "email": "loadtest14@teste.com",
+    "senha": "LoadTest123!",
+    "salao_id": "5424f784-4178-46ab-857d-7a66fc96a3fc",
+    "auth_user_id": "f1b4140e-04e8-41da-8753-a0be6fbe5172",
+    "profissionais": [
+      {
+        "id": "1d80fdad-59e9-4f8e-9e8a-4f01f02e77d0",
+        "cargo": "PROPRIETARIO",
+        "comissao": 0
+      },
+      {
+        "id": "5d5bd244-4dfa-42e0-9292-1a19e2c58d64",
+        "cargo": "FUNCIONARIO",
+        "comissao": 40
+      },
+      {
+        "id": "6c66b16b-8362-4a88-baf8-20def360d2d9",
+        "cargo": "FUNCIONARIO",
+        "comissao": 30
+      }
+    ],
+    "procedimentos": [
+      {
+        "id": "6759fefb-d6c7-4f57-bf02-7183fa3c3f58",
+        "nome": "Coloração",
+        "preco_p": 80
+      },
+      {
+        "id": "af7d6540-2b56-46ea-b07c-5b33b1c64408",
+        "nome": "Progressiva",
+        "preco_p": 250
+      },
+      {
+        "id": "2a1304a0-1cf9-4db9-a5fa-a5b86f21c26a",
+        "nome": "Corte",
+        "preco_p": 60
+      },
+      {
+        "id": "3645b2c7-4ab0-4371-9da3-fb10410c5429",
+        "nome": "Hidratação",
+        "preco_p": 120
+      }
+    ]
+  },
+  {
+    "email": "loadtest15@teste.com",
+    "senha": "LoadTest123!",
+    "salao_id": "29fa6854-936b-4fcb-8d8a-ed0a8a22567f",
+    "auth_user_id": "6b2478a4-95bb-4672-bc3d-7d71bc858957",
+    "profissionais": [
+      {
+        "id": "82df1baa-def3-418c-9d69-af3b7536f7a6",
+        "cargo": "PROPRIETARIO",
+        "comissao": 0
+      },
+      {
+        "id": "f119b57c-1343-4190-9a7d-8cb788f94520",
+        "cargo": "FUNCIONARIO",
+        "comissao": 40
+      },
+      {
+        "id": "60a4f812-6d82-4d40-8f6b-ccdfa9380d30",
+        "cargo": "FUNCIONARIO",
+        "comissao": 30
+      }
+    ],
+    "procedimentos": [
+      {
+        "id": "88d0cc6f-b2fb-4c11-8f2a-75bb86108c56",
+        "nome": "Coloração",
+        "preco_p": 80
+      },
+      {
+        "id": "6309a62c-5058-4428-81ec-da1b3537c99f",
+        "nome": "Progressiva",
+        "preco_p": 250
+      },
+      {
+        "id": "657f68e1-45d4-458d-8ec5-79c4762d7366",
+        "nome": "Corte",
+        "preco_p": 60
+      },
+      {
+        "id": "8d1f05cb-1486-455c-8ab3-46d3567ed045",
+        "nome": "Hidratação",
+        "preco_p": 120
+      }
+    ]
+  },
+  {
+    "email": "loadtest16@teste.com",
+    "senha": "LoadTest123!",
+    "salao_id": "28889a06-8634-4888-a9e5-fc6800117946",
+    "auth_user_id": "16534560-0370-4c9a-b8f4-11d4f3258ee4",
+    "profissionais": [
+      {
+        "id": "1c1a54cd-620b-4245-9add-13306bfdcba5",
+        "cargo": "PROPRIETARIO",
+        "comissao": 0
+      },
+      {
+        "id": "f146a68f-4e12-435a-97bd-59a61b3cd470",
+        "cargo": "FUNCIONARIO",
+        "comissao": 40
+      },
+      {
+        "id": "7205c7bf-c29c-4378-bc11-5ffafbbf1a5f",
+        "cargo": "FUNCIONARIO",
+        "comissao": 30
+      }
+    ],
+    "procedimentos": [
+      {
+        "id": "b7a5596f-f7ed-44c0-921d-f6375bfa7a1f",
+        "nome": "Coloração",
+        "preco_p": 80
+      },
+      {
+        "id": "50caad04-2f62-4e72-9390-3ad45987e41f",
+        "nome": "Progressiva",
+        "preco_p": 250
+      },
+      {
+        "id": "e19f2051-9604-4eb1-9d04-6475833b3ccd",
+        "nome": "Corte",
+        "preco_p": 60
+      },
+      {
+        "id": "6831a10a-6340-47a6-8d02-310ef4e00561",
+        "nome": "Hidratação",
+        "preco_p": 120
+      }
+    ]
+  },
+  {
+    "email": "loadtest17@teste.com",
+    "senha": "LoadTest123!",
+    "salao_id": "412f621d-7913-4095-88c9-345c9b2ca667",
+    "auth_user_id": "bf3bcaf3-1047-43d3-b578-0d32ed8ef959",
+    "profissionais": [
+      {
+        "id": "bb44901d-1f37-4272-adf5-d610ffcf612e",
+        "cargo": "PROPRIETARIO",
+        "comissao": 0
+      },
+      {
+        "id": "5d4b8ca1-82fb-40b0-a90e-c90a011e3311",
+        "cargo": "FUNCIONARIO",
+        "comissao": 40
+      },
+      {
+        "id": "035690cc-5b1e-4788-bb13-6ea3fb7f1b28",
+        "cargo": "FUNCIONARIO",
+        "comissao": 30
+      }
+    ],
+    "procedimentos": [
+      {
+        "id": "55a93a6e-3363-4375-bc00-6a694744f034",
+        "nome": "Coloração",
+        "preco_p": 80
+      },
+      {
+        "id": "d220a014-0d49-4edc-9c7a-90edfe662fb0",
+        "nome": "Progressiva",
+        "preco_p": 250
+      },
+      {
+        "id": "33ec215d-6844-4e3b-9aab-4b9814633e21",
+        "nome": "Corte",
+        "preco_p": 60
+      },
+      {
+        "id": "556c7704-f9d1-42d0-bcf0-ef61c0e8b014",
+        "nome": "Hidratação",
+        "preco_p": 120
+      }
+    ]
+  },
+  {
+    "email": "loadtest18@teste.com",
+    "senha": "LoadTest123!",
+    "salao_id": "4723bb63-a8b7-4363-99f0-c132b94ed366",
+    "auth_user_id": "5da1ab7b-5b6d-41e3-a056-5fadfa211d38",
+    "profissionais": [
+      {
+        "id": "8e868b99-2700-4c16-ab47-f166802ea3b4",
+        "cargo": "PROPRIETARIO",
+        "comissao": 0
+      },
+      {
+        "id": "f40aef3f-37ab-4852-a529-753af67a8064",
+        "cargo": "FUNCIONARIO",
+        "comissao": 40
+      },
+      {
+        "id": "bdf770cf-1b0b-489d-9aa6-0e59be6fa76e",
+        "cargo": "FUNCIONARIO",
+        "comissao": 30
+      }
+    ],
+    "procedimentos": [
+      {
+        "id": "2fd638cb-5ff2-40f4-8499-cc11c0b719c8",
+        "nome": "Coloração",
+        "preco_p": 80
+      },
+      {
+        "id": "97491a76-34af-4700-a4eb-6b51bd04352d",
+        "nome": "Progressiva",
+        "preco_p": 250
+      },
+      {
+        "id": "0f2305ff-b46d-46cb-a0c9-e8acd7a78e58",
+        "nome": "Corte",
+        "preco_p": 60
+      },
+      {
+        "id": "e76e283d-8d76-418a-9efe-b6b9a6a3768a",
+        "nome": "Hidratação",
+        "preco_p": 120
+      }
+    ]
+  },
+  {
+    "email": "loadtest19@teste.com",
+    "senha": "LoadTest123!",
+    "salao_id": "2697ca4e-4281-4515-a3a4-7b4ed69ed14f",
+    "auth_user_id": "b43e9690-c92a-4d51-a82a-d3b5611596f8",
+    "profissionais": [
+      {
+        "id": "7c839639-7522-41a7-9ae3-2d6c5e82ac47",
+        "cargo": "PROPRIETARIO",
+        "comissao": 0
+      },
+      {
+        "id": "a87bc420-8c8b-4144-9b22-d3637096628e",
+        "cargo": "FUNCIONARIO",
+        "comissao": 40
+      },
+      {
+        "id": "fe8c59ca-5c59-4b3c-9a25-b962e321b3b8",
+        "cargo": "FUNCIONARIO",
+        "comissao": 30
+      }
+    ],
+    "procedimentos": [
+      {
+        "id": "b4828753-3b89-47dd-83ad-6a26c39e8b68",
+        "nome": "Coloração",
+        "preco_p": 80
+      },
+      {
+        "id": "741fe992-6dfa-47de-888e-d3b10166fd3e",
+        "nome": "Progressiva",
+        "preco_p": 250
+      },
+      {
+        "id": "5a996a46-ffb9-482c-a1cb-8db0fd3ceaa5",
+        "nome": "Corte",
+        "preco_p": 60
+      },
+      {
+        "id": "1734f80b-c399-44bb-8ec0-c8a88fa2b31f",
+        "nome": "Hidratação",
+        "preco_p": 120
+      }
+    ]
+  },
+  {
+    "email": "loadtest20@teste.com",
+    "senha": "LoadTest123!",
+    "salao_id": "a02c92bf-ebca-4a1a-b478-7de01c5335b5",
+    "auth_user_id": "fcc8642e-f429-4961-aaf8-77705405bfa6",
+    "profissionais": [
+      {
+        "id": "fce4b548-b951-4644-99a9-fb5800b585f3",
+        "cargo": "PROPRIETARIO",
+        "comissao": 0
+      },
+      {
+        "id": "a26ed3b0-dd63-4053-8970-ecfd472736de",
+        "cargo": "FUNCIONARIO",
+        "comissao": 40
+      },
+      {
+        "id": "3021131b-d476-4624-b7ff-5f227c97e909",
+        "cargo": "FUNCIONARIO",
+        "comissao": 30
+      }
+    ],
+    "procedimentos": [
+      {
+        "id": "79b769ad-2173-4916-ab15-d43050dc011e",
+        "nome": "Coloração",
+        "preco_p": 80
+      },
+      {
+        "id": "5c20eb24-39b8-4e8c-bd91-bec9812e5b20",
+        "nome": "Progressiva",
+        "preco_p": 250
+      },
+      {
+        "id": "8823bd9a-27a4-4044-b779-27a2e40a4326",
+        "nome": "Corte",
+        "preco_p": 60
+      },
+      {
+        "id": "f2301722-a0d2-4afe-9f5c-ee22b139fce7",
+        "nome": "Hidratação",
+        "preco_p": 120
+      }
+    ]
+  },
+  {
+    "email": "loadtest21@teste.com",
+    "senha": "LoadTest123!",
+    "salao_id": "db1173e4-5fa6-4277-9eeb-c32fdbdc5f21",
+    "profissionais": [],
+    "procedimentos": []
+  },
+  {
+    "email": "loadtest22@teste.com",
+    "senha": "LoadTest123!",
+    "salao_id": "62833ed9-320e-4706-a3b2-811b94f3cf5a",
+    "auth_user_id": "88ed8c80-7bfe-4d3d-ac45-1fdd3f25f471",
+    "profissionais": [
+      {
+        "id": "19360083-fe5e-4700-ba2a-de967fc1ad7c",
+        "cargo": "PROPRIETARIO",
+        "comissao": 0
+      },
+      {
+        "id": "be7ae702-bfcd-4efc-b7f9-62d5581d3b32",
+        "cargo": "FUNCIONARIO",
+        "comissao": 40
+      },
+      {
+        "id": "ed479cc7-fa3a-462d-800f-8f51be4d72d2",
+        "cargo": "FUNCIONARIO",
+        "comissao": 30
+      }
+    ],
+    "procedimentos": [
+      {
+        "id": "097cddc4-1d55-439f-94c2-0435be5b8692",
+        "nome": "Coloração",
+        "preco_p": 80
+      },
+      {
+        "id": "0edacb51-328c-450e-88fa-284655c4c813",
+        "nome": "Progressiva",
+        "preco_p": 250
+      },
+      {
+        "id": "3e86feef-10f5-4675-bcb5-c36362e26337",
+        "nome": "Corte",
+        "preco_p": 60
+      },
+      {
+        "id": "afcee805-7924-43fc-a62c-1a0c9a959121",
+        "nome": "Hidratação",
+        "preco_p": 120
+      }
+    ]
+  },
+  {
+    "email": "loadtest23@teste.com",
+    "senha": "LoadTest123!",
+    "salao_id": "dda28530-7723-45b2-b5bd-49dbe98babaf",
+    "auth_user_id": "6c8a2594-8f7c-4487-9ea1-0646446459b2",
+    "profissionais": [
+      {
+        "id": "cac9ef3b-6ad4-4274-aeb6-13bc38e4d32e",
+        "cargo": "PROPRIETARIO",
+        "comissao": 0
+      },
+      {
+        "id": "19395560-160f-40ba-b3d8-6c6e2f1285b7",
+        "cargo": "FUNCIONARIO",
+        "comissao": 40
+      },
+      {
+        "id": "2ab7343b-f964-4d8d-8232-2b2583f7f2b8",
+        "cargo": "FUNCIONARIO",
+        "comissao": 30
+      }
+    ],
+    "procedimentos": [
+      {
+        "id": "82bddc0a-792b-417f-9e22-b6a0eb2f4086",
+        "nome": "Coloração",
+        "preco_p": 80
+      },
+      {
+        "id": "93f0d0fc-5ea5-4896-bbef-befa28b3f947",
+        "nome": "Progressiva",
+        "preco_p": 250
+      },
+      {
+        "id": "791588cf-e001-44c6-8d89-9471fa1df38d",
+        "nome": "Corte",
+        "preco_p": 60
+      },
+      {
+        "id": "0c47fbed-84e2-40c9-bc01-1ff5411ea5d7",
+        "nome": "Hidratação",
+        "preco_p": 120
+      }
+    ]
+  },
+  {
+    "email": "loadtest24@teste.com",
+    "senha": "LoadTest123!",
+    "salao_id": "781964a5-d3f7-42c4-a609-f9b9894aaf7e",
+    "auth_user_id": "223baf2a-f17f-4e0a-a070-a0933876e706",
+    "profissionais": [
+      {
+        "id": "05ea7f15-4e36-404b-8a8b-68150a674541",
+        "cargo": "PROPRIETARIO",
+        "comissao": 0
+      },
+      {
+        "id": "52d1f210-9dc6-490e-9eb9-246835cc1085",
+        "cargo": "FUNCIONARIO",
+        "comissao": 40
+      },
+      {
+        "id": "a8eabb0a-621b-423c-b0b7-43f0897735e0",
+        "cargo": "FUNCIONARIO",
+        "comissao": 30
+      }
+    ],
+    "procedimentos": [
+      {
+        "id": "b9fddae3-28c5-4101-8190-329ec0374e8a",
+        "nome": "Coloração",
+        "preco_p": 80
+      },
+      {
+        "id": "dc478779-f8e6-4ab8-9a27-b6c016e82161",
+        "nome": "Progressiva",
+        "preco_p": 250
+      },
+      {
+        "id": "7ef3a1e5-feb4-4f7a-b874-f945f91ff898",
+        "nome": "Corte",
+        "preco_p": 60
+      },
+      {
+        "id": "be114b5c-cf9b-49cd-a068-0e6f76fcf03b",
+        "nome": "Hidratação",
+        "preco_p": 120
+      }
+    ]
+  },
+  {
+    "email": "loadtest25@teste.com",
+    "senha": "LoadTest123!",
+    "salao_id": "8c3be105-290d-481c-a9f7-0f0d1fc13df4",
+    "auth_user_id": "27535cb7-130b-46e1-beb8-b321531cf7fe",
+    "profissionais": [
+      {
+        "id": "d624cca6-fa56-4006-9c06-9b11639f1426",
+        "cargo": "PROPRIETARIO",
+        "comissao": 0
+      },
+      {
+        "id": "3230c34d-ed22-4ecc-9593-e3d7bca07f29",
+        "cargo": "FUNCIONARIO",
+        "comissao": 40
+      },
+      {
+        "id": "171274ba-a4a6-43f9-9b51-d021a16751b4",
+        "cargo": "FUNCIONARIO",
+        "comissao": 30
+      }
+    ],
+    "procedimentos": [
+      {
+        "id": "d25093c5-281d-492b-8c6f-94c364b1b938",
+        "nome": "Coloração",
+        "preco_p": 80
+      },
+      {
+        "id": "f3a1178c-e1c0-4322-84f9-617ce527237d",
+        "nome": "Progressiva",
+        "preco_p": 250
+      },
+      {
+        "id": "182acb0f-08a3-4fde-a16b-7891a06c31bc",
+        "nome": "Corte",
+        "preco_p": 60
+      },
+      {
+        "id": "3a9b5317-86ea-42c3-b00c-51758cb8fc5b",
+        "nome": "Hidratação",
+        "preco_p": 120
+      }
+    ]
+  },
+  {
+    "email": "loadtest26@teste.com",
+    "senha": "LoadTest123!",
+    "salao_id": "53aa4463-81d8-45be-bbe8-41b0c2f52d80",
+    "auth_user_id": "303a0d73-af03-4ff7-aeab-138e87cff293",
+    "profissionais": [
+      {
+        "id": "e1c604b4-91a8-4d53-a639-161f521ff039",
+        "cargo": "PROPRIETARIO",
+        "comissao": 0
+      },
+      {
+        "id": "a54913a0-1163-4f68-abce-8e82b64c35ef",
+        "cargo": "FUNCIONARIO",
+        "comissao": 40
+      },
+      {
+        "id": "10e9b717-a005-4813-9d66-7bd763695118",
+        "cargo": "FUNCIONARIO",
+        "comissao": 30
+      }
+    ],
+    "procedimentos": [
+      {
+        "id": "e6c3eb38-68e3-4e60-9e07-bb19790b8cfd",
+        "nome": "Coloração",
+        "preco_p": 80
+      },
+      {
+        "id": "1358c232-8c99-48e2-a4a3-702bcc295f81",
+        "nome": "Progressiva",
+        "preco_p": 250
+      },
+      {
+        "id": "a13bc603-5a60-4bd5-93d4-2a2142e397cd",
+        "nome": "Corte",
+        "preco_p": 60
+      },
+      {
+        "id": "164bca8a-00f9-4e8b-981a-5c9aee2c9050",
+        "nome": "Hidratação",
+        "preco_p": 120
+      }
+    ]
+  },
+  {
+    "email": "loadtest27@teste.com",
+    "senha": "LoadTest123!",
+    "salao_id": "c666520d-81df-4b32-b235-1ab23cd206f3",
+    "auth_user_id": "78ee4d13-ac5f-4c19-9b55-59f65a90a206",
+    "profissionais": [
+      {
+        "id": "15dd1d06-ad7e-4398-b1a9-ea210e452fdc",
+        "cargo": "PROPRIETARIO",
+        "comissao": 0
+      },
+      {
+        "id": "0b3e3872-ea01-4b52-9ac4-9b32ec6dcf82",
+        "cargo": "FUNCIONARIO",
+        "comissao": 40
+      },
+      {
+        "id": "af444657-7a32-4c69-8f32-bd967dc63de1",
+        "cargo": "FUNCIONARIO",
+        "comissao": 30
+      }
+    ],
+    "procedimentos": [
+      {
+        "id": "f3c76110-e8d7-4bdc-976f-f7947a64c8ec",
+        "nome": "Coloração",
+        "preco_p": 80
+      },
+      {
+        "id": "d80df9b0-25d9-41e0-8547-945e24051d82",
+        "nome": "Progressiva",
+        "preco_p": 250
+      },
+      {
+        "id": "5b3e5de5-87e8-458d-8ed6-3d1923df5973",
+        "nome": "Corte",
+        "preco_p": 60
+      },
+      {
+        "id": "1ff526d3-c4f3-4e85-ad08-9ad56de06fcb",
+        "nome": "Hidratação",
+        "preco_p": 120
+      }
+    ]
+  },
+  {
+    "email": "loadtest28@teste.com",
+    "senha": "LoadTest123!",
+    "salao_id": "3b55964a-093b-463c-84f7-6576351a5341",
+    "auth_user_id": "e80a81b3-9953-441f-859c-7b8bb0a3d556",
+    "profissionais": [
+      {
+        "id": "68494724-4b5d-4d77-aaf7-53cd0f3f7764",
+        "cargo": "PROPRIETARIO",
+        "comissao": 0
+      },
+      {
+        "id": "4339fa87-1618-4317-b16a-ab6a8f3a13b6",
+        "cargo": "FUNCIONARIO",
+        "comissao": 40
+      },
+      {
+        "id": "cd82ca91-e8a9-4ca9-a76b-0b71d63d051a",
+        "cargo": "FUNCIONARIO",
+        "comissao": 30
+      }
+    ],
+    "procedimentos": [
+      {
+        "id": "52f8a516-7203-4f03-adda-d74e6c8b4e8a",
+        "nome": "Coloração",
+        "preco_p": 80
+      },
+      {
+        "id": "51e4331c-5237-48f7-a687-5bbc0211ba12",
+        "nome": "Progressiva",
+        "preco_p": 250
+      },
+      {
+        "id": "3dd115b6-756f-4427-a73e-59bf3ad13c8d",
+        "nome": "Corte",
+        "preco_p": 60
+      },
+      {
+        "id": "c2688b79-cb2c-47b8-980c-f3ec1981c254",
+        "nome": "Hidratação",
+        "preco_p": 120
+      }
+    ]
+  },
+  {
+    "email": "loadtest29@teste.com",
+    "senha": "LoadTest123!",
+    "salao_id": "3880d367-c02d-46a0-a247-58137fda91fe",
+    "auth_user_id": "805573a0-43a1-4e18-8d3f-552a8fd4f1d5",
+    "profissionais": [
+      {
+        "id": "9f75dda5-d8d4-49b3-8406-308b3ceaba91",
+        "cargo": "PROPRIETARIO",
+        "comissao": 0
+      },
+      {
+        "id": "552e01ea-7c45-4092-9cf4-1ee5e7d3552f",
+        "cargo": "FUNCIONARIO",
+        "comissao": 40
+      },
+      {
+        "id": "94e1005c-88d9-485c-8eb9-618dcbe4b253",
+        "cargo": "FUNCIONARIO",
+        "comissao": 30
+      }
+    ],
+    "procedimentos": [
+      {
+        "id": "56f51707-8816-4a0f-8124-9fe4ef9fdcab",
+        "nome": "Coloração",
+        "preco_p": 80
+      },
+      {
+        "id": "7625f2b1-0f44-4064-9964-37c2f7122efa",
+        "nome": "Progressiva",
+        "preco_p": 250
+      },
+      {
+        "id": "b1a2c5b7-e9eb-4fee-a13d-7b1085e829bb",
+        "nome": "Corte",
+        "preco_p": 60
+      },
+      {
+        "id": "e3d13813-3bac-4e9a-8f9a-da1e430895cb",
+        "nome": "Hidratação",
+        "preco_p": 120
+      }
+    ]
+  },
+  {
+    "email": "loadtest30@teste.com",
+    "senha": "LoadTest123!",
+    "salao_id": "43854227-e8b7-4c60-8bbc-177e7df3b819",
+    "auth_user_id": "8ac6739e-3c5f-4009-ad00-2469ba2b6a04",
+    "profissionais": [
+      {
+        "id": "14ca8e7c-ac12-48db-a7a1-6c40054554b6",
+        "cargo": "PROPRIETARIO",
+        "comissao": 0
+      },
+      {
+        "id": "7315d5d5-c085-4644-b88b-8eb413af1cdc",
+        "cargo": "FUNCIONARIO",
+        "comissao": 40
+      },
+      {
+        "id": "b7739119-85b6-4742-bc9c-960b4566ae6b",
+        "cargo": "FUNCIONARIO",
+        "comissao": 30
+      }
+    ],
+    "procedimentos": [
+      {
+        "id": "dd4825f0-7c0e-4aa2-b534-e851e1cf1b38",
+        "nome": "Coloração",
+        "preco_p": 80
+      },
+      {
+        "id": "15d3c7f1-aeda-4e1d-b1d7-0b29140c8d34",
+        "nome": "Progressiva",
+        "preco_p": 250
+      },
+      {
+        "id": "66ee97ac-4135-4942-9b9a-16f30d07ea77",
+        "nome": "Corte",
+        "preco_p": 60
+      },
+      {
+        "id": "0041ff36-92f9-4b1c-9e2e-678a230e5bc9",
+        "nome": "Hidratação",
+        "preco_p": 120
+      }
+    ]
+  },
+  {
+    "email": "loadtest31@teste.com",
+    "senha": "LoadTest123!",
+    "salao_id": "6557bfc7-58a9-4672-8879-b26dec3a50bd",
+    "auth_user_id": "f21cd598-ecd5-4972-8be6-d14f7f36ef61",
+    "profissionais": [
+      {
+        "id": "0f984874-7cf6-4cb9-b176-3f5723f9c43a",
+        "cargo": "PROPRIETARIO",
+        "comissao": 0
+      },
+      {
+        "id": "a1e2d406-41af-4cb8-9e2b-a436b635bfb5",
+        "cargo": "FUNCIONARIO",
+        "comissao": 40
+      },
+      {
+        "id": "64c41803-888e-4130-886c-de11ca19e4e9",
+        "cargo": "FUNCIONARIO",
+        "comissao": 30
+      }
+    ],
+    "procedimentos": [
+      {
+        "id": "042379c1-e15f-45c6-a012-0fe77621d804",
+        "nome": "Coloração",
+        "preco_p": 80
+      },
+      {
+        "id": "653c745f-7918-4ae3-b0a4-53061f768d72",
+        "nome": "Progressiva",
+        "preco_p": 250
+      },
+      {
+        "id": "fadb2e82-b182-4790-85c0-d0d4df3c7111",
+        "nome": "Corte",
+        "preco_p": 60
+      },
+      {
+        "id": "c1aa963e-a374-4eae-9e9f-f7f0e766c8fa",
+        "nome": "Hidratação",
+        "preco_p": 120
+      }
+    ]
+  },
+  {
+    "email": "loadtest32@teste.com",
+    "senha": "LoadTest123!",
+    "salao_id": "162a5d4f-f3a2-4f4a-94e5-79d7a8328e90",
+    "auth_user_id": "55a4d07c-45e9-4274-a8a7-3a8bd06dfc19",
+    "profissionais": [
+      {
+        "id": "0dd8afe9-0a56-43ec-b1b6-e28d8a807da5",
+        "cargo": "PROPRIETARIO",
+        "comissao": 0
+      },
+      {
+        "id": "073b9cef-f065-424b-85e4-e84f442621ff",
+        "cargo": "FUNCIONARIO",
+        "comissao": 40
+      },
+      {
+        "id": "f203d5f7-37af-40b7-bb67-e82382664a51",
+        "cargo": "FUNCIONARIO",
+        "comissao": 30
+      }
+    ],
+    "procedimentos": [
+      {
+        "id": "38e519a1-6c11-4b96-a151-4080e7668815",
+        "nome": "Coloração",
+        "preco_p": 80
+      },
+      {
+        "id": "74713c09-a01a-4d94-9b02-c5d4de873be0",
+        "nome": "Progressiva",
+        "preco_p": 250
+      },
+      {
+        "id": "b91259d2-b5e3-4636-a62a-4ad79e748ff6",
+        "nome": "Corte",
+        "preco_p": 60
+      },
+      {
+        "id": "d5d7b0ee-6a67-4edc-ae05-12b7f703ef12",
+        "nome": "Hidratação",
+        "preco_p": 120
+      }
+    ]
+  },
+  {
+    "email": "loadtest33@teste.com",
+    "senha": "LoadTest123!",
+    "salao_id": "58a1f23d-b473-4258-8af9-20134f608a0d",
+    "auth_user_id": "373eb38c-6545-4721-ac6d-d038c43eaf23",
+    "profissionais": [
+      {
+        "id": "279d44e3-5566-491c-b0a7-ef992bbbcf42",
+        "cargo": "PROPRIETARIO",
+        "comissao": 0
+      },
+      {
+        "id": "1cfde3a5-6239-466c-bfea-fe1118524068",
+        "cargo": "FUNCIONARIO",
+        "comissao": 40
+      },
+      {
+        "id": "725f1018-04ee-47b8-8c7c-bcf0c34989d1",
+        "cargo": "FUNCIONARIO",
+        "comissao": 30
+      }
+    ],
+    "procedimentos": [
+      {
+        "id": "cba0323b-b2b8-4574-ae8e-61bd814aa511",
+        "nome": "Coloração",
+        "preco_p": 80
+      },
+      {
+        "id": "ac500edc-21f6-4be7-bac5-d2c6d6344cb9",
+        "nome": "Progressiva",
+        "preco_p": 250
+      },
+      {
+        "id": "882d2cbe-fb41-4b8f-94de-c9ccb90a1ab3",
+        "nome": "Corte",
+        "preco_p": 60
+      },
+      {
+        "id": "884cf792-5aa4-44ae-9c97-041b0816cf32",
+        "nome": "Hidratação",
+        "preco_p": 120
+      }
+    ]
+  },
+  {
+    "email": "loadtest34@teste.com",
+    "senha": "LoadTest123!",
+    "salao_id": "224946bb-b432-4ed2-8950-1eaa1fb451bd",
+    "auth_user_id": "e6aff2d2-01d2-473a-83d0-4d5708d0dd60",
+    "profissionais": [
+      {
+        "id": "22f71b08-10e3-40cc-822d-ce2a317f8053",
+        "cargo": "PROPRIETARIO",
+        "comissao": 0
+      },
+      {
+        "id": "37b2be2a-394b-4c68-83ef-63729568d434",
+        "cargo": "FUNCIONARIO",
+        "comissao": 40
+      },
+      {
+        "id": "7505d57c-6c49-4fe9-8816-d856e4d7bac5",
+        "cargo": "FUNCIONARIO",
+        "comissao": 30
+      }
+    ],
+    "procedimentos": [
+      {
+        "id": "05d15fd6-8cc3-4446-835a-fc11bfaf3c6d",
+        "nome": "Coloração",
+        "preco_p": 80
+      },
+      {
+        "id": "2ab15bf8-48ec-46b6-b2d3-4dcc448c81c3",
+        "nome": "Progressiva",
+        "preco_p": 250
+      },
+      {
+        "id": "5d772f25-e7f0-4675-811e-144032998fc6",
+        "nome": "Corte",
+        "preco_p": 60
+      },
+      {
+        "id": "4070c239-3e76-4aac-99af-f14a546cfa01",
+        "nome": "Hidratação",
+        "preco_p": 120
+      }
+    ]
+  },
+  {
+    "email": "loadtest35@teste.com",
+    "senha": "LoadTest123!",
+    "salao_id": "eea119c8-a13d-4f86-b47e-9e12be49d09a",
+    "auth_user_id": "1da33e8e-11a1-4cd1-9a5b-1959e9cf8d64",
+    "profissionais": [
+      {
+        "id": "f486b49b-c461-41b6-9ea4-3e878558d858",
+        "cargo": "PROPRIETARIO",
+        "comissao": 0
+      },
+      {
+        "id": "e50186e5-0822-4e54-8378-b1ac4cc57bc9",
+        "cargo": "FUNCIONARIO",
+        "comissao": 40
+      },
+      {
+        "id": "d6ffe342-8c21-4514-8533-fa2df0ed2be9",
+        "cargo": "FUNCIONARIO",
+        "comissao": 30
+      }
+    ],
+    "procedimentos": [
+      {
+        "id": "94c3dac6-b917-42a2-bb14-02d37db7efb3",
+        "nome": "Coloração",
+        "preco_p": 80
+      },
+      {
+        "id": "bbd5d776-7d79-4f1a-9107-2b4ecfe39650",
+        "nome": "Progressiva",
+        "preco_p": 250
+      },
+      {
+        "id": "128b32b7-b670-46cf-bcaa-e12075ee9e78",
+        "nome": "Corte",
+        "preco_p": 60
+      },
+      {
+        "id": "caa63429-3f3b-41ba-8f0d-22cc3290f002",
+        "nome": "Hidratação",
+        "preco_p": 120
+      }
+    ]
+  },
+  {
+    "email": "loadtest36@teste.com",
+    "senha": "LoadTest123!",
+    "salao_id": "b4464e46-c251-46d6-afca-007e0b80293f",
+    "auth_user_id": "9dc024ea-aa80-493d-b325-67ba547bce71",
+    "profissionais": [
+      {
+        "id": "fae68beb-eb85-42e3-b33e-36484aa82a65",
+        "cargo": "PROPRIETARIO",
+        "comissao": 0
+      },
+      {
+        "id": "a5e1b47b-fb9c-4b8d-a26e-0240e58415e4",
+        "cargo": "FUNCIONARIO",
+        "comissao": 40
+      },
+      {
+        "id": "fa99e052-3d90-45c1-b218-ea7b086aab74",
+        "cargo": "FUNCIONARIO",
+        "comissao": 30
+      }
+    ],
+    "procedimentos": [
+      {
+        "id": "7292449e-a31b-4032-8cab-26d8fe9f6ddc",
+        "nome": "Coloração",
+        "preco_p": 80
+      },
+      {
+        "id": "1d96ef5b-827a-40d5-9ff5-30e834e1d719",
+        "nome": "Progressiva",
+        "preco_p": 250
+      },
+      {
+        "id": "6ba7cdf5-c9db-4e45-9459-7e270492c9ad",
+        "nome": "Corte",
+        "preco_p": 60
+      },
+      {
+        "id": "62007f5f-af49-4260-9af4-19356a2b0a87",
+        "nome": "Hidratação",
+        "preco_p": 120
+      }
+    ]
+  },
+  {
+    "email": "loadtest37@teste.com",
+    "senha": "LoadTest123!",
+    "salao_id": "d016e7fa-1f8e-4d74-ba19-b4d34e6782ee",
+    "auth_user_id": "7b05a9eb-0a7c-4deb-8988-de7df5359e0b",
+    "profissionais": [
+      {
+        "id": "5cae0dca-e123-48c9-971c-7cd14b6a4c83",
+        "cargo": "PROPRIETARIO",
+        "comissao": 0
+      },
+      {
+        "id": "04fbfd23-0b89-43f6-8e11-12ba5ecb4b31",
+        "cargo": "FUNCIONARIO",
+        "comissao": 40
+      },
+      {
+        "id": "b8bd829b-2a7f-4a2b-be5f-c2cbaa8d07b0",
+        "cargo": "FUNCIONARIO",
+        "comissao": 30
+      }
+    ],
+    "procedimentos": [
+      {
+        "id": "205c7f99-1926-498a-b359-2caf3ff0eae9",
+        "nome": "Coloração",
+        "preco_p": 80
+      },
+      {
+        "id": "09ff7fde-e724-4ef3-a6a7-fe367f6adacf",
+        "nome": "Progressiva",
+        "preco_p": 250
+      },
+      {
+        "id": "a86bf3da-71ed-41fe-8d81-384ed2d60857",
+        "nome": "Corte",
+        "preco_p": 60
+      },
+      {
+        "id": "0d11febc-d2aa-44b9-8b2c-84707f83af16",
+        "nome": "Hidratação",
+        "preco_p": 120
+      }
+    ]
+  },
+  {
+    "email": "loadtest38@teste.com",
+    "senha": "LoadTest123!",
+    "salao_id": "a92c09f3-b155-4a7a-a3ae-496677614222",
+    "auth_user_id": "8c1c3ef0-cd3f-4b1f-be42-a31ab1f4beed",
+    "profissionais": [
+      {
+        "id": "7d69c060-739f-4143-a138-286e1a195576",
+        "cargo": "PROPRIETARIO",
+        "comissao": 0
+      },
+      {
+        "id": "6aefce90-c2c5-45d2-a122-f6d3425503d7",
+        "cargo": "FUNCIONARIO",
+        "comissao": 40
+      },
+      {
+        "id": "9cd3e716-9af0-4f95-b6f3-cc14cba01e56",
+        "cargo": "FUNCIONARIO",
+        "comissao": 30
+      }
+    ],
+    "procedimentos": [
+      {
+        "id": "9deaa85c-d981-4301-b51d-94a5a39837eb",
+        "nome": "Coloração",
+        "preco_p": 80
+      },
+      {
+        "id": "a4d8864e-8135-4598-85de-b071e703c9c6",
+        "nome": "Progressiva",
+        "preco_p": 250
+      },
+      {
+        "id": "31baaa4c-2506-4273-8392-b05e6203e7ba",
+        "nome": "Corte",
+        "preco_p": 60
+      },
+      {
+        "id": "0c4e3fb3-5b93-4b82-9612-958a7a095e78",
+        "nome": "Hidratação",
+        "preco_p": 120
+      }
+    ]
+  },
+  {
+    "email": "loadtest39@teste.com",
+    "senha": "LoadTest123!",
+    "salao_id": "37d66203-8430-4905-90db-ad9a7e8b574d",
+    "auth_user_id": "a14d7975-b3b0-4f00-aa6a-afda1ca920e9",
+    "profissionais": [
+      {
+        "id": "21b4858e-2433-4f46-93aa-a2b767ef4385",
+        "cargo": "PROPRIETARIO",
+        "comissao": 0
+      },
+      {
+        "id": "d91663cc-f7e6-44a9-a013-87750608a806",
+        "cargo": "FUNCIONARIO",
+        "comissao": 40
+      },
+      {
+        "id": "c0e06dcd-ed61-407f-8b69-f6f07c2bbbf5",
+        "cargo": "FUNCIONARIO",
+        "comissao": 30
+      }
+    ],
+    "procedimentos": [
+      {
+        "id": "3ec2b927-7b28-4b39-802a-07f9869221a6",
+        "nome": "Coloração",
+        "preco_p": 80
+      },
+      {
+        "id": "decc108c-80d4-4b7a-8c05-8aaab3d5f9bf",
+        "nome": "Progressiva",
+        "preco_p": 250
+      },
+      {
+        "id": "c26a750e-4155-41fa-b478-b77f8b7c32be",
+        "nome": "Corte",
+        "preco_p": 60
+      },
+      {
+        "id": "899dd56b-2434-4035-86aa-941334306863",
+        "nome": "Hidratação",
+        "preco_p": 120
+      }
+    ]
+  },
+  {
+    "email": "loadtest40@teste.com",
+    "senha": "LoadTest123!",
+    "salao_id": "aa2b1ffb-b50e-4014-88c6-626f3dc84c30",
+    "auth_user_id": "0d916f33-6fda-407c-b379-1152ab12c386",
+    "profissionais": [
+      {
+        "id": "b6491841-08af-44b5-9592-f9fc6172664e",
+        "cargo": "PROPRIETARIO",
+        "comissao": 0
+      },
+      {
+        "id": "6cd92b03-8b9e-488b-8641-8f93370da693",
+        "cargo": "FUNCIONARIO",
+        "comissao": 40
+      },
+      {
+        "id": "3f8d9cab-17d2-4212-937e-728a3b2cb83d",
+        "cargo": "FUNCIONARIO",
+        "comissao": 30
+      }
+    ],
+    "procedimentos": [
+      {
+        "id": "983b1972-86ec-4f84-914e-25d7df2d522f",
+        "nome": "Coloração",
+        "preco_p": 80
+      },
+      {
+        "id": "84232a9e-77b7-489e-80dd-a4855c6bf65d",
+        "nome": "Progressiva",
+        "preco_p": 250
+      },
+      {
+        "id": "4ca9ce1e-a211-44ee-8e0b-bb4433d92337",
+        "nome": "Corte",
+        "preco_p": 60
+      },
+      {
+        "id": "e3bb3eb4-3a0f-490e-9866-a4d0f49b8a42",
+        "nome": "Hidratação",
+        "preco_p": 120
+      }
+    ]
+  },
+  {
+    "email": "loadtest41@teste.com",
+    "senha": "LoadTest123!",
+    "salao_id": "4f49c438-fb4c-4db8-89c6-68331b703fb9",
+    "auth_user_id": "b80a6aa0-4712-4b90-909c-c872460387ee",
+    "profissionais": [
+      {
+        "id": "1497842c-65f1-44af-8b31-63c126721185",
+        "cargo": "PROPRIETARIO",
+        "comissao": 0
+      },
+      {
+        "id": "e3c4c5c1-a336-4759-9eb4-d5d44458adfb",
+        "cargo": "FUNCIONARIO",
+        "comissao": 40
+      },
+      {
+        "id": "159f4fd8-da20-47b2-857e-bcc4ec9c86b7",
+        "cargo": "FUNCIONARIO",
+        "comissao": 30
+      }
+    ],
+    "procedimentos": [
+      {
+        "id": "59b0edf1-7d60-439b-a447-7dc6e30bd7ab",
+        "nome": "Coloração",
+        "preco_p": 80
+      },
+      {
+        "id": "97c3b92d-081d-4177-b3d6-d2b3986907d5",
+        "nome": "Progressiva",
+        "preco_p": 250
+      },
+      {
+        "id": "943f26a7-d197-40f1-9df2-b31009ebebc7",
+        "nome": "Corte",
+        "preco_p": 60
+      },
+      {
+        "id": "a68ec469-f5d7-4a28-9c88-c92faf27b068",
+        "nome": "Hidratação",
+        "preco_p": 120
+      }
+    ]
+  },
+  {
+    "email": "loadtest42@teste.com",
+    "senha": "LoadTest123!",
+    "salao_id": "f388e977-d535-4825-9581-6342e2ef981e",
+    "auth_user_id": "858229f1-5b3a-47d8-936c-875d18f2c2f9",
+    "profissionais": [
+      {
+        "id": "b2408b9d-3770-4088-9a4d-41bb8f525793",
+        "cargo": "PROPRIETARIO",
+        "comissao": 0
+      },
+      {
+        "id": "97a7286c-7180-47e8-8262-48528ba963d0",
+        "cargo": "FUNCIONARIO",
+        "comissao": 40
+      },
+      {
+        "id": "ac319fa5-4da8-4264-8f36-98d0ab437e5c",
+        "cargo": "FUNCIONARIO",
+        "comissao": 30
+      }
+    ],
+    "procedimentos": [
+      {
+        "id": "64202085-81be-4b85-a1e0-fb3edc10cc67",
+        "nome": "Coloração",
+        "preco_p": 80
+      },
+      {
+        "id": "9decb365-57a2-4c10-a7f0-294610b1be1e",
+        "nome": "Progressiva",
+        "preco_p": 250
+      },
+      {
+        "id": "2ba60c79-5848-4453-b164-ad29ec576e04",
+        "nome": "Corte",
+        "preco_p": 60
+      },
+      {
+        "id": "10d17e46-c7ec-483d-b3f1-bc087e0982d0",
+        "nome": "Hidratação",
+        "preco_p": 120
+      }
+    ]
+  },
+  {
+    "email": "loadtest43@teste.com",
+    "senha": "LoadTest123!",
+    "salao_id": "4820395f-cbd7-4db5-86ec-f9dc4985f6d6",
+    "auth_user_id": "52a42479-8f53-4d9b-b9f1-17461101bdae",
+    "profissionais": [
+      {
+        "id": "8cb6df33-714e-4096-9e4a-30d1ab1c511f",
+        "cargo": "PROPRIETARIO",
+        "comissao": 0
+      },
+      {
+        "id": "9f270e92-4c27-420a-8832-de210e844649",
+        "cargo": "FUNCIONARIO",
+        "comissao": 40
+      },
+      {
+        "id": "5b2e1e34-5199-4164-9fe8-d738127e4ca1",
+        "cargo": "FUNCIONARIO",
+        "comissao": 30
+      }
+    ],
+    "procedimentos": [
+      {
+        "id": "c2de90d0-f2b6-434e-88d2-d53dca309fa0",
+        "nome": "Coloração",
+        "preco_p": 80
+      },
+      {
+        "id": "22161848-1128-4029-a7b6-b6b4aa417821",
+        "nome": "Progressiva",
+        "preco_p": 250
+      },
+      {
+        "id": "2cb67fd5-b34a-43be-a9ac-74eb9dbf4151",
+        "nome": "Corte",
+        "preco_p": 60
+      },
+      {
+        "id": "5c09c388-eb7c-4345-bb46-ef4114f6ce53",
+        "nome": "Hidratação",
+        "preco_p": 120
+      }
+    ]
+  },
+  {
+    "email": "loadtest44@teste.com",
+    "senha": "LoadTest123!",
+    "salao_id": "7781da7f-77e8-4666-97cb-a0db2789018f",
+    "auth_user_id": "5e79ab80-0f9f-49a8-9092-f2ac3ed3dfdb",
+    "profissionais": [
+      {
+        "id": "5408178d-a816-4dae-a213-bed32cefc357",
+        "cargo": "PROPRIETARIO",
+        "comissao": 0
+      },
+      {
+        "id": "bc151f2a-dc0b-4e9f-b739-64eed423f35f",
+        "cargo": "FUNCIONARIO",
+        "comissao": 40
+      },
+      {
+        "id": "736c55dd-c09f-4dbd-bca2-8be5e9658080",
+        "cargo": "FUNCIONARIO",
+        "comissao": 30
+      }
+    ],
+    "procedimentos": [
+      {
+        "id": "5e750353-5520-4f91-a158-cacfdeebe6d1",
+        "nome": "Coloração",
+        "preco_p": 80
+      },
+      {
+        "id": "08c5bdd8-8adb-4022-9461-fafbbb70182e",
+        "nome": "Progressiva",
+        "preco_p": 250
+      },
+      {
+        "id": "90c0909b-5670-43b1-a24e-2997c1c0e85d",
+        "nome": "Corte",
+        "preco_p": 60
+      },
+      {
+        "id": "250421ff-38a8-447e-af9a-db32248e091d",
+        "nome": "Hidratação",
+        "preco_p": 120
+      }
+    ]
+  },
+  {
+    "email": "loadtest45@teste.com",
+    "senha": "LoadTest123!",
+    "salao_id": "3509062e-d851-49df-84b7-cf6d113fedf6",
+    "auth_user_id": "788aa256-fae8-437c-91bc-0656a0bc6dbf",
+    "profissionais": [
+      {
+        "id": "92a7e639-d312-4dd0-87c7-5b6e8e2d0f36",
+        "cargo": "PROPRIETARIO",
+        "comissao": 0
+      },
+      {
+        "id": "f5efb90b-bd13-46c6-be82-d938707f2b66",
+        "cargo": "FUNCIONARIO",
+        "comissao": 40
+      },
+      {
+        "id": "06021cfd-fc88-4657-be61-c93e0b1a19fe",
+        "cargo": "FUNCIONARIO",
+        "comissao": 30
+      }
+    ],
+    "procedimentos": [
+      {
+        "id": "6fae1f05-9f33-48cd-bec2-205425fbded8",
+        "nome": "Coloração",
+        "preco_p": 80
+      },
+      {
+        "id": "449ce6b7-6798-4c3f-b2d7-732144fb6b4f",
+        "nome": "Progressiva",
+        "preco_p": 250
+      },
+      {
+        "id": "d6b10675-a8cd-4302-a0f4-bc0abcde34a1",
+        "nome": "Corte",
+        "preco_p": 60
+      },
+      {
+        "id": "649aaaee-80a9-4d77-a904-7c68bf003105",
+        "nome": "Hidratação",
+        "preco_p": 120
+      }
+    ]
+  },
+  {
+    "email": "loadtest46@teste.com",
+    "senha": "LoadTest123!",
+    "salao_id": "989ec563-12aa-4e5a-b878-d14e9571ea60",
+    "auth_user_id": "c077b913-3454-41e5-9c5f-ce2684fd7c79",
+    "profissionais": [
+      {
+        "id": "83e71e50-1c03-4eb1-9aeb-7cba734bb5e8",
+        "cargo": "PROPRIETARIO",
+        "comissao": 0
+      },
+      {
+        "id": "7845cb91-ba30-4d8a-8e97-bc0e19b2c75b",
+        "cargo": "FUNCIONARIO",
+        "comissao": 40
+      },
+      {
+        "id": "1105c01c-00e4-4b69-9302-46989466e428",
+        "cargo": "FUNCIONARIO",
+        "comissao": 30
+      }
+    ],
+    "procedimentos": [
+      {
+        "id": "b0862fcb-e4ad-4efe-84d6-494174d8bdd1",
+        "nome": "Coloração",
+        "preco_p": 80
+      },
+      {
+        "id": "05656c7c-32e3-4feb-bfc8-8e18418844cc",
+        "nome": "Progressiva",
+        "preco_p": 250
+      },
+      {
+        "id": "4c4cb99a-fb0c-434f-b12e-4935ca342ee8",
+        "nome": "Corte",
+        "preco_p": 60
+      },
+      {
+        "id": "21f606b4-b238-4836-82c2-5e293adee16c",
+        "nome": "Hidratação",
+        "preco_p": 120
+      }
+    ]
+  },
+  {
+    "email": "loadtest47@teste.com",
+    "senha": "LoadTest123!",
+    "salao_id": "4c74cfe6-cd1a-485f-9aab-be8cc2286523",
+    "auth_user_id": "d3f6fac1-5d05-43cf-8351-75350b4beeeb",
+    "profissionais": [
+      {
+        "id": "ae2038e3-17d2-4bc1-8456-e97549bfadde",
+        "cargo": "PROPRIETARIO",
+        "comissao": 0
+      },
+      {
+        "id": "378e6c5c-f5fc-4ae5-92f0-49b80de6a0c7",
+        "cargo": "FUNCIONARIO",
+        "comissao": 40
+      },
+      {
+        "id": "c0733e53-66a0-4243-a5f2-e78e1e971ea7",
+        "cargo": "FUNCIONARIO",
+        "comissao": 30
+      }
+    ],
+    "procedimentos": [
+      {
+        "id": "89b3bf6e-944e-4fea-8b92-8ab13b097999",
+        "nome": "Coloração",
+        "preco_p": 80
+      },
+      {
+        "id": "e8b31c82-9a4b-4821-965c-280e46cb9863",
+        "nome": "Progressiva",
+        "preco_p": 250
+      },
+      {
+        "id": "60ea2e8d-aec3-41f7-967a-260938e340ca",
+        "nome": "Corte",
+        "preco_p": 60
+      },
+      {
+        "id": "9ecaddf8-cb35-4f62-bbcd-be2bede7dd8d",
+        "nome": "Hidratação",
+        "preco_p": 120
+      }
+    ]
+  },
+  {
+    "email": "loadtest48@teste.com",
+    "senha": "LoadTest123!",
+    "salao_id": "502c518b-0b58-4365-9733-bd0f92bdacf8",
+    "auth_user_id": "633820f4-155c-4e46-99ba-f6ebace5a2d4",
+    "profissionais": [
+      {
+        "id": "694056eb-e40f-4892-87bb-788c26f9ebd9",
+        "cargo": "PROPRIETARIO",
+        "comissao": 0
+      },
+      {
+        "id": "f368370a-1d3b-49ac-9aa8-1a08a3e1e71c",
+        "cargo": "FUNCIONARIO",
+        "comissao": 40
+      },
+      {
+        "id": "002076ae-ae68-46a4-8ef3-dcf4b7d87e73",
+        "cargo": "FUNCIONARIO",
+        "comissao": 30
+      }
+    ],
+    "procedimentos": [
+      {
+        "id": "4acd3bd1-977d-431f-b974-686eed238282",
+        "nome": "Coloração",
+        "preco_p": 80
+      },
+      {
+        "id": "31171ade-39b8-4d31-bdbf-e8e4e4a2f4e3",
+        "nome": "Progressiva",
+        "preco_p": 250
+      },
+      {
+        "id": "192bcd77-47e7-49ef-ae13-1f2424474291",
+        "nome": "Corte",
+        "preco_p": 60
+      },
+      {
+        "id": "4843ee32-5837-4955-a702-3136bbcfe297",
+        "nome": "Hidratação",
+        "preco_p": 120
+      }
+    ]
+  },
+  {
+    "email": "loadtest49@teste.com",
+    "senha": "LoadTest123!",
+    "salao_id": "e13895ac-3b82-4ed5-abb6-859a80aa25ab",
+    "auth_user_id": "e79bcc6b-5d7d-482a-ad87-75479377405f",
+    "profissionais": [
+      {
+        "id": "7440e685-8d89-411a-9677-67ad48fca9bb",
+        "cargo": "PROPRIETARIO",
+        "comissao": 0
+      },
+      {
+        "id": "b2eea6c4-9a4e-4d96-8f84-e59c5a4d4f5f",
+        "cargo": "FUNCIONARIO",
+        "comissao": 40
+      },
+      {
+        "id": "83309edf-af38-466c-b238-0b655d1a17c0",
+        "cargo": "FUNCIONARIO",
+        "comissao": 30
+      }
+    ],
+    "procedimentos": [
+      {
+        "id": "f9a56c27-f249-4ad7-a51f-811e3e71b803",
+        "nome": "Coloração",
+        "preco_p": 80
+      },
+      {
+        "id": "b5489dcc-d140-44b1-9c31-7429409f11e6",
+        "nome": "Progressiva",
+        "preco_p": 250
+      },
+      {
+        "id": "bc1666a8-c7d9-47cf-9db3-f19d8d49c76e",
+        "nome": "Corte",
+        "preco_p": 60
+      },
+      {
+        "id": "02087d80-b7b9-4b2a-a081-aab383d47257",
+        "nome": "Hidratação",
+        "preco_p": 120
+      }
+    ]
+  },
+  {
+    "email": "loadtest50@teste.com",
+    "senha": "LoadTest123!",
+    "salao_id": "1982859e-e96c-4e18-afec-b3b47123721b",
+    "auth_user_id": "b4278915-7cb8-436a-89e8-b3ee1caf650f",
+    "profissionais": [
+      {
+        "id": "852fa6d7-ae33-4bd3-8b9b-718ff108a38a",
+        "cargo": "PROPRIETARIO",
+        "comissao": 0
+      },
+      {
+        "id": "adcb56d4-8d6d-4519-a6c9-1e84ddfb67bc",
+        "cargo": "FUNCIONARIO",
+        "comissao": 40
+      },
+      {
+        "id": "3a314e1a-d301-46db-974f-b4a463594e6d",
+        "cargo": "FUNCIONARIO",
+        "comissao": 30
+      }
+    ],
+    "procedimentos": [
+      {
+        "id": "8c240dfc-d159-44c8-add2-1aeb63e0f511",
+        "nome": "Coloração",
+        "preco_p": 80
+      },
+      {
+        "id": "a119621b-32c1-4d45-bd92-c1a2f0c9b490",
+        "nome": "Progressiva",
+        "preco_p": 250
+      },
+      {
+        "id": "56116a36-fe31-4731-9a16-bf220bd608ab",
+        "nome": "Corte",
+        "preco_p": 60
+      },
+      {
+        "id": "a678a1d0-396c-4ef1-b0bf-26b975e3f1bc",
+        "nome": "Hidratação",
+        "preco_p": 120
+      }
+    ]
+  }
+]

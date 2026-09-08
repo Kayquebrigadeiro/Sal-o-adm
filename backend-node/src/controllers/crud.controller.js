@@ -7,6 +7,13 @@ const pool = require('../config/db');
 const { v4: uuidv4 } = require('uuid');
 const { mesEstaFechado } = require('../services/fechamentoGuard.service');
 const { invalidarFechamentoCache } = require('./fechamento.controller');
+const { calcularPrecoPorComprimento } = require('../services/financialEngine.service');
+
+// Valores válidos do ENUM `despesas.tipo` (espelha o SHOW COLUMNS do banco)
+const TIPOS_DESPESA_VALIDOS = [
+  'ALUGUEL', 'ENERGIA', 'AGUA', 'INTERNET', 'MATERIAL',
+  'EQUIPAMENTO', 'FORNECEDOR', 'FUNCIONARIO', 'OUTRO', 'PRODUTO'
+];
 
 // Tabelas que afetam o fechamento mensal e a coluna usada como data-base.
 // gastos_pessoais NÃO possui coluna `data` — o mês é derivado de `criado_em`.
@@ -167,6 +174,28 @@ function createCRUDController(nomeTabela, campos = []) {
           if (!dados.valor_pago) dados.valor_pago = 0;
         }
         
+        // Validação do campo `tipo` de despesas contra o ENUM do banco
+        // (antes o banco rejeitava com "Data truncated" e virava 500 genérico)
+        if (nomeTabela === 'despesas' && dados.tipo !== undefined && dados.tipo !== null) {
+          const tipoUpper = String(dados.tipo).trim().toUpperCase();
+          if (!TIPOS_DESPESA_VALIDOS.includes(tipoUpper)) {
+            return res.status(400).json({ error: `tipo inválido, use um dos seguintes: ${TIPOS_DESPESA_VALIDOS.join(', ')}` });
+          }
+          dados.tipo = tipoUpper;
+        }
+
+        // Fallback automático de preço M/G para procedimentos: se preco_m/preco_g
+        // não forem informados, calcula preco_p * 1.2 e preco_p * 1.3
+        if (nomeTabela === 'procedimentos' && dados.preco_p !== undefined && dados.preco_p !== null && dados.preco_p !== '') {
+          const precoM = (dados.preco_m === undefined || dados.preco_m === '') ? null : dados.preco_m;
+          const precoG = (dados.preco_g === undefined || dados.preco_g === '') ? null : dados.preco_g;
+          if (precoM === null || precoG === null) {
+            const precos = calcularPrecoPorComprimento({ precoP: dados.preco_p, precoM, precoG });
+            if (precoM === null) dados.preco_m = precos.m;
+            if (precoG === null) dados.preco_g = precos.g;
+          }
+        }
+
         // Gerar UUID para a coluna 'id' se não foi fornecido
         if (!dados.id) {
           dados.id = uuidv4();
@@ -225,6 +254,15 @@ function createCRUDController(nomeTabela, campos = []) {
         
         // Mapear campos antes de atualizar
         let dadosUpdate = mapearCampos(nomeTabela, { ...req.body });
+
+        // Validação do campo `tipo` de despesas também na atualização
+        if (nomeTabela === 'despesas' && dadosUpdate.tipo !== undefined && dadosUpdate.tipo !== null) {
+          const tipoUpper = String(dadosUpdate.tipo).trim().toUpperCase();
+          if (!TIPOS_DESPESA_VALIDOS.includes(tipoUpper)) {
+            return res.status(400).json({ error: `tipo inválido, use um dos seguintes: ${TIPOS_DESPESA_VALIDOS.join(', ')}` });
+          }
+          dadosUpdate.tipo = tipoUpper;
+        }
         
         // Capturar a data anterior do registro para invalidar o cache do mês correto
         // (gastos_pessoais não tem coluna `data`; usa criado_em)

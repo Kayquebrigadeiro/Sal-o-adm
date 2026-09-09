@@ -256,4 +256,5 @@ Pendências, limitações conhecidas e funcionalidades em avaliação estão reg
 
 ## 📝 Licença
 
-Software de uso privado. Todos os direitos reservados para **Kayque Brigadeiro**.
+Software proprietário desenvolvido por **Kayque Brigadeiro**.
+Distribuição e uso comercial mediante contrato.

@@ -1,0 +1,132 @@
+{
+  "salao": {
+    "email": "beleza.real@teste.com",
+    "senha": "BelezaReal123!",
+    "salao_id": "fd5427ed-1d3b-4a59-b224-3a41870f0787",
+    "base": "https://sal-o-adm-1.onrender.com"
+  },
+  "gerado_em": "2026-09-09T00:58:53.826Z",
+  "config": {
+    "taxa_maquininha_pct": 4.5,
+    "custo_fixo_por_atendimento": 17.4,
+    "total_custos_fixos_mensais": 1740,
+    "salarios_fixos": 3000
+  },
+  "meses": {
+    "2026-07": {
+      "independente": {
+        "faturamentoBruto": 7568,
+        "receitaRecebida": 6349.82,
+        "totalPendente": 1218.18,
+        "lucroAtendimentosReal": 3125.91,
+        "totalAtendimentos": 47,
+        "receitaHomecare": 773,
+        "lucroHomecare": 479,
+        "receitaParalelos": 412,
+        "totalDespesas": 180,
+        "totalGastosPessoais": 770
+      },
+      "api": {
+        "mes": "2026-07",
+        "isFechado": true,
+        "faturamentoBruto": 7568,
+        "receitaRecebida": 6349.82,
+        "totalPendente": 1218.18,
+        "receitaHomecare": 773,
+        "receitaParalelos": 412,
+        "receitaTotalCaixa": 8753,
+        "lucroAtendimentosReal": 3125.91,
+        "lucroPossivel": 3466.5,
+        "totalAtendimentos": 47,
+        "lucroHomecare": 479,
+        "totalDespesas": 180,
+        "totalSalariosFixos": 3000,
+        "totalGastosPessoais": 770,
+        "saudeFinanceira": 424.91,
+        "margemLucro": "35.71",
+        "resultadoFinal": -345.09,
+        "resultadoComCustosFixos": -2085.09
+      },
+      "isFechado": true
+    },
+    "2026-08": {
+      "independente": {
+        "faturamentoBruto": 6734,
+        "receitaRecebida": 5488.05,
+        "totalPendente": 1245.95,
+        "lucroAtendimentosReal": 3276.35,
+        "totalAtendimentos": 41,
+        "receitaHomecare": 936,
+        "lucroHomecare": 630,
+        "receitaParalelos": 426,
+        "totalDespesas": 0,
+        "totalGastosPessoais": 570
+      },
+      "api": {
+        "mes": "2026-08",
+        "isFechado": true,
+        "faturamentoBruto": 6734,
+        "receitaRecebida": 5488.05,
+        "totalPendente": 1245.95,
+        "receitaHomecare": 936,
+        "receitaParalelos": 426,
+        "receitaTotalCaixa": 8096,
+        "lucroAtendimentosReal": 3276.35,
+        "lucroPossivel": 3579.4,
+        "totalAtendimentos": 41,
+        "lucroHomecare": 630,
+        "totalDespesas": 0,
+        "totalSalariosFixos": 3000,
+        "totalGastosPessoais": 570,
+        "saudeFinanceira": 906.35,
+        "margemLucro": "40.47",
+        "resultadoFinal": 336.35,
+        "resultadoComCustosFixos": -1403.65
+      },
+      "isFechado": true
+    },
+    "2026-09": {
+      "independente": {
+        "faturamentoBruto": 7233.76,
+        "receitaRecebida": 6120.31,
+        "totalPendente": 1113.45,
+        "lucroAtendimentosReal": 2818.08,
+        "totalAtendimentos": 53,
+        "receitaHomecare": 1053,
+        "lucroHomecare": 652,
+        "receitaParalelos": 658,
+        "totalDespesas": 1090,
+        "totalGastosPessoais": 920
+      },
+      "api": {
+        "mes": "2026-09",
+        "isFechado": false,
+        "faturamentoBruto": 7233.76,
+        "receitaRecebida": 6120.31,
+        "totalPendente": 1113.45,
+        "receitaHomecare": 1053,
+        "receitaParalelos": 658,
+        "receitaTotalCaixa": 8944.76,
+        "lucroAtendimentosReal": 2818.08,
+        "lucroPossivel": 3143.62,
+        "totalAtendimentos": 53,
+        "lucroHomecare": 652,
+        "totalDespesas": 1090,
+        "totalSalariosFixos": 3000,
+        "totalGastosPessoais": 920,
+        "saudeFinanceira": -619.92,
+        "margemLucro": "31.51",
+        "resultadoFinal": -1539.92,
+        "resultadoComCustosFixos": -3279.92
+      },
+      "isFechado": false
+    }
+  },
+  "divergencias": [],
+  "erros": [],
+  "achados": [],
+  "auditoria_linhas": {
+    "ok": 141,
+    "erro": 0
+  }
+}

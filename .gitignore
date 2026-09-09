@@ -170,3 +170,8 @@ backup/
 # BINÁRIOS DE FERRAMENTAS DE TESTE (não versionar)
 # ============================================
 backend-node/scripts/k6
+
+# ============================================
+# PROMPTS & ARQUIVOS INTERNOS DE IA (não versionar)
+# ============================================
+prompt-*.md

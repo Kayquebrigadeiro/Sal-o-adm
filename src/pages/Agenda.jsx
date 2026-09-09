@@ -718,7 +718,8 @@ export default function Agenda({ salaoId, role }) {
         throw new Error(err.error || 'Erro na API ao atualizar pagamento');
       }
 
-      if (error) throw error;
+      // (resquício do Supabase `if (error) throw error` removido — `error` nunca
+      // existiu neste escopo e gerava ReferenceError mesmo em chamadas bem-sucedidas)
 
       // Atualiza o estado local para refletir na UI imediatamente
       setAgendamentoSelecionado(prev => ({ ...prev, valor_pago: novoValorPago }));

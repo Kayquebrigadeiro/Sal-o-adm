@@ -1,7 +1,9 @@
 import { useState, useEffect } from 'react';
-import { supabase } from '../supabaseClient';
+import api from '../services/api';
 import { useNavigate } from 'react-router-dom';
 
+// Migrado do Supabase para a API própria (TiDB) — mesma fonte de dados
+// de MeusSaloes.jsx: GET /salao (lista salões do vendedor logado).
 export default function VendedorDashboard({ userId }) {
   const [saloes, setSaloes] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -13,28 +15,16 @@ export default function VendedorDashboard({ userId }) {
 
   const carregar = async () => {
     setLoading(true);
-    
-    const { data: saloesData } = await supabase
-      .from('saloes')
-      .select('id, nome, ativo, criado_em')
-      .eq('vendedor_id', userId)
-      .order('criado_em', { ascending: false });
-
-    if (saloesData) {
-      // Buscar contagens para cada salão
-      const saloesComDados = await Promise.all(
-        saloesData.map(async (salao) => {
-          const [{ count: profCount }, { count: procCount }] = await Promise.all([
-            supabase.from('profissionais').select('*', { count: 'exact', head: true }).eq('salao_id', salao.id),
-            supabase.from('procedimentos').select('*', { count: 'exact', head: true }).eq('salao_id', salao.id),
-          ]);
-          return { ...salao, profCount: profCount || 0, procCount: procCount || 0 };
-        })
-      );
-      setSaloes(saloesComDados);
+    try {
+      const res = await api.get('/salao');
+      const data = res.ok ? await res.json() : [];
+      setSaloes(Array.isArray(data) ? data : []);
+    } catch (err) {
+      console.error('Erro ao carregar salões:', err);
+      setSaloes([]);
+    } finally {
+      setLoading(false);
     }
-    
-    setLoading(false);
   };
 
   if (loading) return <div className="p-8 text-gray-400">Carregando...</div>;
@@ -59,8 +49,7 @@ export default function VendedorDashboard({ userId }) {
             </div>
             
             <div className="space-y-2 text-sm text-gray-600 mb-4">
-              <p>{salao.profCount} profissional(is)</p>
-              <p>{salao.procCount} procedimento(s)</p>
+              {salao.telefone && <p>{salao.telefone}</p>}
               <p className="text-xs text-gray-400">
                 Criado em {new Date(salao.criado_em).toLocaleDateString('pt-BR')}
               </p>

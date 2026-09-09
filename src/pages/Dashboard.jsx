@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
-import { api } from '../services/api';
+import { api, getComRetry, criarPool } from '../services/api';
 import { useToast } from '../components/Toast';
 import ConfirmModal from '../components/ConfirmModal';
 import useDashboardProtection from '../hooks/useDashboardProtection';
@@ -156,10 +156,17 @@ export default function Dashboard({ salaoId }) {
     setLoading(true);
     try {
       const [ano, mes] = mesSelecionado.split('-');
-      
-      const fechPromises = meses.map(m => api.get(`/fechamento/${m}`).then(res => res.json()).catch(() => null));
-      const fechResultsRaw = await Promise.all(fechPromises);
-      
+
+      // Pool de concorrência 3 + retry: 12 meses em rajada derrubava o Render
+      // free com 429 (que sem CORS parecia "CORS Missing Allow Origin")
+      const fechResultsRaw = await criarPool(3)(
+        meses.map((m) => () =>
+          getComRetry(`/fechamento/${m}`)
+            .then((res) => (res.ok ? res.json() : null))
+            .catch(() => null)
+        )
+      );
+
       const fechamentoArr = fechResultsRaw.filter(Boolean).map(fData => ({
         mes: `${fData.mes}-01`,
         faturamento_bruto: fData.faturamentoBruto,
@@ -170,9 +177,9 @@ export default function Dashboard({ salaoId }) {
       })).reverse();
 
       const [rankRes, rendRes, custosFixosRes] = await Promise.all([
-        api.get(`/relatorios/ranking-procedimentos?mes=${ano}-${mes}`).then(res => res.json()),
-        api.get(`/relatorios/rendimento-professional?mes=${ano}-${mes}`).then(res => res.json()),
-        api.get('/cadastros/custos-fixos').then(res => res.json().catch(() => []))
+        getComRetry(`/relatorios/ranking-procedimentos?mes=${ano}-${mes}`).then(res => res.ok ? res.json() : null),
+        getComRetry(`/relatorios/rendimento-professional?mes=${ano}-${mes}`).then(res => res.ok ? res.json() : null),
+        getComRetry('/cadastros/custos-fixos').then(res => res.ok ? res.json().catch(() => []) : [])
       ]);
 
       setFechamento(fechamentoArr);
@@ -215,7 +222,7 @@ export default function Dashboard({ salaoId }) {
 
   const carregarHomecarePorMes = async () => {
     try {
-      const data = await api.get(`/relatorios/homecare-anual?ano=${anoHomecare}`).then(res => res.json());
+      const data = await getComRetry(`/relatorios/homecare-anual?ano=${anoHomecare}`).then(res => res.ok ? res.json() : []);
       const arr = Array.from({ length: 12 }, (_, i) => {
         const m = String(i + 1).padStart(2, '0');
         const mesStr = `${anoHomecare}-${m}`;

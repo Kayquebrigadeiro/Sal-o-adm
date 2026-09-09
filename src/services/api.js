@@ -56,4 +56,51 @@ export const api = {
   },
 };
 
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+
+// Status transitórios (Render free: cold start / rate limit / restart) que valem retry
+const STATUS_RETRIABLE = new Set([429, 502, 503, 504]);
+
+/**
+ * GET com retry exponencial em falhas de rede e status 429/5xx.
+ * Mitiga o "cold start" do Render free: as requisições seguintes ao
+ * primeiro request que acorda o servidor falhavam em cascata.
+ */
+export async function getComRetry(url, config = {}, { retries = 3, baseDelay = 1000 } = {}) {
+  for (let attempt = 0; ; attempt++) {
+    try {
+      const res = await api.get(url, config);
+      if (STATUS_RETRIABLE.has(res.status) && attempt < retries) {
+        await sleep(baseDelay * 2 ** attempt + Math.random() * 500);
+        continue;
+      }
+      return res;
+    } catch (err) {
+      if (attempt >= retries) throw err;
+      await sleep(baseDelay * 2 ** attempt + Math.random() * 500);
+    }
+  }
+}
+
+/**
+ * Executa um array de tarefas assíncronas com concorrência limitada
+ * (em vez de Promise.all em rajada), evitando estourar o rate limit.
+ * Ex.: const [a, b] = await criarPool(3)([() => f1(), () => f2()]);
+ */
+export function criarPool(concurrency = 3) {
+  return function pool(tasks) {
+    const results = new Array(tasks.length);
+    let next = 0;
+    async function worker() {
+      while (next < tasks.length) {
+        const idx = next++;
+        results[idx] = await tasks[idx]();
+      }
+    }
+    return Promise.all(
+      Array.from({ length: Math.max(1, Math.min(concurrency, tasks.length)) }, worker)
+    );
+  };
+}
+
 export default api;

@@ -17,12 +17,15 @@ const app = express();
 // Sentry (opcional via SENTRY_DSN) — init feito em src/instrument.js (expressIntegration)
 // O error handler do Sentry é registrado em `setupExpressErrorHandler` abaixo (antes do handler genérico).
 
-// Rate limiting geral (configurável via env, default 300 req/15min por IP)
+// Rate limiting geral (configurável via env, default 1000 req/15min por IP).
+// O Dashboard dispara ~15 requisições por visita; 300 derrubava a sessão em cascata.
 const generalLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
-  max: parseInt(process.env.RATE_LIMIT_MAX) || 300,
+  max: parseInt(process.env.RATE_LIMIT_MAX) || 1000,
   standardHeaders: true,
   legacyHeaders: false,
+  skip: (req) => req.method === 'OPTIONS', // preflight não consome cota
+  message: { error: 'Muitas requisições. Tente novamente em alguns minutos.' },
 });
 
 // Rate limit restrito para login (configurável via env, default 100 tentativas/15min por IP)
@@ -31,10 +34,9 @@ const loginLimiter = rateLimit({
   max: parseInt(process.env.LOGIN_RATE_LIMIT_MAX) || 100,
   standardHeaders: true,
   legacyHeaders: false,
+  skip: (req) => req.method === 'OPTIONS',
   message: { error: 'Muitas tentativas de login. Tente novamente em 15 minutos.' },
 });
-
-app.use(generalLimiter);
 
 // Headers de segurança (equivalente ao helmet, sem dependência extra)
 app.use((req, res, next) => {
@@ -47,6 +49,9 @@ app.use((req, res, next) => {
 });
 
 // CORS configuration for production
+// ⚠️ Deve vir ANTES do rate limiter: respostas 429/5xx do limiter também
+// precisam dos headers CORS, senão o navegador mascara o erro como
+// "CORS Missing Allow Origin" e o erro real (rate limit) fica invisível.
 const allowedOrigins = (process.env.ALLOWED_ORIGINS || 'http://localhost:5173').split(',').map(origin => origin.trim());
 app.use(cors({
   origin: function (origin, callback) {
@@ -59,6 +64,8 @@ app.use(cors({
   credentials: true
 }));
 app.use(express.json());
+
+app.use(generalLimiter);
 
 // Rate limit restrito apenas na rota de login
 app.use('/auth/login', loginLimiter);

@@ -1,12 +1,23 @@
-# Sal-o-adm — Gestão Financeira para Salões de Beleza
+# Salão Secreto — Gestão Financeira para Salões de Beleza
 
 > SaaS multi-tenant que mostra, atendimento por atendimento, quanto o salão realmente lucra.
 
-O **Sal-o-adm** substitui a planilha de controle do salão por um sistema que calcula o lucro
-de cada serviço no momento em que ele é lançado na agenda: desconta a taxa da maquininha, a
-comissão da profissional, o custo dos produtos usados e o custo fixo rateado por atendimento.
-No fim do mês, o fechamento mostra faturamento, receita recebida, pendências, despesas,
-retiradas e o resultado real do negócio.
+O **Salão Secreto** substitui a planilha de controle do salão por um sistema que calcula o lucro de cada serviço no momento em que ele é lançado na agenda: desconta a taxa da maquininha, a comissão da profissional, o custo dos produtos usados e o custo fixo rateado por atendimento. No fim do mês, o fechamento mostra faturamento, receita recebida, pendências, despesas, retiradas e o resultado real do negócio.
+
+---
+
+## 🔍 Demonstração ao vivo
+
+O sistema está em produção. Acesse e explore com o salão de demonstração:
+
+**URL:** [https://adm-salao.vercel.app](https://adm-salao.vercel.app)
+
+| Campo | Valor |
+|---|---|
+| E-mail | `beleza.real@teste.com` |
+| Senha | `BelezaReal123!` |
+
+> O salão demo possui 3 meses de dados reais simulados (145+ atendimentos, 4 profissionais com comissões diferentes, produtos vinculados, custos fixos, homecare, procedimentos paralelos e fechamentos auditados). Fique à vontade para explorar — é um ambiente de demonstração.
 
 ---
 
@@ -37,15 +48,15 @@ retiradas e o resultado real do negócio.
 
 ### Dashboard (fechamento mensal)
 - Faturamento bruto, receita recebida, pendências, lucro real e lucro possível.
-- Resultado do mês: lucro + homecare − despesas − gastos pessoais − salários fixos.
+- Resultado do mês: lucro dos atendimentos + homecare − despesas − gastos pessoais − salários fixos.
 - Ranking de procedimentos por lucro e rendimento por profissional.
-- **Fechamento mensal com snapshot** imutável: meses fechados não podem ser editados (guarda no backend).
+- **Fechamento mensal com snapshot imutável**: meses fechados não podem ser editados — protegido no backend com guard de 403.
 
 ### Precificação (motor de preços)
 - Custo variável por procedimento, estático ou **dinâmico via insumos** (produto × quantidade por uso).
 - Cadastro de **produtos** (preço de compra ÷ aplicações) e vínculo com procedimentos.
-- **Custos fixos mensais** (aluguel, água, energia, internet...) e **custo fixo rateado por atendimento**.
-- **Ganho líquido desejado** por procedimento com **engenharia reversa**: o sistema calcula o preço preciso para atingir o ganho alvo.
+- **Custos fixos mensais** (aluguel, água, energia, internet...) e custo fixo rateado por atendimento.
+- **Engenharia reversa de preço**: informe o ganho líquido desejado e o sistema calcula o preço exato para atingi-lo, descontando todos os custos e a taxa da maquininha.
 - Simulador "e se?" para testar preços e comissões antes de aplicar.
 
 ### Outros módulos
@@ -53,7 +64,7 @@ retiradas e o resultado real do negócio.
 - **Procedimentos paralelos**: eventos fora da agenda (noivas, formaturas) com repasse à profissional.
 - **Clientes**: cadastro com telefone e histórico.
 - **Configurações**: taxa de maquininha, custo fixo por atendimento, comissões da equipe, salários fixos, proteção do dashboard por PIN.
-- **Área do vendedor/admin**: criação e gestão das contas de salões (tenants) e assinaturas.
+- **Área do vendedor/admin**: criação e gestão das contas de salões (tenants).
 
 ---
 
@@ -61,11 +72,11 @@ retiradas e o resultado real do negócio.
 
 | Perfil | O que vê |
 |---|---|
-| **VENDEDOR (admin)** | Painel de todos os salões, criação de contas de proprietária, assinaturas. |
+| **VENDEDOR** | Painel de todos os salões, criação de contas de proprietária. |
 | **PROPRIETARIO** | Tudo do salão: agenda, dashboard, precificação, clientes, homecare, configurações. |
 | **FUNCIONARIO** | Apenas a própria agenda e seus atendimentos. |
 
-Todos os dados são isolados por `salao_id` (multi-tenant) em todas as queries do backend.
+Todos os dados são isolados por `salao_id` (multi-tenant) em todas as queries do backend. O `salao_id` é extraído do JWT no servidor — o frontend não consegue forjar o salão de outro tenant.
 
 ---
 
@@ -74,11 +85,11 @@ Todos os dados são isolados por `salao_id` (multi-tenant) em todas as queries d
 Para cada atendimento EXECUTADO, o motor financeiro (`financialEngine.service.js`) calcula:
 
 ```
-maquininha        = valor cobrado × taxa (%)
-comissão          = valor cobrado × % da profissional   (apenas FUNCIONARIO com comissão)
-custo variável    = soma dos insumos vinculados          (ou custo estático do procedimento)
-lucro líquido     = valor cobrado − maquininha − custo fixo/atend. − custo variável − comissão
-lucro possível    = valor cobrado − custo fixo/atend. − custo variável − comissão
+maquininha     = valor cobrado × taxa (%)
+comissão       = valor cobrado × % da profissional   (apenas FUNCIONARIO com comissão > 0)
+custo variável = soma dos insumos vinculados          (ou custo estático do procedimento)
+lucro líquido  = valor cobrado − maquininha − custo fixo/atend. − custo variável − comissão
+lucro possível = valor cobrado − custo fixo/atend. − custo variável − comissão
 ```
 
 O **fechamento do mês** consolida:
@@ -87,10 +98,9 @@ O **fechamento do mês** consolida:
 resultado = lucro dos atendimentos + lucro do homecare − despesas − gastos pessoais − salários fixos
 ```
 
-Cada mês é calculado de forma independente (não há arraste de saldo entre meses — decisão
-registrada no [roadmap](roadmap.md)). Todos os cálculos foram auditados com uma réplica
-independente do motor: **0 divergências em 3 meses de dados simulados** (141 atendimentos
-conferidos linha a linha).
+Cada mês é calculado de forma independente — não há arraste de saldo entre meses (decisão registrada no [roadmap](roadmap.md)).
+
+O motor foi auditado com uma réplica independente (fora do código do servidor) que recalcula tudo do zero e compara centavo a centavo com a API: **0 divergências em 141 atendimentos e 3 meses de fechamento** (auditoria de 08/09/2026).
 
 ---
 
@@ -98,11 +108,9 @@ conferidos linha a linha).
 
 **Frontend** — React 18 · Vite · Tailwind CSS · Recharts · React Router
 
-**Backend** — Node.js (Express) · MySQL/TiDB (mysql2) · JWT + bcrypt · rate limiting · cache (`node-cache`) · Sentry (monitoramento de erros)
+**Backend** — Node.js (Express) · MySQL/TiDB (mysql2) · JWT + bcrypt · rate limiting · cache (`node-cache`) · Sentry
 
 **Infra** — Frontend na Vercel · Backend no Render · Banco TiDB Cloud
-
-> O Supabase permanece apenas como dependência *legacy* da tela de Assinaturas e do painel do vendedor, em processo de desativação.
 
 ---
 
@@ -110,28 +118,28 @@ conferidos linha a linha).
 
 ```
 Sal-o-adm/
-├── src/                      # Frontend (React + Vite)
-│   ├── pages/                # Agenda, Dashboard, Precificacao, HomeCar, Paralelos...
-│   ├── components/           # Componentes reutilizáveis (Sidebar, modais, gráficos)
-│   ├── services/             # FinancialEngine.js (réplica do motor de cálculo) e API
-│   ├── hooks/                # Hooks customizados
-│   ├── constants/            # Constantes e enums
-│   └── vendedor/             # Telas do admin/vendedor (assinaturas)
+├── src/                        # Frontend (React + Vite)
+│   ├── pages/                  # Agenda, Dashboard, Precificacao, HomeCar, Paralelos...
+│   ├── components/             # Componentes reutilizáveis (Sidebar, modais, gráficos)
+│   ├── services/               # FinancialEngine.js (réplica do motor) e api.js
+│   ├── hooks/                  # Hooks customizados
+│   ├── constants/              # Constantes e enums
+│   └── vendedor/               # Telas do admin/vendedor
 │
-├── backend-node/             # Backend (Node.js + Express)
+├── backend-node/               # Backend (Node.js + Express)
 │   ├── src/
-│   │   ├── controllers/      # atendimentos, fechamento, CRUD, auth, relatórios
-│   │   ├── services/         # financialEngine.service.js (motor de cálculo)
-│   │   ├── routes/           # Rotas da API
-│   │   ├── middlewares/      # Auth (JWT), permissões por cargo
-│   │   └── config/           # Pool de conexão (TiDB/MySQL)
-│   ├── tests/                # Suíte de testes end-to-end da API
-│   ├── scripts/              # Simulações, auditorias e utilitários
-│   └── docs/                 # Documentação técnica do backend
+│   │   ├── controllers/        # atendimentos, fechamento, CRUD, auth, relatórios
+│   │   ├── services/           # financialEngine.service.js (motor de cálculo)
+│   │   ├── routes/             # Rotas da API
+│   │   ├── middlewares/        # Auth (JWT), permissões por cargo
+│   │   └── config/             # Pool de conexão (TiDB/MySQL)
+│   ├── tests/                  # Suíte de testes end-to-end da API
+│   ├── scripts/                # Simulações, auditorias e utilitários
+│   └── docs/                   # Documentação técnica do backend
 │
-├── docs/                     # Auditorias e documentação (multi-tenant, carga)
-├── scripts/                  # Utilitários de manutenção
-└── roadmap.md                # Pendências e decisões registradas
+├── docs/                       # Auditorias e documentação (multi-tenant, carga)
+├── scripts/                    # Utilitários de manutenção
+└── roadmap.md                  # Pendências e decisões registradas
 ```
 
 ---
@@ -158,7 +166,7 @@ cd backend-node && npm install
 ### Execução
 
 ```bash
-# 1. Backend (staging na porta 3334)
+# 1. Backend (porta 3334)
 cd backend-node
 npm run dev
 
@@ -176,9 +184,8 @@ Copie os `.env.example` para `.env` (raiz e `backend-node/`) e preencha as crede
 
 | Variável | Descrição |
 |---|---|
-| `VITE_API_URL` | URL da API do backend (**principal**) |
+| `VITE_API_URL` | URL da API do backend |
 | `VITE_DASHBOARD_PIN` | PIN de proteção do dashboard |
-| `VITE_SUPABASE_URL` / `VITE_SUPABASE_ANON_KEY` | Supabase (legacy — tela de assinaturas) |
 | `VITE_PIX_CHAVE` / `VITE_PIX_NOME` / `VITE_PIX_COPIA_COLA` | Dados de PIX exibidos no sistema |
 | `VITE_WHATSAPP_SUPORTE` | Contato de suporte |
 
@@ -205,23 +212,24 @@ Copie os `.env.example` para `.env` (raiz e `backend-node/`) e preencha as crede
 
 ## ✅ Testes e validação financeira
 
-O núcleo financeiro é tratado como o componente mais crítico do sistema e é validado por
-**contagem independente**: scripts que recriam o cálculo do zero (fora do código do servidor)
-e comparam centavo a centavo com o que a API retorna.
+O núcleo financeiro é tratado como o componente mais crítico do sistema e é validado por **contagem independente**: scripts que recriam o cálculo do zero (fora do código do servidor) e comparam centavo a centavo com o que a API retorna.
 
 ```bash
-# Suíte end-to-end da API (backend)
+# Suíte end-to-end da API
 cd backend-node
-node tests/run-full-tests.js
+bash tests/run-full-tests.sh                        # 57 testes funcionais
 
-# Simulação realista de 3 meses + auditoria financeira (salão demo)
-node scripts/simulacao_producao_realista.js                      # cria dados e audita
-node scripts/simulacao_producao_realista.js --somente-auditoria  # só auditoria
+# Simulação realista de 3 meses + auditoria financeira
+node scripts/simular_validacao_final.js             # cria dados e audita
+node scripts/testar_correcoes.js                    # 30 testes dos fixes críticos
+
+# Suíte completa (unitários + funcional + correções + carga)
+bash scripts/rodar_suite.sh
 ```
 
-Última auditoria (08/09/2026): **141 atendimentos conferidos linha a linha e fechamentos de
-3 meses com 0 divergências** — detalhes em
-[`docs/auditorias/SIMULACAO_REALISTA_PRODUCAO_2026-09-08.md`](docs/auditorias/SIMULACAO_REALISTA_PRODUCAO_2026-09-08.md).
+**Última auditoria (08/09/2026):** 141 atendimentos conferidos linha a linha, fechamentos de 3 meses com **0 divergências** em 33 campos — detalhes em [`docs/auditorias/`](docs/auditorias/).
+
+**Resultados de carga:** 0 erros em todas as fases (5→10→20→35→50 usuários simultâneos). Stress de escrita com 50 salões simultâneos: **100/100 fechamentos com sucesso, 0 divergências financeiras**.
 
 ---
 
@@ -237,15 +245,15 @@ node scripts/simulacao_producao_realista.js --somente-auditoria  # só auditoria
 
 ## 🗺️ Roadmap
 
-As pendências, limitações conhecidas e funcionalidades em avaliação (incluindo o possível
-**arraste de prejuízo/saldo acumulado entre meses**) estão registradas com contexto e
-proposta de implementação no [`roadmap.md`](roadmap.md).
+Pendências, limitações conhecidas e funcionalidades em avaliação estão registradas com contexto e proposta de implementação no [`roadmap.md`](roadmap.md). Destaques:
+
+- Arraste de prejuízo/saldo acumulado entre meses (em avaliação)
+- Refresh token para sessões longas
+- Gateway de pagamento real (Stripe / Mercado Pago)
+- Serialização das requisições paralelas do Dashboard para evitar 429 no Render free tier
 
 ---
 
 ## 📝 Licença
 
 Software de uso privado. Todos os direitos reservados para **Kayque Brigadeiro**.
-
-
-

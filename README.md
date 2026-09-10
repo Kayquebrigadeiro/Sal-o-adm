@@ -17,7 +17,11 @@ O sistema está em produção. Acesse e explore com o salão de demonstração:
 | E-mail | `beleza.real@teste.com` |
 | Senha | `BelezaReal123!` |
 
-> O salão demo possui 3 meses de dados reais simulados (145+ atendimentos, 4 profissionais com comissões diferentes, produtos vinculados, custos fixos, homecare, procedimentos paralelos e fechamentos auditados). Fique à vontade para explorar — é um ambiente de demonstração.
+> O salão demo (**Salão Beleza Real**) contém 3 meses de dados simulados e auditados: **159 atendimentos** (jul/ago/set/2026), 4 profissionais com comissões diferentes, procedimentos precificados com produtos vinculados, custos fixos, despesas, homecare, gastos pessoais e procedimentos paralelos. O Dashboard abre **sem PIN**. Fique à vontade para explorar e editar — é um ambiente de demonstração.
+
+> ℹ️ Cada login fica vinculado a **um único salão** (isolamento multi-tenant por `salao_id` no JWT). O mesmo login em qualquer navegador, dispositivo ou aba anônima mostra sempre o mesmo salão — os dados vivem no banco, não no navegador.
+
+> ⚠️ Na infraestrutura gratuita, o backend "dorme" após ~15 min sem uso: o **primeiro acesso pode levar de 30 a 60 s** e alguma tela pode abrir vazia. Aguarde alguns segundos e recarregue — os dados estão salvos no banco.
 
 ---
 

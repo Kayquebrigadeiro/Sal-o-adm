@@ -175,3 +175,6 @@ backend-node/scripts/k6
 # PROMPTS & ARQUIVOS INTERNOS DE IA (não versionar)
 # ============================================
 prompt-*.md
+
+# Backups de dados gerados por scripts (nunca commitar)
+backend-node/docs/backup-salao-teste-*.json

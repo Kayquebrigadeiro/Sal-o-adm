@@ -14,7 +14,7 @@ export default defineConfig({
 
   optimizeDeps: {
     // Pré-otimize dependências pesadas
-    include: ['react', 'react-dom', 'react-router-dom', '@supabase/supabase-js']
+    include: ['react', 'react-dom', 'react-router-dom']
   },
 
   build: {
@@ -25,8 +25,7 @@ export default defineConfig({
       output: {
         // Chunk splitting para melhor cache
         manualChunks: {
-          'vendor': ['react', 'react-dom', 'react-router-dom'],
-          'supabase': ['@supabase/supabase-js']
+          'vendor': ['react', 'react-dom', 'react-router-dom']
         }
       }
     }

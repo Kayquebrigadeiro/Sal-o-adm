@@ -3,7 +3,7 @@
 // ============================================================================
 //  Fonte: "NOVA PLANILHA DE SALAO 20233 - Copia.xlsm", aba VALORES
 //  Todas as constantes aqui são DEFAULTS que podem ser sobrescritas
-//  pela configuração do salão no Supabase (tabela `configuracoes`).
+//  pela configuração do salão na API (tabela `configuracoes`).
 // ============================================================================
 
 /**

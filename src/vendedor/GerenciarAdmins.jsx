@@ -33,7 +33,7 @@ export default function GerenciarAdmins() {
 
   const criarAdmin = async (e) => {
     e.preventDefault();
-    if (form.senha.length < 6) { showToast('SENHA DEVE TER PELO MENOS 6 CARACTERES', 'error'); return; }
+    if (form.senha.length < 8) { showToast('SENHA DEVE TER PELO MENOS 8 CARACTERES', 'error'); return; }
     setSalvando(true);
 
     const vendedor_id = localStorage.getItem('userId');
@@ -170,7 +170,7 @@ export default function GerenciarAdmins() {
                   type="text" required value={form.senha}
                   onChange={e => setForm({...form, senha: e.target.value})}
                   className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-800 focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 outline-none"
-                  placeholder="Mínimo 6 caracteres"
+                  placeholder="Mínimo 8 caracteres"
                 />
                 <p className="text-xs text-gray-400 mt-1">
                   Mostrado em texto para você anotar e entregar.

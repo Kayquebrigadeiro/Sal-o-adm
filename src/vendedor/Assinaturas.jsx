@@ -28,118 +28,19 @@ export default function Assinaturas() {
   }, []);
 
   const carregarAssinaturas = async () => {
-    // DESATIVADO TEMPORARIAMENTE — aviso explícito na tela, sem erro silencioso.
+    // Módulo desativado temporariamente — aviso explícito na tela, sem erro silencioso.
+    // Quando reativar, reimplementar a listagem via API própria (GET em endpoint
+    // de assinaturas do backend-node), não via Supabase (removido do projeto).
     setModuloDesativado(true);
     setCarregando(false);
-    return;
-
-    /* DESATIVADO TEMPORARIAMENTE (código original mantido para reativação futura.
-       Ao reativar, lembrar de adicionar: import { supabase } from '../supabaseClient';
-       — antes o supabase era usado sem import, o que gerava
-       "ReferenceError: supabase is not defined" exibido como toast. */
-    setCarregando(true);
-    try {
-      const userId = localStorage.getItem('userId');
-
-      const { data, error } = await supabase
-        .from('saloes')
-        .select(`
-          id, nome, ativo,
-          assinaturas (
-            id, status, proximo_vencimento,
-            planos ( valor_mensal )
-          )
-        `)
-        .eq('vendedor_id', userId)
-        .order('nome');
-
-      if (error) throw error;
-
-      // Calcular dias restantes no frontend para exibição rápida
-      const hoje = new Date();
-      hoje.setHours(0, 0, 0, 0);
-
-      const formatado = data.map(s => {
-        // Como 'assinaturas' é uma relação 1:1, a query retorna array com 1 item ou objeto.
-        const ass = Array.isArray(s.assinaturas) ? s.assinaturas[0] : s.assinaturas;
-        let dias = 0;
-        if (ass?.proximo_vencimento) {
-          const venc = new Date(ass.proximo_vencimento + 'T00:00:00');
-          dias = Math.ceil((venc - hoje) / (1000 * 60 * 60 * 24));
-        }
-
-        return {
-          ...s,
-          assinatura: ass || null,
-          diasRestantes: dias
-        };
-      });
-
-      setSaloes(formatado);
-    } catch (err) {
-      showToast(err.message, 'error');
-    } finally {
-      setCarregando(false);
-    }
   };
 
   const handleRenovar = async (e) => {
     e.preventDefault();
     if (moduloDesativado) return;
-    if (!salaoSelecionado) return;
-    setSalvando(true);
-
-    try {
-      const userId = localStorage.getItem('userId');
-      const ass = salaoSelecionado.assinatura;
-
-      // 1. Calcular novas datas
-      const dataVencimentoAtual = new Date(ass.proximo_vencimento + 'T00:00:00');
-      const hoje = new Date();
-      hoje.setHours(0, 0, 0, 0);
-
-      // Se vencido, renova a partir de hoje. Se ainda ativo, soma 30 dias na data atual.
-      const dataBase = dataVencimentoAtual < hoje ? hoje : dataVencimentoAtual;
-      
-      const novaDataFim = new Date(dataBase);
-      novaDataFim.setDate(novaDataFim.getDate() + 30);
-      const strDataFim = novaDataFim.toISOString().split('T')[0];
-
-      // 2. Inserir em pagamentos_assinatura
-      const { error: pgError } = await supabase
-        .from('pagamentos_assinatura')
-        .insert({
-          salao_id: salaoSelecionado.id,
-          assinatura_id: ass.id,
-          valor: renovacaoForm.valor,
-          metodo: renovacaoForm.forma_pagamento,
-          pago: true,
-          pago_em: new Date().toISOString(),
-          referencia_mes: strDataFim
-        });
-
-      if (pgError) throw pgError;
-
-      // 3. Atualizar assinatura
-      const { error: assError } = await supabase
-        .from('assinaturas')
-        .update({
-          status: 'ATIVA',
-          proximo_vencimento: strDataFim
-        })
-        .eq('id', ass.id);
-
-      if (assError) throw assError;
-
-      showToast('Assinatura renovada com sucesso!', 'success');
-      setModalAberto(false);
-      carregarAssinaturas();
-
-    } catch (err) {
-      showToast(err.message, 'error');
-    } finally {
-      setSalvando(false);
-    }
+    // Renovação desativada junto com o módulo. Quando reativar, chamar a API
+    // própria (backend-node) para registrar o pagamento e estender o vencimento.
+    showToast('Módulo de assinaturas desativado temporariamente.', 'error');
   };
 
   const abrirModal = (salao) => {

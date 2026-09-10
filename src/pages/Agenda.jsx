@@ -21,7 +21,7 @@ const PROF_COLORS = [
 export default function Agenda({ salaoId, role }) {
   const { showToast } = useToast();
 
-  // ─── Dados do Supabase ───
+  // ─── Dados da API (backend-node) ───
   const [profissionais, setProfissionais] = useState([]);
   const [procedimentos, setProcedimentos] = useState([]);
   const [agendamentos, setAgendamentos] = useState([]);

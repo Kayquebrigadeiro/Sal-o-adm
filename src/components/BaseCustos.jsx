@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import api from '../services/api';
+import { parseApiError } from '../services/api';
 import { useToast } from './Toast';
 import { Plus, Trash2, Home, Zap, Droplets, Wifi, ShoppingBag, Wrench } from 'lucide-react';
 
@@ -28,7 +29,7 @@ export default function BaseCustos({ salaoId, qtdAtendimentos, onCustoFixoChange
       setItens(itensOrdenados);
       recalcularRateio(itensOrdenados);
     } catch (error) {
-      showToast('Erro ao carregar base de custos: ' + (error.response?.data?.message || error.message), 'error');
+      showToast(parseApiError(error, 'Erro ao carregar custos fixos'), 'error');
     } finally {
       setLoading(false);
     }
@@ -46,7 +47,7 @@ export default function BaseCustos({ salaoId, qtdAtendimentos, onCustoFixoChange
       await api.post('/cadastros/custos-fixos', { salao_id: salaoId, descricao: '', tipo: 'OUTRO', valor: 0, valor_mensal: 0, ativo: true });
       carregar();
     } catch (error) {
-      showToast('Erro ao adicionar: ' + (error.response?.data?.message || error.message), 'error');
+      showToast(parseApiError(error, 'Erro ao adicionar custo'), 'error');
     }
   };
 
@@ -71,7 +72,7 @@ export default function BaseCustos({ salaoId, qtdAtendimentos, onCustoFixoChange
       carregar();
       showToast('Removido', 'success');
     } catch (error) {
-      showToast('Erro ao remover: ' + (error.response?.data?.message || error.message), 'error');
+      showToast(parseApiError(error, 'Erro ao remover custo'), 'error');
     }
   };
 

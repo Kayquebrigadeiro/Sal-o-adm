@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useToast } from '../components/Toast';
-import { api } from '../services/api';
+import { api, parseApiError } from '../services/api';
 import { FinancialEngine } from '../services/FinancialEngine';
 import { User, X, CheckCircle2, AlertTriangle, UserPlus, ChevronLeft, ChevronRight, Loader2, Sparkles, Search, Phone, Plus, Eye, EyeOff, Trash2, Package, Pencil, HelpCircle, Settings } from 'lucide-react';
 import Tooltip from '../components/Tooltip';
@@ -323,7 +323,7 @@ export default function Agenda({ salaoId, role }) {
       setShowSugestoes(false);
       showToast(`✅ ${data.nome} CADASTRADA!`, 'success');
     } catch (err) {
-      showToast(`ERRO: ${err.message}`, 'error');
+      showToast(parseApiError(err, 'Erro ao cadastrar cliente'), 'error');
     } finally {
       setSalvandoCliente(false);
     }
@@ -431,7 +431,7 @@ export default function Agenda({ salaoId, role }) {
       const profData = await api.get('/cadastros/profissionais').then(r => r.json());
       setProfissionais(profData || []);
     } catch (err) {
-      showToast('ERRO: ' + err.message, 'error');
+      showToast(parseApiError(err, 'Erro ao adicionar profissional'), 'error');
     } finally {
       setSalvandoProf(false);
     }
@@ -577,7 +577,7 @@ export default function Agenda({ salaoId, role }) {
       setModalAberto(false);
       carregarAtendimentos();
     } catch (err) {
-      showToast(`ERRO: ${err.message}`, 'error');
+      showToast(parseApiError(err, 'Erro ao salvar atendimento'), 'error');
     } finally {
       setSalvando(false);
     }
@@ -677,7 +677,7 @@ export default function Agenda({ salaoId, role }) {
       setModalDetalhesAberto(false);
       carregarAtendimentos();
     } catch (err) {
-      showToast('ERRO: ' + err.message, 'error');
+      showToast(parseApiError(err, 'Erro ao atualizar serviços'), 'error');
     } finally {
       setSalvandoEdicao(false);
     }
@@ -726,7 +726,7 @@ export default function Agenda({ salaoId, role }) {
       showToast(novoValorPago > 0 ? 'ATENDIMENTO MARCADO COMO PAGO!' : 'ATENDIMENTO MARCADO COMO NÃO PAGO.', 'success');
       carregarAtendimentos(); // Recarrega a grade
     } catch (err) {
-      showToast(`ERRO AO ALTERAR PAGAMENTO: ${err.message}`, 'error');
+      showToast(parseApiError(err, 'Erro ao alterar pagamento'), 'error');
     } finally {
       setAlterandoPagamento(false);
     }
@@ -755,7 +755,7 @@ export default function Agenda({ salaoId, role }) {
       setModalDetalhesAberto(false);
       carregarAtendimentos();
     } catch (err) {
-      showToast(`ERRO: ${err.message}`, 'error');
+      showToast(parseApiError(err, 'Erro ao cancelar atendimento'), 'error');
     } finally {
       setCancelando(false);
     }
@@ -775,7 +775,7 @@ export default function Agenda({ salaoId, role }) {
       setModalDetalhesAberto(false);
       carregarAtendimentos();
     } catch (err) {
-      showToast(`ERRO: ${err.message}`, 'error');
+      showToast(parseApiError(err, 'Erro ao finalizar atendimento'), 'error');
     } finally {
       setCancelando(false);
     }
@@ -848,7 +848,7 @@ export default function Agenda({ salaoId, role }) {
       setDragOver(null);
       carregarAtendimentos();
     } catch (err) {
-      showToast(`ERRO AO MOVER: ${err.message}`, 'error');
+      showToast(parseApiError(err, 'Erro ao mover agendamento'), 'error');
     }
   };
   const getAgendamento = (hora, profId) => {
@@ -955,7 +955,7 @@ export default function Agenda({ salaoId, role }) {
                 const profData = await api.get('/cadastros/profissionais').then(r => r.json());
                 setProfissionais(profData || []);
               } catch (err) {
-                showToast('ERRO: ' + err.message, 'error');
+                showToast(parseApiError(err, 'Erro ao adicionar profissional'), 'error');
               }
             }}
             className="flex-shrink-0 px-4 py-2.5 bg-blue-100 text-blue-800 border border-blue-300 rounded-xl font-bold text-sm hover:bg-blue-200 transition-all shadow-sm uppercase"
@@ -991,7 +991,7 @@ export default function Agenda({ salaoId, role }) {
                     showToast(`${nome} ADICIONADA À AGENDA! 👑`, 'success');
                     const profData = await api.get('/cadastros/profissionais').then(r => r.json());
                     setProfissionais(profData || []);
-                  } catch (err) { showToast('ERRO: ' + err.message, 'error'); }
+                  } catch (err) { showToast(parseApiError(err, 'Erro ao adicionar profissional'), 'error'); }
                 }}
                 className="px-6 py-3 bg-blue-100 text-blue-800 border border-blue-300 rounded-xl font-bold text-sm hover:bg-blue-200 transition-all shadow-sm uppercase"
               >

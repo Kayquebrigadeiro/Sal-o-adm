@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { api } from '../services/api';
+import { api, parseApiError } from '../services/api';
 import { useToast } from '../components/Toast';
 import ConfirmModal from '../components/ConfirmModal';
 
@@ -42,7 +42,7 @@ export default function GerenciarAdmins() {
     setSalvando(false);
     if (!res.ok) {
       const err = await res.json().catch(() => ({}));
-      showToast('ERRO: ' + (err.error || res.status), 'error');
+      showToast(parseApiError(err, 'Erro ao criar admin'), 'error');
       return;
     }
 
@@ -56,8 +56,7 @@ export default function GerenciarAdmins() {
     const res = await api.delete(`/admin/${id}`);
     if (!res.ok) {
       const err = await res.json().catch(() => ({}));
-      showToast('ERRO: ' + (err.error || res.status), 'error');
-      setLoading(false);
+      showToast(parseApiError(err, 'Erro ao remover admin'), 'error');
       return;
     }
     showToast('ADMIN REMOVIDO', 'success');

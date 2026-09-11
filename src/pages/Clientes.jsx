@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { api } from '../services/api';
+import { api, parseApiError } from '../services/api';
 import { useToast } from '../components/Toast';
 import Modal from '../components/Modal';
 import { Plus, Search, Phone, MessageCircle, Calendar, History, User, FileText, UserPlus } from 'lucide-react';
@@ -57,7 +57,7 @@ export default function Clientes({ salaoId }) {
       setModalAberto(false);
       carregarClientes();
     } catch (err) {
-      showToast(err.message || 'Erro ao salvar cliente', 'error');
+      showToast(parseApiError(err, 'Erro ao salvar cliente'), 'error');
     }
   };
 

@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import api from '../services/api';
+import { parseApiError } from '../services/api';
 import { useNavigate } from 'react-router-dom';
 
 // Gera senha segura aleatória (10 chars: letras + números)
@@ -41,8 +42,7 @@ export default function NovoSalao({ userId }) {
       });
       setEtapa(4);
     } catch (err) {
-      const msg = err.response?.data?.error || err.message || 'Erro desconhecido';
-      alert('Erro ao criar salão: ' + msg);
+      alert('Erro ao criar salão: ' + parseApiError(err, 'Erro ao criar salão'));
     } finally {
       setCarregando(false);
     }

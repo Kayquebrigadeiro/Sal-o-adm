@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { api } from '../services/api';
+import { api, parseApiError } from '../services/api';
 import { useToast } from '../components/Toast';
 import PageHeader from '../components/PageHeader';
 import Modal from '../components/Modal';
@@ -142,7 +142,7 @@ export default function Paralelos({ salaoId }) {
       setModalAberto(false);
       carregarDados();
     } catch (error) {
-      showToast(error.message || 'Erro ao salvar', 'error');
+      showToast(parseApiError(error, 'Erro ao salvar'), 'error');
     }
   };
 
@@ -156,7 +156,7 @@ export default function Paralelos({ salaoId }) {
       showToast('Deletado', 'success');
       carregarDados();
     } catch (error) {
-      showToast(error.message || 'Erro ao deletar', 'error');
+      showToast(parseApiError(error, 'Erro ao deletar'), 'error');
     }
   };
 

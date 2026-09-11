@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { api } from '../services/api';
+import { api, parseApiError, ApiError } from '../services/api';
 import { useToast } from '../components/Toast';
 import Modal from '../components/Modal';
 import ConfirmModal from '../components/ConfirmModal';
@@ -41,10 +41,10 @@ const TableRow = ({ proc, config, custoMaterial, isExpanded, onToggleExpand, sal
         try {
           const numValue = Number(value) || 0;
           const response = await api.put(`/cadastros/procedimentos/${proc.id}`, { [field]: numValue });
-          if (!response.ok) throw new Error('save');
+          if (!response.ok) throw await ApiError.fromResponse(response, 'Erro ao salvar');
           carregar(); // Recarrega os dados para garantir consistência
         } catch (err) {
-          showToast('ERRO AO SALVAR ' + field, 'error');
+          showToast(parseApiError(err, `Erro ao salvar ${field}`), 'error');
         }
       }, 800),
     [proc.id, salaoId, showToast, carregar]
@@ -64,9 +64,10 @@ const TableRow = ({ proc, config, custoMaterial, isExpanded, onToggleExpand, sal
   const handleUpdate = async (field, value) => {
     try {
       const numValue = Number(value) || 0;
-      await api.put(`/cadastros/procedimentos/${proc.id}`, { [field]: numValue });
+      const response = await api.put(`/cadastros/procedimentos/${proc.id}`, { [field]: numValue });
+      if (!response.ok) throw await ApiError.fromResponse(response, 'Erro ao salvar');
     } catch (err) {
-      showToast('ERRO AO SALVAR ' + field, 'error');
+      showToast(parseApiError(err, `Erro ao salvar ${field}`), 'error');
     }
   };
 
@@ -82,10 +83,10 @@ const TableRow = ({ proc, config, custoMaterial, isExpanded, onToggleExpand, sal
 
     try {
       const response = await api.put(`/cadastros/procedimentos/${proc.id}`, { ganho_liquido_desejado: numGanho });
-      if (!response.ok) throw new Error('save');
+      if (!response.ok) throw await ApiError.fromResponse(response, 'Erro ao salvar ganho');
       showToast('✓ Ganho salvo', 'success');
     } catch (err) {
-      showToast('ERRO AO SALVAR GANHO', 'error');
+      showToast(parseApiError(err, 'Erro ao salvar ganho'), 'error');
     }
   };
 
@@ -102,10 +103,10 @@ const TableRow = ({ proc, config, custoMaterial, isExpanded, onToggleExpand, sal
 
     try {
       const response = await api.put(`/cadastros/procedimentos/${proc.id}`, { preco_p: novoP, preco_m: novoM, preco_g: novoG });
-      if (!response.ok) throw new Error('save');
+      if (!response.ok) throw await ApiError.fromResponse(response, 'Erro ao recalcular preços');
       showToast(`✓ P: ${fmt(novoP)} | M: ${fmt(novoM)} | G: ${fmt(novoG)}`, 'success');
     } catch (err) {
-      showToast('ERRO AO RECALCULAR', 'error');
+      showToast(parseApiError(err, 'Erro ao recalcular preços'), 'error');
     }
   };
 
@@ -341,7 +342,7 @@ export default function Precificacao({ salaoId }) {
       setModalProc(false);
       carregar();
     } catch (err) {
-      showToast('ERRO: ' + err.message, 'error');
+      showToast(parseApiError(err, 'Erro ao salvar procedimento'), 'error');
     }
   };
 

@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
-import { api, getComRetry, criarPool } from '../services/api';
+import { api, getComRetry, criarPool, parseApiError } from '../services/api';
 import { useToast } from '../components/Toast';
 import ConfirmModal from '../components/ConfirmModal';
 import useDashboardProtection from '../hooks/useDashboardProtection';
@@ -768,7 +768,7 @@ export default function Dashboard({ salaoId }) {
                         showToast(`MÊS DE ${mesLabel.toUpperCase()} FECHADO COM SUCESSO!`, 'success');
                       } catch (err) {
                         console.error('Erro ao fechar mês:', err);
-                        showToast(err.message, 'error');
+                        showToast(parseApiError(err, 'Erro ao fechar mês'), 'error');
                       } finally {
                         setSalvandoFechamento(false);
                       }

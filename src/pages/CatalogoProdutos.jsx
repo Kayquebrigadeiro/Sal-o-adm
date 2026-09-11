@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import api from '../services/api';
+import { parseApiError } from '../services/api';
 import { useToast } from '../components/Toast';
 import Modal from '../components/Modal';
 import ConfirmModal from '../components/ConfirmModal';
@@ -67,7 +68,7 @@ export default function CatalogoProdutos({ salaoId, onChange }) {
       await carregar();
       if (onChange) onChange();
     } catch (error) {
-      showToast('ERRO: ' + (error.response?.data?.error || error.message), 'error');
+      showToast(parseApiError(error, 'Erro ao salvar produto'), 'error');
     }
   };
 
@@ -78,7 +79,7 @@ export default function CatalogoProdutos({ salaoId, onChange }) {
       await carregar();
       if (onChange) onChange();
     } catch (error) {
-      showToast('ERRO AO REMOVER: ' + (error.response?.data?.error || error.message), 'error');
+      showToast(parseApiError(error, 'Erro ao remover produto'), 'error');
     }
   };
 

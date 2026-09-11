@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import api from '../services/api';
+import { parseApiError } from '../services/api';
 import { useToast } from './Toast';
 import ConfirmModal from './ConfirmModal';
 import { Plus, Trash2, Loader2, Package } from 'lucide-react';
@@ -58,7 +59,7 @@ export default function ProdutosRelacionados({ salaoId, servicoId, onUpdate }) {
       await carregar();
       if (onUpdate) onUpdate(); // Atualiza a tabela principal
     } catch (err) {
-      showToast('ERRO AO VINCULAR PRODUTO: ' + (err.response?.data?.error || err.message), 'error');
+      showToast(parseApiError(err, 'Erro ao vincular produto'), 'error');
     } finally {
       setSalvando(false);
     }

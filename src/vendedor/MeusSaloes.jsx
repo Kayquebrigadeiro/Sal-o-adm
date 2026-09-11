@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import api from '../services/api';
+import { parseApiError } from '../services/api';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useToast } from '../components/Toast';
 import ConfirmModal from '../components/ConfirmModal';
@@ -34,7 +35,7 @@ export default function MeusSaloes({ userId }) {
       showToast('SALÃO DELETADO', 'success');
       carregar();
     } catch (err) {
-      showToast('ERRO AO DELETAR: ' + (err.response?.data?.error || err.message), 'error');
+      showToast(parseApiError(err, 'Erro ao deletar salão'), 'error');
       setLoading(false);
     }
   };

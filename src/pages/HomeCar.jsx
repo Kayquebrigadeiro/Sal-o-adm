@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo, useRef } from 'react';
-import { api } from '../services/api';
+import { api, parseApiError } from '../services/api';
 import { useToast } from '../components/Toast';
 import { FinancialEngine } from '../services/FinancialEngine';
 import PageHeader from '../components/PageHeader';
@@ -145,7 +145,7 @@ export default function HomeCar({ salaoId }) {
       setShowSugestoes(false);
       showToast(`✅ CLIENTE ${data.nome} CADASTRADA!`, 'success');
     } catch (err) {
-      showToast(`ERRO: ${err.message}`, 'error');
+      showToast(parseApiError(err, 'Erro ao cadastrar cliente'), 'error');
     } finally {
       setSalvandoCliente(false);
     }
@@ -221,7 +221,7 @@ export default function HomeCar({ salaoId }) {
       setModalAberto(false);
       carregarVendas();
     } catch (error) {
-      showToast(error.message || 'ERRO AO SALVAR VENDA', 'error');
+      showToast(parseApiError(error, 'Erro ao salvar venda'), 'error');
     }
   };
 
@@ -235,7 +235,7 @@ export default function HomeCar({ salaoId }) {
       showToast('VENDA DELETADA', 'success');
       carregarVendas();
     } catch (error) {
-      showToast(error.message || 'ERRO AO DELETAR', 'error');
+      showToast(parseApiError(error, 'Erro ao deletar venda'), 'error');
     }
   };
 

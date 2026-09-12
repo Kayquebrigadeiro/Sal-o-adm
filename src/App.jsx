@@ -13,6 +13,8 @@ import Configuracoes from './pages/Configuracoes';
 
 import VendedorApp from './vendedor/VendedorApp';
 import BannerOffline from './components/BannerOffline';
+import IndicadorConectando from './components/IndicadorConectando';
+import { iniciarAquecimentoBackend } from './services/api';
 // DESATIVADO TEMPORARIAMENTE
 // import TelaAssinaturaVencida from './pages/TelaAssinaturaVencida';
 // import BannerRenovacao from './components/BannerRenovacao';
@@ -61,6 +63,11 @@ export default function App() {
     };
   }, []);
 
+  // ─── Aquecimento do backend (Render free adormece após ~15 min sem uso) ───
+  // Acorda o servidor na abertura do app e mantém acordado enquanto a aba
+  // estiver visível, para o login/primeiro uso não ficar pendente 20-60s.
+  useEffect(() => iniciarAquecimentoBackend(), []);
+
   // Ecrã de Erro Crítico
   if (erroCritico) {
     return (
@@ -94,7 +101,12 @@ export default function App() {
   }
 
   if (!sessao || !perfil) {
-    return <Login />;
+    return (
+      <>
+        <IndicadorConectando />
+        <Login />
+      </>
+    );
   }
 
   const salaoId = perfil?.salao_id;
@@ -107,6 +119,7 @@ export default function App() {
     return (
       <BrowserRouter>
         <BannerOffline />
+        <IndicadorConectando />
         <VendedorApp email={email} userId={sessao.user.id} />
       </BrowserRouter>
     );
@@ -134,6 +147,7 @@ export default function App() {
   return (
     <BrowserRouter>
       <BannerOffline />
+      <IndicadorConectando />
       {/* DESATIVADO TEMPORARIAMENTE
       {role === 'PROPRIETARIO' && assinatura && assinatura.tem_acesso && (
         <BannerRenovacao diasRestantes={assinatura.dias_restantes} />

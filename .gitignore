@@ -178,3 +178,10 @@ prompt-*.md
 
 # Backups de dados gerados por scripts (nunca commitar)
 backend-node/docs/backup-salao-teste-*.json
+
+# Playwright
+/test-results/
+/playwright-report/
+/blob-report/
+/playwright/.cache/
+/playwright/.auth/

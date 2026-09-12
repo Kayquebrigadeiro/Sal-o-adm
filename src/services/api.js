@@ -11,38 +11,43 @@ async function fetchWithAuth(url, options = {}) {
     headers['Authorization'] = `Bearer ${token}`;
   }
 
-  let response;
+  const idRequisicao = registrarRequisicao();
   try {
-    response = await fetch(`${VITE_API_URL}${url}`, {
-      ...options,
-      headers,
-    });
-  } catch (err) {
-    // Falha ANTES da resposta (rede, DNS, abort). O fetch já lançava TypeError aqui
-    // antes (Chrome "Failed to fetch", Safari "Load failed", Firefox "NetworkError…"),
-    // então o fluxo de exceção não muda — só a mensagem que chega ao catch do
-    // componente, que agora é amigável e é retornada por parseApiError direto.
-    const ehAbort = err?.name === 'AbortError' || err?.name === 'TimeoutError';
-    throw ehAbort
-      ? new ApiError('Requisição abortada', { code: 'timeout', userMessage: 'O servidor demorou para responder. Tente novamente.' })
-      : new ApiError('Sem conexão com o servidor', { code: 'network_error', userMessage: 'Sem conexão com o servidor. Verifique sua internet.' });
-  }
-
-  if (response.status === 401 && !url.includes('/auth/login')) {
-    // Sessão inválida/expirada: limpa o storage e volta ao login.
-    // (Sem isso o app ficava em estado "zumbi": token apagado, mas usuário
-    // ainda navegando — e toda requisição seguinte virava 401 "Token not provided".)
+    let response;
     try {
-      localStorage.removeItem('authToken');
-      localStorage.removeItem('userEmail');
-      localStorage.removeItem('userRole');
-      localStorage.removeItem('salaoId');
-      localStorage.removeItem('userId');
-    } catch (e) { /* ignore */ }
-    window.location.replace('/');
-  }
+      response = await fetch(`${VITE_API_URL}${url}`, {
+        ...options,
+        headers,
+      });
+    } catch (err) {
+      // Falha ANTES da resposta (rede, DNS, abort). O fetch já lançava TypeError aqui
+      // antes (Chrome "Failed to fetch", Safari "Load failed", Firefox "NetworkError…"),
+      // então o fluxo de exceção não muda — só a mensagem que chega ao catch do
+      // componente, que agora é amigável e é retornada por parseApiError direto.
+      const ehAbort = err?.name === 'AbortError' || err?.name === 'TimeoutError';
+      throw ehAbort
+        ? new ApiError('Requisição abortada', { code: 'timeout', userMessage: 'O servidor demorou para responder. Tente novamente.' })
+        : new ApiError('Sem conexão com o servidor', { code: 'network_error', userMessage: 'Sem conexão com o servidor. Verifique sua internet.' });
+    }
 
-  return response;
+    if (response.status === 401 && !url.includes('/auth/login')) {
+      // Sessão inválida/expirada: limpa o storage e volta ao login.
+      // (Sem isso o app ficava em estado "zumbi": token apagado, mas usuário
+      // ainda navegando — e toda requisição seguinte virava 401 "Token not provided".)
+      try {
+        localStorage.removeItem('authToken');
+        localStorage.removeItem('userEmail');
+        localStorage.removeItem('userRole');
+        localStorage.removeItem('salaoId');
+        localStorage.removeItem('userId');
+      } catch (e) { /* ignore */ }
+      window.location.replace('/');
+    }
+
+    return response;
+  } finally {
+    concluirRequisicao(idRequisicao);
+  }
 }
 
 export const api = {
@@ -113,6 +118,105 @@ export function criarPool(concurrency = 3) {
       Array.from({ length: Math.max(1, Math.min(concurrency, tasks.length)) }, worker)
     );
   };
+}
+
+/**
+ * Aquecimento/keep-alive do backend.
+ *
+ * O Render free adormece a instância após ~15 min sem uso: na primeira
+ * requisição real o servidor leva 20-60s para acordar e a requisição fica
+ * pendente no devtools (sintoma: "requisições feitas mas nada chega").
+ *
+ * Este ping é fire-and-forget (falha é ignorada, `no-cors` evita erro de CORS
+ * na resposta opaca): acorda o servidor na abertura do app e o mantém acordado
+ * enquanto a aba estiver visível, para que o login/uso imediato não trave.
+ * Retorna a função de limpeza (para usar em useEffect).
+ */
+export function iniciarAquecimentoBackend({ intervaloMin = 4 } = {}) {
+  const ping = () => {
+    try {
+      fetch(VITE_API_URL, { method: 'GET', mode: 'no-cors', cache: 'no-store' }).catch(() => {});
+    } catch { /* ignora — o ping é best-effort */ }
+  };
+  ping();
+  const id = setInterval(() => {
+    if (typeof document === 'undefined' || document.visibilityState === 'visible') ping();
+  }, Math.max(1, intervaloMin) * 60 * 1000);
+  // Acorda o servidor IMEDIATAMENTE quando o usuário volta para a aba: se a aba
+  // ficou em segundo plano (aba visible=false não pinga) por mais de ~15 min,
+  // o backend adormeceu — sem isto, a primeira interação após o retorno traria
+  // exatamente o sintoma "site aberto há muito tempo e nada funciona".
+  const aoVoltar = () => {
+    if (typeof document !== 'undefined' && document.visibilityState === 'visible') ping();
+  };
+  document.addEventListener('visibilitychange', aoVoltar);
+  return () => {
+    clearInterval(id);
+    document.removeEventListener('visibilitychange', aoVoltar);
+  };
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Indicador de "conectando ao servidor": detecta requisições pendentes há mais
+// de LIMITE_LENTO_MS e notifica assinantes (componente visual). Presentação
+// apenas — não altera o resultado nem o fluxo de nenhuma requisição.
+// ─────────────────────────────────────────────────────────────────────────────
+const LIMITE_LENTO_MS = 4000;
+const requisicoesAbertas = new Map(); // id -> timestamp de início
+let lentoAtual = false;
+let monitorTimer = null;
+const ouvidoresLentidao = new Set();
+
+function notificarLentidao() {
+  for (const cb of ouvidoresLentidao) {
+    try { cb(lentoAtual); } catch { /* ignore */ }
+  }
+}
+
+function monitorarLentidao() {
+  if (monitorTimer) return;
+  monitorTimer = setInterval(() => {
+    const agora = Date.now();
+    const algumLento = [...requisicoesAbertas.values()].some((t) => agora - t >= LIMITE_LENTO_MS);
+    if (algumLento !== lentoAtual) {
+      lentoAtual = algumLento;
+      notificarLentidao();
+    }
+    if (requisicoesAbertas.size === 0) {
+      clearInterval(monitorTimer);
+      monitorTimer = null;
+    }
+  }, 1000);
+}
+
+let seqRequisicao = 0;
+function registrarRequisicao() {
+  const id = ++seqRequisicao;
+  requisicoesAbertas.set(id, Date.now());
+  monitorarLentidao();
+  return id;
+}
+function concluirRequisicao(id) {
+  requisicoesAbertas.delete(id);
+  // Esconde o indicador imediatamente quando a última requisição termina
+  // (em vez de esperar o próximo tick do monitor, até 1s depois).
+  if (requisicoesAbertas.size === 0 && lentoAtual) {
+    lentoAtual = false;
+    notificarLentidao();
+    clearInterval(monitorTimer);
+    monitorTimer = null;
+  }
+}
+
+/**
+ * Assina mudanças do estado "há requisição pendente há mais de 4s".
+ * O callback recebe `true`/`false`; é chamado imediatamente com o estado atual.
+ * Retorna a função de desinscrição (uso em useEffect).
+ */
+export function onMudancaLentidao(callback) {
+  ouvidoresLentidao.add(callback);
+  callback(lentoAtual);
+  return () => ouvidoresLentidao.delete(callback);
 }
 
 // ─────────────────────────────────────────────────────────────────────────────

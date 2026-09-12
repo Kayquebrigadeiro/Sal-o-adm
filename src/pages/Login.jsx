@@ -1,6 +1,18 @@
 import { useState } from 'react';
-import { api } from '../services/api';
+import { api, parseApiError } from '../services/api';
 import { Scissors, Eye, EyeOff, Loader2, User, Lock, ArrowRight } from 'lucide-react';
+
+/** Formata segundos de espera em mensagem legível ("14 min" ou "45 segundos"). */
+function mensagemLimiteLogin(segundos) {
+  if (!Number.isFinite(segundos) || segundos <= 0) {
+    return 'Muitas tentativas de login. Aguarde alguns minutos e tente novamente.';
+  }
+  if (segundos >= 60) {
+    const min = Math.ceil(segundos / 60);
+    return `Muitas tentativas de login. Aguarde ${min} minuto${min > 1 ? 's' : ''} e tente novamente.`;
+  }
+  return `Muitas tentativas de login. Aguarde ${segundos} segundos e tente novamente.`;
+}
 
 export default function Login() {
   const [login, setLogin] = useState(''); // Aceita username ou email
@@ -26,6 +38,14 @@ export default function Login() {
       const data = await response.json();
 
       if (!response.ok) {
+        if (response.status === 429) {
+          // Rate limit atingido: o backend envia o header Retry-After (segundos)
+          // com o tempo exato até poder tentar de novo — mostramos ao usuário.
+          const retrySeg = parseInt(response.headers.get('Retry-After'), 10);
+          throw new Error(mensagemLimiteLogin(retrySeg));
+        }
+        // Mensagem real do backend (ex.: 'Invalid credentials' →
+        // 'E-mail ou senha incorretos.' via parseApiError)
         throw new Error(data.error || 'Credenciais inválidas.');
       }
 
@@ -41,7 +61,10 @@ export default function Login() {
 
     } catch (err) {
       console.error('Erro no login:', err);
-      setErro('Credenciais inválidas. Verifique os dados inseridos.');
+      // Mostra a mensagem real (senha errada, rede, rate limit...) em vez de
+      // sempre exibir "Credenciais inválidas" — antes até o aviso de limite
+      // ficava invisível para o usuário.
+      setErro(parseApiError(err, 'Credenciais inválidas. Verifique os dados inseridos.'));
     } finally {
       setLoading(false);
     }
@@ -111,6 +134,7 @@ export default function Login() {
                 <button
                   type="button"
                   onClick={() => setMostrarSenha(!mostrarSenha)}
+                  aria-label={mostrarSenha ? 'Ocultar senha' : 'Mostrar senha'}
                   className="absolute right-0 inset-y-0 px-4 flex items-center text-gray-400 hover:text-gray-600 transition-colors"
                 >
                   {mostrarSenha ? <EyeOff size={18} /> : <Eye size={18} />}

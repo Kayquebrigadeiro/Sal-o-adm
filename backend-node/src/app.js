@@ -28,14 +28,21 @@ const generalLimiter = rateLimit({
   message: { error: 'Muitas requisições. Tente novamente em alguns minutos.' },
 });
 
-// Rate limit restrito para login (configurável via env, default 100 tentativas/15min por IP)
+// Rate limit restrito para login (configurável via env, default 200 tentativas
+// falhas/15min por IP).
+// skipSuccessfulRequests: login com senha CORRETA não consome a cota — só
+// tentativas erradas contam, então usuários legítimos (ou que erram muitas
+// vezes) não são bloqueados por estarem atrás do mesmo IP (escritório/salão).
 const loginLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
-  max: parseInt(process.env.LOGIN_RATE_LIMIT_MAX) || 100,
+  max: parseInt(process.env.LOGIN_RATE_LIMIT_MAX) || 200,
   standardHeaders: true,
   legacyHeaders: false,
   skip: (req) => req.method === 'OPTIONS',
-  message: { error: 'Muitas tentativas de login. Tente novamente em 15 minutos.' },
+  skipSuccessfulRequests: true,
+  // O tempo exato de espera vai no header Retry-After (em segundos), que o
+  // frontend lê para avisar "aguarde X minutos". Esta mensagem é o fallback.
+  message: { error: 'Muitas tentativas de login. Aguarde alguns minutos e tente novamente.' },
 });
 
 // Headers de segurança (equivalente ao helmet, sem dependência extra)
